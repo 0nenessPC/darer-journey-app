@@ -1,0 +1,32 @@
+// Design Tokens - Warm Dusk + Pixel Game aesthetic
+export const C = {
+  plum: "#7B4B6A", 
+  plumLt: "#F5EBE8", 
+  plumMd: "#C89DB2",
+  gold: "#D4A050", 
+  goldLt: "#FAF0E0", 
+  goldMd: "#E8C87A",
+  cream: "#F5EDE8", 
+  charcoal: "#3D2E3A", 
+  gray: "#7A6B75", 
+  grayLt: "#B8A8B2",
+  rose: "#D4A59A", 
+  roseLt: "#F5EBE8",
+  amber: "#C48A5A", 
+  amberLt: "#FAF0E0",
+  white: "#FFFFFF", 
+  red: "#C45A5A", 
+  redLt: "#FAE8E8",
+  teal: "#6BA5A0", 
+  tealLt: "#E0F0EE",
+  sky: "#7AADBE",
+  mapBg: "#2A1F28", 
+  mapPath: "#5C3A50", 
+  bossRed: "#C45A5A", 
+  goalGold: "#E8C87A",
+  hpGreen: "#6BA56B", 
+  hpRed: "#C45A5A", 
+  xpPurple: "#9B7BAA",
+};
+
+export const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
