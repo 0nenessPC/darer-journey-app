@@ -4,27 +4,15 @@ export const QWEN_MODELS = ['qwen3.5-flash', 'qwen3.6-plus'];
 const QWEN_MODEL = QWEN_MODELS[0];
 
 export async function callQwen(systemPrompt, messages, options = {}) {
-  const apiKey = import.meta.env.VITE_QWEN_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing VITE_QWEN_API_KEY in .env');
-  }
-
-  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+  const response = await fetch('/api/qwen-chat', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: options.model || QWEN_MODEL,
-      max_tokens: options.maxTokens || 1000,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.map((m) => ({
-          role: m.role,
-          content: m.text,
-        })),
-      ],
+      systemPrompt,
+      messages,
+      options,
     }),
   });
 
@@ -34,10 +22,7 @@ export async function callQwen(systemPrompt, messages, options = {}) {
   }
 
   const data = await response.json();
-  return (data.choices || [])
-    .map((choice) => choice.message?.content ?? '')
-    .join('\n')
-    .trim();
+  return data.reply || '';
 }
 
 export function useAIChat(systemPrompt, context = '') {
