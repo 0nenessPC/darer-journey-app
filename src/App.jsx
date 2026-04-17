@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "./utils/supabase";
 
 // ============ DESIGN TOKENS — Warm Dusk + Pixel Game ============
 const C = {
@@ -236,12 +237,27 @@ function LoginScreen({ onLogin }) {
   const [pw, setPw] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const handle = () => {
+  const handle = async () => {
     setErr("");
     if (!email.trim()) { setErr("Enter your email"); return; }
-    if (!pw.trim()) { setErr("Enter your password"); return; }
+    if (pw.length < 6) { setErr("Password must be at least 6 characters"); return; }
     setLoading(true);
-    setTimeout(() => { setLoading(false); onLogin(); }, 1000);
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({ email, password: pw });
+        if (error) { setErr(error.message); setLoading(false); return; }
+        setErr("Account created! Check your email to confirm, then log in.");
+        setMode("login");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        if (error) { setErr(error.message); setLoading(false); return; }
+        onLogin();
+      }
+    } catch (e) {
+      setErr("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px", background: C.mapBg }}>
@@ -3622,6 +3638,20 @@ export default function DARERQuest() {
   const [hero, setHero] = useState({ name: "Hero", darerId: "", strengths: [], stats: { courage: 5, resilience: 5, openness: 5 }, traits: [] });
   const [quest, setQuest] = useState(DEFAULT_QUEST);
   const [activeBoss, setActiveBoss] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+
+  // Check for active session on mount
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setAuthReady(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const setScreen = (s) => {
     setScreenHistory(prev => [...prev, screen]);
@@ -3640,7 +3670,15 @@ export default function DARERQuest() {
   const handleLogin = () => {
     const id = "DARER_" + Math.floor(100000 + Math.random() * 900000);
     setHero(h => ({ ...h, darerId: id, name: id }));
+    setIsAuthenticated(true);
     setScreen("intro");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setScreenRaw("login");
+    setScreenHistory([]);
   };
 
   const handleCharacterComplete = (name, stats, traits, sadsScore, actValues) => {
@@ -3695,7 +3733,23 @@ export default function DARERQuest() {
           <PixelText size={7} color={C.grayLt}>← BACK</PixelText>
         </button>
       )}
-      {screen === "login" && <LoginScreen onLogin={handleLogin} />}
+      {screen === "login" && !authReady && (
+        <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.mapBg }}>
+          <link href={FONT_LINK} rel="stylesheet" />
+          <PixelText size={10} color={C.goldMd}>Checking for existing hero...</PixelText>
+        </div>
+      )}
+      {screen === "login" && authReady && <LoginScreen onLogin={handleLogin} />}
+      {isAuthenticated && screen !== "login" && (
+        <button onClick={handleLogout} style={{
+          position: "fixed", top: 12, right: 12, zIndex: 100,
+          background: "#1A1218CC", border: "1px solid #5C3A50",
+          borderRadius: 6, padding: "6px 12px", cursor: "pointer",
+          backdropFilter: "blur(4px)",
+        }}>
+          <PixelText size={7} color={C.grayLt}>LOGOUT</PixelText>
+        </button>
+      )}
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} />}
       {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("values")} />}
