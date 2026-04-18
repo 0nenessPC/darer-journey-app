@@ -795,14 +795,18 @@ function CharacterCreate({ onComplete, initialName, darerId }) {
             </PixelText>
           </DialogBox>
 
-          <PixelBtn onClick={() => setStep("preCards")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+          <PixelBtn onClick={() => {
+            setStats(defaultStats);
+            setStep("reveal");
+            setTimeout(() => setStatsRevealed(true), 400);
+          }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
             CONTINUE →
           </PixelBtn>
         </div>
       )}
 
-      {/* STEP 1.9: TRANSITION TO CARD SORT */}
-      {step === "preCards" && (
+      {/* STEP 1.9: TRANSITION TO CARD SORT (hidden — skip to reveal) */}
+      {false && step === "preCards" && (
         <div style={{ width: "100%", animation: "fadeIn 0.6s ease-out", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.7 }}>🔍</div>
 
@@ -824,8 +828,8 @@ function CharacterCreate({ onComplete, initialName, darerId }) {
         </div>
       )}
 
-      {/* STEP 2: CARD SORT */}
-      {step === "cards" && card && (
+      {/* STEP 2: CARD SORT (hidden — skipped) */}
+      {false && step === "cards" && card && (
         <div style={{ width: "100%", animation: "fadeIn 0.3s ease-out" }}>
           <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>
             YOU IN SOCIAL MOMENTS
