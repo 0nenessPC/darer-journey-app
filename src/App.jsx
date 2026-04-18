@@ -2194,7 +2194,7 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
 }
 
 // --- TUTORIAL BATTLE ("Training Grounds") ---
-function TutorialBattle({ heroName, shadowText, heroValues, onComplete }) {
+function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete }) {
   const [phase, setPhase] = useState("intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
   const [chosenExposure, setChosenExposure] = useState(null);
   const [sudsBefore, setSudsBefore] = useState(null);
@@ -2214,12 +2214,67 @@ function TutorialBattle({ heroName, shadowText, heroValues, onComplete }) {
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [coachChat.messages, coachChat.typing]);
 
-  // Micro-exposure options — universally accessible, very low SUDs
-  const exposureOptions = [
-    { id: "smile", text: "Make eye contact and smile at a stranger", icon: "😊", where: "Anywhere — street, shop, café", time: "5 seconds", suds: 1 },
-    { id: "hello", text: "Say 'hello' or 'good morning' to someone you don't know", icon: "👋", where: "Walking past someone, a cashier, a neighbor", time: "10 seconds", suds: 2 },
-    { id: "compliment", text: "Give a small genuine compliment to someone", icon: "✨", where: "A shop worker, a colleague, anyone", time: "15 seconds", suds: 3 },
-  ];
+  // AI-generated micro-exposures tailored to the user's profile
+  const [tutorialExposures, setTutorialExposures] = useState([]);
+  const [exposuresLoading, setExposuresLoading] = useState(true);
+
+  const generateTutorialExposures = async () => {
+    setExposuresLoading(true);
+    try {
+      const shadowsText = shadowText || "General social anxiety";
+      const strengthsText = heroStrengths.length > 0 ? heroStrengths.join(", ") : "Not specified";
+      const valuesText = heroCoreValues.length > 0 ? heroCoreValues.map(v => v.word || v.text).join(", ") : (heroValues?.[0]?.text || "courage");
+      const res = await callClaude(
+        `You are a clinical psychologist designing micro-exposures for someone with social anxiety. Generate exactly 3 very low-SUDS (1-2 out of 10) training exposures for a user's FIRST exposure experience.
+
+User profile:
+- Shadow pattern: ${shadowsText}
+- Self-identified strengths: ${strengthsText}
+- Core value: ${valuesText}
+
+Clinical rules:
+- SUDS must be 1 or 2 (very gentle, low-stakes micro-actions)
+- Each must be completable in 5-15 seconds
+- Each must be context-flexible (works in multiple settings)
+- Tailor the activities to the user's shadow pattern without being too targeted (this is still a beginner exercise)
+- Leverage the user's strengths where possible
+- Connect subtly to their core value
+- Give each a creative RPG-style boss name (1-2 words)
+- Include an emoji icon name (use standard emoji names like "smile", "wave", "nod", "greet", etc.)
+
+Return ONLY a JSON array: [{"name":"Boss Name","text":"specific micro-exposure activity","icon":"emoji_name","where":"where to do it","time":"X seconds","suds":1}]
+No other text.`,
+        [{ role: "user", text: "Generate 3 training exposures for my first battle." }]
+      );
+      const jsonMatch = res.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          setTutorialExposures(parsed.slice(0, 3).map((e, i) => ({
+            ...e,
+            id: "tutorial_" + (e.name || "exp" + i).replace(/\s+/g, "_").toLowerCase(),
+            suds: Math.min(2, e.suds || 1),
+            time: e.time || "10 seconds",
+            icon: e.icon || "star",
+          })));
+          setExposuresLoading(false);
+          return;
+        }
+      }
+      throw new Error("Parse failed");
+    } catch (e) {
+      console.error("Tutorial exposure generation failed:", e);
+      // Fallback to gentle defaults
+      setTutorialExposures([
+        { id: "smile", text: "Make eye contact and smile at a stranger", icon: "😊", where: "Anywhere — street, shop, café", time: "5 seconds", suds: 1, name: "The Smiler" },
+        { id: "hello", text: "Say 'hello' or 'good morning' to someone you don't know", icon: "👋", where: "Walking past someone, a cashier, a neighbor", time: "10 seconds", suds: 1, name: "The Greeter" },
+        { id: "nod", text: "Give a small nod of acknowledgment to someone nearby", icon: "🙂", where: "Elevator, waiting in line, shared space", time: "5 seconds", suds: 2, name: "The Nod" },
+      ]);
+      setExposuresLoading(false);
+    }
+  };
+
+  useEffect(() => { generateTutorialExposures(); }, []);
 
   // Timer for waiting phase
   useEffect(() => {
@@ -2319,40 +2374,56 @@ function TutorialBattle({ heroName, shadowText, heroValues, onComplete }) {
               <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>Pick the one that feels right</PixelText>
             </div>
 
-            {exposureOptions.map((exp) => {
-              const selected = chosenExposure?.id === exp.id;
-              return (
-                <button key={exp.id} onClick={() => setChosenExposure(exp)} style={{
-                  width: "100%", textAlign: "left", padding: 14, marginBottom: 8,
-                  background: selected ? C.goldMd + "12" : "#1A1218",
-                  border: `2px solid ${selected ? C.goldMd : "#5C3A50"}`,
-                  borderRadius: 6, cursor: "pointer",
-                  boxShadow: selected ? `0 0 12px ${C.goldMd}15` : "none",
-                  transition: "all 0.2s",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 24 }}>{exp.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <PixelText size={8} color={selected ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
-                        {exp.text}
-                      </PixelText>
-                      <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                        <PixelText size={6} color={C.grayLt}>📍 {exp.where}</PixelText>
+            {exposuresLoading ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>🔨 FORGING YOUR TRAINING</PixelText>
+                <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
+              </div>
+            ) : (
+              <>
+                {tutorialExposures.map((exp) => {
+                  const selected = chosenExposure?.id === exp.id;
+                  return (
+                    <button key={exp.id} onClick={() => setChosenExposure(exp)} style={{
+                      width: "100%", textAlign: "left", padding: 14, marginBottom: 8,
+                      background: selected ? C.goldMd + "12" : "#1A1218",
+                      border: `2px solid ${selected ? C.goldMd : "#5C3A50"}`,
+                      borderRadius: 6, cursor: "pointer",
+                      boxShadow: selected ? `0 0 12px ${C.goldMd}15` : "none",
+                      transition: "all 0.2s",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 24 }}>{exp.icon}</span>
+                        <div style={{ flex: 1 }}>
+                          <PixelText size={8} color={selected ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
+                            {exp.text}
+                          </PixelText>
+                          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                            <PixelText size={6} color={C.grayLt}>📍 {exp.where}</PixelText>
+                          </div>
+                          <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
+                            <PixelText size={6} color={C.grayLt}>⏱ {exp.time}</PixelText>
+                            <PixelText size={6} color={C.hpGreen}>SUDs {exp.suds}/10</PixelText>
+                          </div>
+                        </div>
+                        {selected && <PixelText size={14} color={C.goldMd}>✓</PixelText>}
                       </div>
-                      <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
-                        <PixelText size={6} color={C.grayLt}>⏱ {exp.time}</PixelText>
-                        <PixelText size={6} color={C.hpGreen}>SUDs {exp.suds}/10</PixelText>
-                      </div>
-                    </div>
-                    {selected && <PixelText size={14} color={C.goldMd}>✓</PixelText>}
-                  </div>
-                </button>
-              );
-            })}
+                    </button>
+                  );
+                })}
 
-            <PixelBtn onClick={() => chosenExposure && setPhase("decide")} disabled={!chosenExposure} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
-              BEGIN TRAINING →
-            </PixelBtn>
+                <PixelBtn onClick={() => chosenExposure && setPhase("decide")} disabled={!chosenExposure} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
+                  BEGIN TRAINING →
+                </PixelBtn>
+                <button onClick={generateTutorialExposures} style={{
+                  width: "100%", marginTop: 8, padding: 10,
+                  background: "transparent", border: "1px dashed #5C3A50",
+                  borderRadius: 4, cursor: "pointer",
+                }}>
+                  <PixelText size={6} color={C.grayLt}>🔄 Generate different training exposures</PixelText>
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -3961,7 +4032,7 @@ export default function DARERQuest() {
       {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerWeapons")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
       {screen === "darerWeapons" && <DARERWeapons heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("tutorial")} obState={getOBState("darerWeapons", { step: 0 })} setOBState={(s) => setOBState("darerWeapons", s)} />}
-      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onComplete={() => setScreen("exposureSort")} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
+      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={() => setScreen("exposureSort")} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
