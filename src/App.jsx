@@ -2276,9 +2276,33 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
                 We'll practice for 5 minutes.{"\n"}You don't need to do it{"\n"}perfectly. Just follow the{"\n"}rhythm.
               </PixelText>
             </DialogBox>
-            <PixelBtn onClick={() => setArmoryStep("practice")} color={C.teal} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+            <PixelBtn onClick={() => setArmoryStep("ready")} color={C.teal} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
               BEGIN PRACTICE →
             </PixelBtn>
+          </div>
+        )}
+
+        {armoryStep === "ready" && (
+          <div style={{ animation: "fadeIn 0.6s ease-out" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>dYOS</div>
+            <PixelText size={10} color={C.teal} style={{ display: "block", marginBottom: 6 }}>PACED BREATHING</PixelText>
+            <DialogBox speaker="DARA">
+              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
+                Ready to try it, {heroName}?{"\n"}{"\n"}
+                Press the button when you're{"\n"}ready. The timer will start{"\n"}and I'll guide you through{"\n"}each breath.{"\n\n"}
+                Take as long as you need.{"\n"}There's no rush.
+              </PixelText>
+            </DialogBox>
+            <PixelBtn onClick={() => setArmoryStep("practice")} color={C.teal} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+              BEGIN BREATHING EXERCISE +'
+            </PixelBtn>
+            <button onClick={onContinue} style={{
+              width: "100%", marginTop: 10, padding: 10,
+              background: "transparent", border: "1px dashed #5C3A50",
+              borderRadius: 4, cursor: "pointer",
+            }}>
+              <PixelText size={6} color={C.grayLt}>Skip the practice ?</PixelText>
+            </button>
           </div>
         )}
 
@@ -2314,6 +2338,7 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
                 Follow the rhythm. Let each{"\n"}exhale be longer than the inhale.{"\n"}If your mind wanders — it will —{"\n"}just return to the breath.{"\n"}No judgment. Just return.
               </PixelText>
             </DialogBox>
+            <button onClick={onContinue} style={{ width: "100%", marginTop: 10, padding: 10, background: "transparent", border: "1px dashed #5C3A50", borderRadius: 4, cursor: "pointer" }}><PixelText size={6} color={C.grayLt}>Skip the practice ?</PixelText></button>
           </div>
         )}
 
