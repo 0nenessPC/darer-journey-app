@@ -226,6 +226,64 @@ function DialogBox({ speaker, text, typing, children }) {
   );
 }
 
+// ============ ONBOARDING PROGRESS BAR ============
+// Shows progress through the journey from intro to training ground (tutorial)
+const ONBOARDING = [
+  { key: "intro", label: "Story" },
+  { key: "character", label: "Hero" },
+  { key: "values", label: "Values" },
+  { key: "shadowLore", label: "Shadow Lore" },
+  { key: "psychoed", label: "Learn" },
+  { key: "shadowLorePost", label: "Shadow Lore" },
+  { key: "intake", label: "Intake" },
+  { key: "shadowReveal", label: "Reveal" },
+  { key: "darerWeapons", label: "Weapons" },
+  { key: "tutorial", label: "Training" },
+];
+
+function OnboardingProgress({ screen }) {
+  const idx = ONBOARDING.findIndex(s => s.key === screen);
+  if (idx === -1) return null;
+  const pct = ((idx + 1) / ONBOARDING.length) * 100;
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+      background: "#1A1218", borderBottom: "2px solid #5C3A50",
+      padding: "8px 12px 6px",
+    }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
+      }}>
+        <PixelText size={7} color={C.goldMd}>STEP {idx + 1}/{ONBOARDING.length}</PixelText>
+        <PixelText size={7} color={C.grayLt}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
+      </div>
+      <div style={{
+        height: 6, background: "#5C3A50", borderRadius: 3, overflow: "hidden",
+      }}>
+        <div style={{
+          height: "100%", width: `${pct}%`, background: C.goldMd,
+          transition: "width 0.5s ease",
+        }} />
+      </div>
+      <div style={{
+        display: "flex", justifyContent: "space-between", marginTop: 4,
+        padding: "0 2px",
+      }}>
+        {ONBOARDING.map((s, i) => (
+          <div key={s.key} style={{
+            width: i <= idx ? 6 : 4,
+            height: i <= idx ? 6 : 4,
+            borderRadius: "50%",
+            background: i < idx ? C.goldMd : i === idx ? C.gold : C.gray,
+            transition: "all 0.3s",
+            flexShrink: 0,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ============ SCREENS ============
 
 // --- LOGIN ---
@@ -3756,7 +3814,7 @@ export default function DARERQuest() {
       {/* Global back button — shown on all screens except login and map */}
       {!["login", "map", "battle"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} style={{
-          position: "fixed", top: 12, left: 12, zIndex: 100,
+          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 12, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
@@ -3774,7 +3832,7 @@ export default function DARERQuest() {
       {screen === "login" && authReady && <LoginScreen onLogin={handleLogin} />}
       {isAuthenticated && screen !== "login" && (
         <button onClick={handleLogout} style={{
-          position: "fixed", top: 12, right: 12, zIndex: 100,
+          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 12, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           backdropFilter: "blur(4px)",
@@ -3782,6 +3840,9 @@ export default function DARERQuest() {
           <PixelText size={7} color={C.grayLt}>LOGOUT</PixelText>
         </button>
       )}
+      {/* Onboarding progress bar — shown from intro through training ground */}
+      <OnboardingProgress screen={screen} />
+      <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} />}
       {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("values")} />}
@@ -3806,6 +3867,7 @@ export default function DARERQuest() {
       {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
+      </div>
     </div>
   );
 }
