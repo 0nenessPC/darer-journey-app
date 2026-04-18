@@ -247,7 +247,7 @@ function OnboardingProgress({ screen }) {
   const pct = ((idx + 1) / ONBOARDING.length) * 100;
   return (
     <div style={{
-      position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, zIndex: 200,
+      position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
       background: "#1A1218", borderBottom: "2px solid #5C3A50",
       padding: "8px 12px 6px",
       boxSizing: "border-box",
@@ -3745,8 +3745,9 @@ export default function DARERQuest() {
       setHero(progress.hero);
       if (progress.quest) setQuest(progress.quest);
       setShadowText(progress.shadow_text || '');
+      setScreenHistory([]); // Clear history on fresh login
       if (progress.screen && progress.screen !== 'login') {
-        setScreenRaw(progress.screen);
+        setScreen(progress.screen); // Use setScreen to track history
       } else {
         setScreen("intro");
       }
