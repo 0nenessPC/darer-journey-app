@@ -391,8 +391,12 @@ function calcSADS(claimed, dismissed) {
 }
 
 // --- CHARACTER CREATION (Name → Card Sort → Stat Reveal) ---
+// Currently bypassing card sort; goes name → stat reveal (all stats = 1)
+// To re-enable card sort: set SKIP_CARD_SORT = false
+const SKIP_CARD_SORT = true;
+
 function CharacterCreate({ onComplete, initialName, darerId }) {
-  const [step, setStep] = useState("name");
+  const [step, setStep] = useState(SKIP_CARD_SORT ? "name" : "name");
   const [name, setName] = useState(initialName || "");
   const [nameConfirmed, setNameConfirmed] = useState(false);
   const [deck, setDeck] = useState(() => [...TRAIT_CARDS].sort(() => Math.random() - 0.5));
@@ -408,6 +412,8 @@ function CharacterCreate({ onComplete, initialName, darerId }) {
   const [valuesPage, setValuesPage] = useState(0);
   const [expandedValue, setExpandedValue] = useState(null);
   const [dragX, setDragX] = useState(0);
+  // Stats defaults — all set to 1 (bypassing card sort calculation)
+  const [defaultStats] = useState({ courage: 1, resilience: 1, openness: 1 });
 
   // ACT Core Values — filtered for social/relational relevance
   // From Russ Harris "A Quick Look at Your Values" (actmindfully.com, 2010)
@@ -3702,9 +3708,9 @@ export default function DARERQuest() {
   const handleCharacterComplete = async (name, stats, traits, sadsScore, actValues) => {
     const strengthNames = traits.filter(t => t.type === "strength").map(t => t.text);
     setHero(h => ({ ...h, name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] }));
-    setScreen("mapPreview");
+    setScreen("values");
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await saveProgress(user.id, { screen: "mapPreview", hero: { name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] } });
+    if (user) await saveProgress(user.id, { screen: "values", hero: { name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] } });
   };
 
   const [shadowText, setShadowText] = useState("");
@@ -3781,6 +3787,8 @@ export default function DARERQuest() {
         setHero(h => ({ ...h, values: cards, valuesText: text }));
         setScreen("shadowLore");
       }} />}
+      {/* === FULL CLINICAL FLOW === */}
+      {/* shadowLore → psychoed → shadowLorePost → intake → shadowReveal → darerWeapons → tutorial → exposureSort */}
       {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} />}
       {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} />}
       {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} />}
@@ -3792,6 +3800,7 @@ export default function DARERQuest() {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
       }} />}
+      {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
