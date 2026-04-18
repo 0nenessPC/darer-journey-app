@@ -2139,7 +2139,7 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
       <div>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🛡</div>
         <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>
-          THE DARER'S PATH
+          THE DARER'S STRATEGY
         </PixelText>
         <div style={{ background: C.hpGreen + "08", border: `1.5px solid ${C.hpGreen}25`, borderRadius: 8, padding: 14, marginBottom: 12 }}>
           {[
