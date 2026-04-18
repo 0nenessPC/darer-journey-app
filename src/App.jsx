@@ -2378,6 +2378,10 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
   const [rehearsalStep, setRehearsalStep] = useState(0);
   const [allowInput, setAllowInput] = useState("");
   const [engageInput, setEngageInput] = useState("");
+  const [riseSubStep, setRiseSubStep] = useState(0);
+  const [exposureWhen, setExposureWhen] = useState("");
+  const [exposureWhere, setExposureWhere] = useState("");
+  const [exposureArmory, setExposureArmory] = useState("");
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
@@ -2550,7 +2554,7 @@ No other text.`,
           <div style={{ textAlign: "center", animation: "fadeIn 0.6s ease-out" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🏕</div>
             <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>TRAINING GROUNDS</PixelText>
-            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>Practice the DARER Strategy � guided by Dara</PixelText>
+            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>Practice the DARER Strategy � guided by Dara</PixelText>
 
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
@@ -2736,42 +2740,138 @@ No other text.`,
           </div>
         )}
 
-        {/* === R — RISE (SUDs before + go do it) === */}
+        {/* === R — RISE (plan + SUDs before + go do it) === */}
         {phase === "rise" && (
           <div style={{ animation: "fadeIn 0.4s ease-out" }}>
             <ProgressBar />
             <PhaseLabel letter="R" title="RISE" active color={C.teal} />
 
-            <DialogBox speaker="DARA">
-              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                The rehearsal is done. You've{"\n"}felt the Storm and you're still{"\n"}standing.{"\n"}{"\n"}
-                Now it's time to do it for real.{"\n"}{"\n"}
-                Before you go — how intense is{"\n"}the Storm right now? Rate it{"\n"}honestly.
-              </PixelText>
-            </DialogBox>
-
-            <div style={{ marginTop: 12 }}>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                  const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
-                  return (
-                    <button key={n} onClick={() => setSudsBefore(n)} style={{
-                      width: 40, height: 40, borderRadius: 4, cursor: "pointer",
-                      background: sudsBefore === n ? color + "30" : "#1A1218",
-                      border: `2px solid ${sudsBefore === n ? color : "#5C3A50"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
+            {/* Sub-step 0: WHEN */}
+            {riseSubStep === 0 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    The rehearsal is done. You've{"\n"}felt the Storm and you're still{"\n"}standing.{"\n"}{"\n"}
+                    Before you step into the arena,{"\n"}tell me — when will you face{"\n"}this battle? Choose a time{"\n"}that feels real and within reach.
+                  </PixelText>
+                </DialogBox>
+                <div style={{ marginTop: 14 }}>
+                  {[
+                    "Today — as soon as I'm ready",
+                    "Later today — within a few hours",
+                    "Tomorrow — I'll plan it in",
+                    "Within the next 3 days",
+                    "This week — I'll pick a day",
+                  ].map(opt => (
+                    <button key={opt} onClick={() => { setExposureWhen(opt); setRiseSubStep(1); }} style={{
+                      display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
+                      borderRadius: 4, border: "2px solid #5C3A50",
+                      background: exposureWhen === opt ? C.teal + "20" : "#1A1218",
+                      cursor: "pointer", textAlign: "left",
                     }}>
-                      <PixelText size={9} color={sudsBefore === n ? color : C.grayLt}>{n}</PixelText>
+                      <PixelText size={7} color={exposureWhen === opt ? C.teal : C.grayLt}>{opt}</PixelText>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <PixelBtn onClick={() => { setPhase("waiting"); setTimerActive(true); }} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-              I'M GOING IN → RISE!
-            </PixelBtn>
+            {/* Sub-step 1: WHERE */}
+            {riseSubStep === 1 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    Good. You know when.{"\n"}{"\n"}
+                    Now — where will you step into{"\n"}the territory? Name the place.{"\n"}Be specific. This is your map.
+                  </PixelText>
+                </DialogBox>
+                <input
+                  type="text"
+                  placeholder="e.g. the coffee shop on Main St..."
+                  value={exposureWhere}
+                  onChange={e => setExposureWhere(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && exposureWhere.trim()) setRiseSubStep(2); }}
+                  style={{
+                    display: "block", width: "100%", marginTop: 14, padding: "12px 14px",
+                    borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                    color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <PixelBtn
+                  onClick={() => setRiseSubStep(2)}
+                  disabled={!exposureWhere.trim()}
+                  color={C.gold} textColor={C.charcoal}
+                  style={{ width: "100%", marginTop: 10 }}
+                >
+                  NEXT →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 2: ARMORY */}
+            {riseSubStep === 2 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    You've chosen your time and{"\n"}your battlefield.{"\n"}{"\n"}
+                    Before you go — which tool{"\n"}from the Armory will you carry?{"\n"}Choose the one that steadies you.
+                  </PixelText>
+                </DialogBox>
+                <div style={{ marginTop: 14 }}>
+                  {[
+                    { key: "breathing", icon: "🌬️", label: "Paced Breathing (4-2-6-2)" },
+                    { key: "allowing", icon: "🛡️", label: "Allow the Storm (don't fight it)" },
+                    { key: "grounding", icon: "⚓", label: "Grounding (5-4-3-2-1 senses)" },
+                    { key: "values", icon: "💎", label: `Anchor to "${valueName}"` },
+                    { key: "none", icon: "🗡️", label: "I'll trust the strategy alone" },
+                  ].map(tool => (
+                    <button key={tool.key} onClick={() => { setExposureArmory(tool.label); setRiseSubStep(3); }} style={{
+                      display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
+                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.label ? C.teal : "#5C3A50"}`,
+                      background: exposureArmory === tool.label ? C.teal + "20" : "#1A1218",
+                      cursor: "pointer", textAlign: "left",
+                    }}>
+                      <span style={{ fontSize: 18 }}>{tool.icon}</span>
+                      <PixelText size={7} color={exposureArmory === tool.label ? C.teal : C.grayLt}>{tool.label}</PixelText>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-step 3: Storm Intensity (SUDs) */}
+            {riseSubStep === 3 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    You're armed and ready.{"\n"}{"\n"}
+                    One last thing before you{"\n"}step through — how intense is{"\n"}the Storm right now? Rate it{"\n"}honestly. There's no wrong answer.
+                  </PixelText>
+                </DialogBox>
+                <div style={{ marginTop: 12 }}>
+                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {[1,2,3,4,5,6,7,8,9,10].map(n => {
+                      const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
+                      return (
+                        <button key={n} onClick={() => setSudsBefore(n)} style={{
+                          width: 40, height: 40, borderRadius: 4, cursor: "pointer",
+                          background: sudsBefore === n ? color + "30" : "#1A1218",
+                          border: `2px solid ${sudsBefore === n ? color : "#5C3A50"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <PixelText size={9} color={sudsBefore === n ? color : C.grayLt}>{n}</PixelText>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <PixelBtn onClick={() => { setPhase("waiting"); setTimerActive(true); }} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  I'M GOING IN → RISE!
+                </PixelBtn>
+              </div>
+            )}
           </div>
         )}
 
@@ -3069,6 +3169,10 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
   const [prepAnswers, setPrepAnswers] = useState(obState.prepAnswers || { value: "", allow: "", rise: "" });
   const [suds, setSuds] = useState(obState.suds || { before: 50, during: 60, after: 30 });
   const [outcome, setOutcome] = useState(obState.outcome || null);
+  const [riseSubStep, setRiseSubStep] = useState(obState.riseSubStep ?? 0);
+  const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || "");
+  const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || "");
+  const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || "");
   const [chatInput, setChatInput] = useState("");
   const chatRef = useRef(null);
 
