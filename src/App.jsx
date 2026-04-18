@@ -3851,6 +3851,19 @@ export default function DARERQuest() {
   };
 
   const handleLogout = async () => {
+    // Save progress before signing out so state isn't lost
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await saveProgress(user.id, {
+          screen,
+          hero,
+          quest,
+          shadow_text: shadowText,
+          onboarding_state: onboardingState,
+        });
+      }
+    } catch (e) { /* ignore save errors on logout */ }
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     setScreenRaw("login");
