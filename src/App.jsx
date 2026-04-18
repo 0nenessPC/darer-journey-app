@@ -353,8 +353,9 @@ function LoginScreen({ onLogin }) {
 }
 
 // --- WELCOME / GAME INTRO ---
-function GameIntro({ onComplete }) {
-  const [slide, setSlide] = useState(0);
+function GameIntro({ onComplete, obState, setOBState }) {
+  const slide = obState?.slide ?? 0;
+  const setSlide = (v) => setOBState({ slide: typeof v === 'function' ? v(slide) : v });
   const slides = [
     { text: "For as long as anyone can\nremember, the Shadow of Fear\nhas ruled these lands.", sub: "It turns words into walls.\nIt makes crowds feel like cages.\nIt convinces people that staying\nsmall is the same as staying safe." },
     { text: "Millions have fallen under\nits spell — convinced they are\nnot enough, that they will be\njudged, that they don't belong\nin social contexts.", sub: "But the Shadow holds a secret\nit never wanted you to know.\nIt is terrified of you.\nThe moment you step forward\nand say \"I DARE to FEAR\" —\nit loses its power." },
@@ -452,10 +453,13 @@ function calcSADS(claimed, dismissed) {
 // To re-enable card sort: set SKIP_CARD_SORT = false
 const SKIP_CARD_SORT = true;
 
-function CharacterCreate({ onComplete, initialName, darerId }) {
-  const [step, setStep] = useState(SKIP_CARD_SORT ? "name" : "name");
-  const [name, setName] = useState(initialName || "");
-  const [nameConfirmed, setNameConfirmed] = useState(false);
+function CharacterCreate({ onComplete, initialName, darerId, obState, setOBState }) {
+  const step = obState?.step ?? "name";
+  const setStep = (v) => setOBState({ step: typeof v === 'function' ? v(step) : v });
+  const name = obState?.name ?? initialName ?? "";
+  const setName = (v) => setOBState({ name: typeof v === 'function' ? v(name) : v });
+  const nameConfirmed = obState?.nameConfirmed ?? false;
+  const setNameConfirmed = (v) => setOBState({ nameConfirmed: typeof v === 'function' ? v(nameConfirmed) : v });
   const [deck, setDeck] = useState(() => [...TRAIT_CARDS].sort(() => Math.random() - 0.5));
   const [currentCard, setCurrentCard] = useState(0);
   const [claimed, setClaimed] = useState([]);
@@ -1155,9 +1159,15 @@ function CharacterCreate({ onComplete, initialName, darerId }) {
 // --- STRENGTH SELECTION (removed — replaced by card sort above) ---
 
 // --- JOURNEY MAP PREVIEW (animated flyover to keep users engaged) ---
-function JourneyMapPreview({ heroName, onContinue }) {
-  const [scrollPos, setScrollPos] = useState(0);
-  const [phase, setPhase] = useState("intro");
+function JourneyMapPreview({ heroName, onContinue, obState = {}, setOBState }) {
+  const [scrollPos, setScrollPos] = useState(obState.scrollPos || 0);
+  const [phase, setPhase] = useState(obState.phase || "intro");
+
+  // Sync state to parent for auto-save
+  useEffect(() => {
+    if (!setOBState) return;
+    setOBState({ scrollPos, phase });
+  }, [scrollPos, phase, setOBState]);
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("scroll"), 2500);
@@ -1699,8 +1709,9 @@ function ValuesScreen({ heroName, onComplete }) {
 }
 
 // --- SHADOW LORE (before intake — reveals the true nature of the Shadow) ---
-function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0 }) {
-  const [step, setStep] = useState(initialStep);
+function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, setOBState }) {
+  const step = obState?.step ?? initialStep;
+  const setStep = (v) => setOBState({ step: typeof v === 'function' ? v(step) : v });
   return (
     <div style={{
       height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center",
@@ -2781,14 +2792,20 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile }) {
 }
 
 // --- BOSS BATTLE ---
-function BossBattle({ boss, quest, hero, onVictory, onRetreat }) {
-  const [phase, setPhase] = useState("prep");
-  const [prepStep, setPrepStep] = useState(0); // 0=D, 1=A, 2=R, 3=E(final)
-  const [prepAnswers, setPrepAnswers] = useState({ value: "", allow: "", rise: "" });
-  const [suds, setSuds] = useState({ before: 50, during: 60, after: 30 });
-  const [outcome, setOutcome] = useState(null);
+function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, setOBState }) {
+  const [phase, setPhase] = useState(obState.phase || "prep");
+  const [prepStep, setPrepStep] = useState(obState.prepStep ?? 0);
+  const [prepAnswers, setPrepAnswers] = useState(obState.prepAnswers || { value: "", allow: "", rise: "" });
+  const [suds, setSuds] = useState(obState.suds || { before: 50, during: 60, after: 30 });
+  const [outcome, setOutcome] = useState(obState.outcome || null);
   const [chatInput, setChatInput] = useState("");
   const chatRef = useRef(null);
+
+  // Persist battle progress so resume-anywhere survives refresh/close
+  useEffect(() => {
+    if (!setOBState) return;
+    setOBState({ phase, prepStep, prepAnswers, suds, outcome });
+  }, [phase, prepStep, prepAnswers, suds, outcome, setOBState]);
 
   const battleChat = useAIChat(SYS.battle, `BOSS: "${boss.name}" — ${boss.desc}. The hero is fighting this boss RIGHT NOW in real life.`);
   const victoryChat = useAIChat(SYS.victory, "");
@@ -3452,23 +3469,29 @@ function PsychoEdScreen({ heroName, heroValues, onContinue }) {
 }
 
 // --- EXPOSURE HIERARCHY SORT (AI generates personalized battles, user swipes) ---
-function ExposureSortScreen({ hero, shadowText, onComplete }) {
+function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {
   const [exposures, setExposures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentCard, setCurrentCard] = useState(0);
-  const [accepted, setAccepted] = useState([]);
-  const [rejected, setRejected] = useState([]);
+  const [currentCard, setCurrentCard] = useState(obState.currentCard || 0);
+  const [accepted, setAccepted] = useState(obState.accepted || []);
+  const [rejected, setRejected] = useState(obState.rejected || []);
+  const [done, setDone] = useState(obState.done || false);
   const [swipeDir, setSwipeDir] = useState(null);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
-  const [done, setDone] = useState(false);
 
   const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? "#E8A04A" : C.bossRed;
   const levelLabel = (lv) => lv <= 3 ? "SHALLOW WATER" : lv <= 6 ? "GETTING DEEPER" : lv <= 8 ? "DEEP END" : "BOSS TERRITORY";
 
   useEffect(() => { generateExposures(); }, []);
+
+  // Persist card-sort progress so resume-anywhere survives refresh/close
+  useEffect(() => {
+    if (!setOBState) return;
+    setOBState({ currentCard, accepted, rejected, done });
+  }, [currentCard, accepted, rejected, done, setOBState]);
 
   const generateExposures = async () => {
     try {
@@ -3708,6 +3731,12 @@ export default function DARERQuest() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
 
+  // Granular onboarding state — tracks internal progress within each screen
+  const [onboardingState, setOnboardingState] = useState({});
+
+  // Shadow text from intake (declared here so auto-save can reference it)
+  const [shadowText, setShadowText] = useState("");
+
   // Check for active session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -3720,13 +3749,14 @@ export default function DARERQuest() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Auto-save progress on every onboarding screen change
-  const lastSavedScreen = useRef("");
+  // Auto-save progress on every onboarding screen change (includes granular onboarding state)
+  const lastSavedAt = useRef(0);
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (screen === "login" || screen === "map" || screen === "battle" || screen === "profile" || screen === "exposureSort") return;
-    if (lastSavedScreen.current === screen) return;
-    lastSavedScreen.current = screen;
+    if (screen === "login" || screen === "map" || screen === "profile") return;
+    const now = Date.now();
+    if (now - lastSavedAt.current < 2000) return; // throttle to every 2s
+    lastSavedAt.current = now;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -3735,15 +3765,54 @@ export default function DARERQuest() {
           hero,
           quest,
           shadow_text: shadowText,
+          onboarding_state: onboardingState,
         });
       }
     })();
-  }, [screen, isAuthenticated]);
+  }, [screen, isAuthenticated, onboardingState, shadowText, hero, quest]);
+
+  // Save on tab/browser close so progress isn't lost mid-screen
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const saveNow = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await saveProgress(user.id, {
+            screen,
+            hero,
+            quest,
+            shadow_text: shadowText,
+            onboarding_state: onboardingState,
+          });
+        }
+      } catch (e) { /* ignore save errors on close */ }
+    };
+    window.addEventListener('beforeunload', saveNow);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') saveNow();
+    });
+    return () => {
+      window.removeEventListener('beforeunload', saveNow);
+      document.removeEventListener('visibilitychange', () => {});
+    };
+  }, [isAuthenticated, screen, hero, quest, shadowText, onboardingState]);
 
   const setScreen = (s) => {
     setScreenHistory(prev => [...prev, screen]);
     setScreenRaw(s);
   };
+
+  // Helper to merge partial state into onboardingState (auto-triggers save)
+  const setOBState = (screenKey, partial) => {
+    setOnboardingState(prev => ({
+      ...prev,
+      [screenKey]: { ...prev[screenKey], ...partial },
+    }));
+  };
+
+  // Restore a single screen's state with defaults
+  const getOBState = (screenKey, defaults = {}) => ({ ...defaults, ...onboardingState[screenKey] });
   const goBack = () => {
     setScreenHistory(prev => {
       if (prev.length === 0) return prev;
@@ -3765,6 +3834,7 @@ export default function DARERQuest() {
       setHero(progress.hero);
       if (progress.quest) setQuest(progress.quest);
       setShadowText(progress.shadow_text || '');
+      if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
       setScreenHistory([]); // Clear history on fresh login
       if (progress.screen && progress.screen !== 'login') {
         setScreen(progress.screen); // Use setScreen to track history
@@ -3794,8 +3864,6 @@ export default function DARERQuest() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) await saveProgress(user.id, { screen: "values", hero: { name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] } });
   };
-
-  const [shadowText, setShadowText] = useState("");
 
   const handleIntakeComplete = async (msgs, summaryText) => {
     setShadowText(summaryText || "");
@@ -3865,29 +3933,29 @@ export default function DARERQuest() {
       {/* Onboarding progress bar — shown from intro through training ground */}
       <OnboardingProgress screen={screen} />
       <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
-      {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} />}
-      {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} />}
-      {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("values")} />}
+      {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
+      {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
+      {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("values")} obState={getOBState("mapPreview", { scrollPos: 0, phase: "intro" })} setOBState={(s) => setOBState("mapPreview", s)} />}
       {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {
         setHero(h => ({ ...h, values: cards, valuesText: text }));
         setScreen("shadowLore");
-      }} />}
+      }} obState={getOBState("values", { step: "default", values: [], guideAnswers: [], guideStep: 0 })} setOBState={(s) => setOBState("values", s)} />}
       {/* === FULL CLINICAL FLOW === */}
       {/* shadowLore → psychoed → shadowLorePost → intake → shadowReveal → darerWeapons → tutorial → exposureSort */}
-      {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} />}
-      {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} />}
-      {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} />}
-      {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} />}
-      {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerWeapons")} />}
-      {screen === "darerWeapons" && <DARERWeapons heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("tutorial")} />}
-      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onComplete={() => setScreen("exposureSort")} />}
+      {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 0 })} setOBState={(s) => setOBState("shadowLore", s)} />}
+      {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} obState={getOBState("psychoed", { step: 0 })} setOBState={(s) => setOBState("psychoed", s)} />}
+      {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 2 })} setOBState={(s) => setOBState("shadowLore", s)} />}
+      {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
+      {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerWeapons")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
+      {screen === "darerWeapons" && <DARERWeapons heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("tutorial")} obState={getOBState("darerWeapons", { step: 0 })} setOBState={(s) => setOBState("darerWeapons", s)} />}
+      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onComplete={() => setScreen("exposureSort")} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
-      }} />}
+      }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} />}
-      {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} />}
+      {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
       </div>
     </div>
