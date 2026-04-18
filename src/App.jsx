@@ -2217,20 +2217,26 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
   // AI-generated micro-exposures tailored to the user's profile
   const [tutorialExposures, setTutorialExposures] = useState([]);
   const [exposuresLoading, setExposuresLoading] = useState(true);
+  const [prevExposureTexts, setPrevExposureTexts] = useState([]);
+  let fallbackRound = 0;
 
-  const generateTutorialExposures = async () => {
+
+  const generateTutorialExposures = async (avoidTexts = []) => {
     setExposuresLoading(true);
     try {
       const shadowsText = shadowText || "General social anxiety";
       const strengthsText = heroStrengths.length > 0 ? heroStrengths.join(", ") : "Not specified";
       const valuesText = heroCoreValues.length > 0 ? heroCoreValues.map(v => v.word || v.text).join(", ") : (heroValues?.[0]?.text || "courage");
+      const avoidBlock = avoidTexts.length > 0
+        ? `\n\nIMPORTANT: Do NOT include these exposures — the user has already seen them and wants DIFFERENT ones:\n${avoidTexts.map(t => "- " + t).join("\n")}`
+        : "";
       const res = await callClaude(
         `You are a clinical psychologist designing micro-exposures for someone with social anxiety. Generate exactly 3 very low-SUDS (1-2 out of 10) training exposures for a user's FIRST exposure experience.
 
 User profile:
 - Shadow pattern: ${shadowsText}
 - Self-identified strengths: ${strengthsText}
-- Core value: ${valuesText}
+- Core value: ${valuesText}${avoidBlock}
 
 Clinical rules:
 - SUDS must be 1 or 2 (very gentle, low-stakes micro-actions)
@@ -2239,6 +2245,7 @@ Clinical rules:
 - Tailor the activities to the user's shadow pattern without being too targeted (this is still a beginner exercise)
 - Leverage the user's strengths where possible
 - Connect subtly to their core value
+- Each activity must be COMPLETELY DIFFERENT from the others and from any previously shown exposures
 - Give each a creative RPG-style boss name (1-2 words)
 - Include an emoji icon name (use standard emoji names like "smile", "wave", "nod", "greet", etc.)
 
@@ -2250,13 +2257,16 @@ No other text.`,
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed) && parsed.length >= 2) {
-          setTutorialExposures(parsed.slice(0, 3).map((e, i) => ({
+          const newExposures = parsed.slice(0, 3).map((e, i) => ({
             ...e,
             id: "tutorial_" + (e.name || "exp" + i).replace(/\s+/g, "_").toLowerCase(),
             suds: Math.min(2, e.suds || 1),
             time: e.time || "10 seconds",
             icon: e.icon || "star",
-          })));
+          }));
+          setTutorialExposures(newExposures);
+          // Track the texts so next regenerate avoids them
+          setPrevExposureTexts(prev => [...prev, ...newExposures.map(e => e.text)]);
           setExposuresLoading(false);
           return;
         }
@@ -2264,12 +2274,26 @@ No other text.`,
       throw new Error("Parse failed");
     } catch (e) {
       console.error("Tutorial exposure generation failed:", e);
-      // Fallback to gentle defaults
-      setTutorialExposures([
-        { id: "smile", text: "Make eye contact and smile at a stranger", icon: "😊", where: "Anywhere — street, shop, café", time: "5 seconds", suds: 1, name: "The Smiler" },
-        { id: "hello", text: "Say 'hello' or 'good morning' to someone you don't know", icon: "👋", where: "Walking past someone, a cashier, a neighbor", time: "10 seconds", suds: 1, name: "The Greeter" },
-        { id: "nod", text: "Give a small nod of acknowledgment to someone nearby", icon: "🙂", where: "Elevator, waiting in line, shared space", time: "5 seconds", suds: 2, name: "The Nod" },
-      ]);
+      // Fallback: rotate through different sets
+      const fallbackSets = [
+        [
+          { id: "smile", text: "Make eye contact and smile at a stranger", icon: "😊", where: "Anywhere — street, shop, café", time: "5 seconds", suds: 1, name: "The Smiler" },
+          { id: "hello", text: "Say 'hello' or 'good morning' to someone you don't know", icon: "👋", where: "Walking past someone, a cashier, a neighbor", time: "10 seconds", suds: 1, name: "The Greeter" },
+          { id: "nod", text: "Give a small nod of acknowledgment to someone nearby", icon: "🙂", where: "Elevator, waiting in line, shared space", time: "5 seconds", suds: 2, name: "The Nod" },
+        ],
+        [
+          { id: "wave", text: "Give a friendly wave to someone across the room", icon: "👋", where: "Park, grocery store, shared space", time: "5 seconds", suds: 1, name: "The Waver" },
+          { id: "door", text: "Hold a door open for someone behind you", icon: "🚪", where: "Any entrance — shop, building, elevator", time: "10 seconds", suds: 1, name: "The Gatekeeper" },
+          { id: "thanks", text: "Thank a cashier or service worker by name if their badge is visible", icon: "🙏", where: "Store, restaurant, pharmacy", time: "10 seconds", suds: 2, name: "The Gratitude" },
+        ],
+        [
+          { id: "chair", text: "Sit in a visible spot and stay there for 30 seconds without looking at your phone", icon: "🪑", where: "Café, park bench, waiting area", time: "30 seconds", suds: 2, name: "The Stillness" },
+          { id: "queue", text: "Make brief friendly small talk with someone in line", icon: "💬", where: "Grocery checkout, coffee shop, ATM line", time: "15 seconds", suds: 2, name: "The Chatter" },
+          { id: "ask", text: "Ask a stranger for simple directions you already know", icon: "🗺️", where: "Street, mall, campus", time: "10 seconds", suds: 2, name: "The Seeker" },
+        ],
+      ];
+      fallbackRound = (fallbackRound + 1) % fallbackSets.length;
+      setTutorialExposures(fallbackSets[fallbackRound]);
       setExposuresLoading(false);
     }
   };
@@ -2415,7 +2439,7 @@ No other text.`,
                 <PixelBtn onClick={() => chosenExposure && setPhase("decide")} disabled={!chosenExposure} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
                   BEGIN TRAINING →
                 </PixelBtn>
-                <button onClick={generateTutorialExposures} style={{
+                <button onClick={() => generateTutorialExposures(prevExposureTexts)} style={{
                   width: "100%", marginTop: 8, padding: 10,
                   background: "transparent", border: "1px dashed #5C3A50",
                   borderRadius: 4, cursor: "pointer",
