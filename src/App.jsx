@@ -4310,7 +4310,15 @@ export default function DARERQuest() {
   }, [isAuthenticated, screen, hero, quest, shadowText, onboardingState]);
 
   const setScreen = (s) => {
-    setScreenHistory(prev => [...prev, screen]);
+    if (s === screen) return; // Don't navigate to the same screen
+    setScreenHistory(prev => {
+      const last = prev.length > 0 ? prev[prev.length - 1] : null;
+      if (last === screen && prev.length > 1) {
+        // Replace duplicate entry so rapid navigations don't stack
+        return [...prev.slice(0, -1), screen];
+      }
+      return [...prev, screen];
+    });
     setScreenRaw(s);
   };
 
@@ -4328,6 +4336,10 @@ export default function DARERQuest() {
     setScreenHistory(prev => {
       if (prev.length === 0) return prev;
       const next = [...prev];
+      // Deduplicate: collapse repeated adjacent entries at the top
+      while (next.length > 1 && next[next.length - 1] === next[next.length - 2]) {
+        next.pop();
+      }
       const last = next.pop();
       setScreenRaw(last);
       return next;
