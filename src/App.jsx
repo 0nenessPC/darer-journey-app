@@ -237,7 +237,7 @@ const ONBOARDING = [
   { key: "shadowLorePost", label: "Shadow Lore" },
   { key: "intake", label: "Intake" },
   { key: "shadowReveal", label: "Reveal" },
-  { key: "darerWeapons", label: "Weapons" },
+  { key: "darerWeapons", label: "Strategies" },
   { key: "tutorial", label: "Training" },
 ];
 
@@ -852,7 +852,7 @@ function CharacterCreate({ onComplete, initialName, darerId, obState, setOBState
           <DialogBox speaker="DARA">
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
               These are the strengths the{"\n"}Shadow cannot take from you.{"\n"}They are yours — and they will{"\n"}grow stronger with every battle.{"\n"}{"\n"}
-              I'll call on these strengths{"\n"}when we plan your battles and{"\n"}face the Shadow together. They{"\n"}are your weapons.
+              I'll call on these strengths{"\n"}when we plan your battles and{"\n"}face the Shadow together. They{"\n"}are your strategies.
             </PixelText>
           </DialogBox>
 
@@ -1122,7 +1122,7 @@ function CharacterCreate({ onComplete, initialName, darerId, obState, setOBState
               </PixelText>
               <PixelText size={7} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
                 {showTooltip === "strength"
-                  ? "These are the qualities that make you who you are — the parts of you the Shadow cannot touch. They boost your stats and become your weapons in battle."
+                  ? "These are the qualities that make you who you are — the parts of you the Shadow cannot touch. They boost your stats and become your strategies in battle."
                   : "These are the places where the Shadow has its grip. They're not weaknesses — they're the battles ahead. Every challenge you claimed is a boss waiting to be defeated, and each victory will raise your stats."}
               </PixelText>
               <button onClick={() => setShowTooltip(null)} style={{
@@ -2004,7 +2004,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
   );
 }
 
-// --- DARER'S WEAPONS (post-intake split-screen psychoeducation) ---
+// --- DARER'S STRATEGIES (post-intake split-screen psychoeducation) ---
 function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
   const [step, setStep] = useState(0);
   const valueName = heroValues?.[0]?.word || heroValues?.[0]?.text || "the life you want";
@@ -2033,7 +2033,7 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
     <div style={{ background: C.hpGreen + "0A", border: `1.5px solid ${C.hpGreen}30`, borderRadius: 8, padding: "14px 12px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
         <span style={{ fontSize: 12 }}>⚔️</span>
-        <PixelText size={6} color={C.hpGreen} style={{ letterSpacing: 2 }}>THE DARER'S WEAPON</PixelText>
+        <PixelText size={6} color={C.hpGreen} style={{ letterSpacing: 2 }}>THE DARER'S STRATEGY</PixelText>
       </div>
       {children}
     </div>
@@ -2052,12 +2052,12 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
     { render: () => (
       <div>
         <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>⚔️</div>
-        <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>YOUR WEAPONS</PixelText>
+        <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>YOUR STRATEGIES</PixelText>
         <DialogBox speaker="DARA">
           <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
             Now you've seen your Shadow's{"\n"}true nature — its territory, its{"\n"}storm, and its escape.{"\n"}{"\n"}
             Every trick the Shadow uses{"\n"}has a counter. The D.A.R.E.R.{"\n"}path was built to break each{"\n"}one.{"\n"}{"\n"}
-            Let me show you your weapons.
+            Let me show you your strategies.
           </PixelText>
         </DialogBox>
       </div>
@@ -2165,8 +2165,8 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
         </div>
         <DialogBox speaker="DARA">
           <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-            Each letter is a weapon against{"\n"}a specific Shadow trick. Together{"\n"}they break the Infinite Trap.{"\n"}{"\n"}
-            {heroName}, you now know your enemy{"\n"}AND your weapons. Before you{"\n"}forge your full path, let's test{"\n"}them in a training battle.
+            Each letter is a strategy against{"\n"}a specific Shadow trick. Together{"\n"}they break the Infinite Trap.{"\n"}{"\n"}
+            {heroName}, you now know your enemy{"\n"}AND your strategies. Before you{"\n"}forge your full path, let's test{"\n"}them in a training battle.
           </PixelText>
         </DialogBox>
       </div>
@@ -3441,7 +3441,7 @@ function PsychoEdScreen({ heroName, heroValues, onContinue }) {
     );
   };
 
-  // Shadow weapons (top) vs DARER weapons (bottom) layout helper
+  // Shadow defenses (top) vs DARER strategies (bottom) layout helper
   const TopSection = ({ children }) => (
     <div style={{ background: C.bossRed + "08", border: `1px solid ${C.bossRed}20`, borderRadius: 8, padding: "16px 12px", marginBottom: 12 }}>
       {children}
