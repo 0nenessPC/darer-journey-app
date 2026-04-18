@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "./utils/supabase";
+import { supabase, saveProgress, loadProgress } from "./utils/supabase";
 
 // ============ DESIGN TOKENS — Warm Dusk + Pixel Game ============
 const C = {
@@ -3667,11 +3667,29 @@ export default function DARERQuest() {
     });
   };
 
-  const handleLogin = () => {
-    const id = "DARER_" + Math.floor(100000 + Math.random() * 900000);
-    setHero(h => ({ ...h, darerId: id, name: id }));
+  const handleLogin = async () => {
+    // Check for existing progress
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const progress = await loadProgress(user.id);
+    if (progress) {
+      // Restore saved state
+      setHero(progress.hero);
+      if (progress.quest) setQuest(progress.quest);
+      setShadowText(progress.shadow_text || '');
+      if (progress.screen && progress.screen !== 'login') {
+        setScreenRaw(progress.screen);
+      } else {
+        setScreen("intro");
+      }
+    } else {
+      // New user
+      const id = "DARER_" + Math.floor(100000 + Math.random() * 900000);
+      setHero(h => ({ ...h, darerId: id, name: id }));
+      setScreen("intro");
+    }
     setIsAuthenticated(true);
-    setScreen("intro");
   };
 
   const handleLogout = async () => {
@@ -3681,20 +3699,24 @@ export default function DARERQuest() {
     setScreenHistory([]);
   };
 
-  const handleCharacterComplete = (name, stats, traits, sadsScore, actValues) => {
+  const handleCharacterComplete = async (name, stats, traits, sadsScore, actValues) => {
     const strengthNames = traits.filter(t => t.type === "strength").map(t => t.text);
     setHero(h => ({ ...h, name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] }));
     setScreen("mapPreview");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await saveProgress(user.id, { screen: "mapPreview", hero: { name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] } });
   };
 
   const [shadowText, setShadowText] = useState("");
 
-  const handleIntakeComplete = (msgs, summaryText) => {
+  const handleIntakeComplete = async (msgs, summaryText) => {
     setShadowText(summaryText || "");
     setScreen("shadowReveal");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await saveProgress(user.id, { screen: "shadowReveal", hero, quest, shadow_text: summaryText || "" });
   };
 
-  const handleBossVictory = (outcome) => {
+  const handleBossVictory = async (outcome) => {
     if (outcome === "victory") {
       setQuest(q => ({
         ...q,
@@ -3717,6 +3739,8 @@ export default function DARERQuest() {
     }
     setActiveBoss(null);
     setScreen("map");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await saveProgress(user.id, { screen: "map", hero, quest });
   };
 
   return (
