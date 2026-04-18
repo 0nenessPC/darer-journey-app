@@ -3720,6 +3720,26 @@ export default function DARERQuest() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Auto-save progress on every onboarding screen change
+  const lastSavedScreen = useRef("");
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (screen === "login" || screen === "map" || screen === "battle" || screen === "profile" || screen === "exposureSort") return;
+    if (lastSavedScreen.current === screen) return;
+    lastSavedScreen.current = screen;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await saveProgress(user.id, {
+          screen,
+          hero,
+          quest,
+          shadow_text: shadowText,
+        });
+      }
+    })();
+  }, [screen, isAuthenticated]);
+
   const setScreen = (s) => {
     setScreenHistory(prev => [...prev, screen]);
     setScreenRaw(s);
