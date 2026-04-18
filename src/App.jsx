@@ -3179,8 +3179,8 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
   // Persist battle progress so resume-anywhere survives refresh/close
   useEffect(() => {
     if (!setOBState) return;
-    setOBState({ phase, prepStep, prepAnswers, suds, outcome });
-  }, [phase, prepStep, prepAnswers, suds, outcome, setOBState]);
+    setOBState({ phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory });
+  }, [phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory, setOBState]);
 
   const battleChat = useAIChat(SYS.battle, `BOSS: "${boss.name}" — ${boss.desc}. The hero is fighting this boss RIGHT NOW in real life.`);
   const victoryChat = useAIChat(SYS.victory, "");
@@ -3342,7 +3342,143 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
               </div>
             );
 
-            // D, A, R steps — text input
+            // RISE step — 4-sub-step flow (when, where, armory, SUDs)
+            if (vs.field === "rise") return (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 28 }}>{vs.icon}</span>
+                  <div>
+                    <PixelText size={10} color={vs.color} style={{ display: "block" }}>{vs.title}</PixelText>
+                    <PixelText size={6} color={C.grayLt}>{vs.subtitle}</PixelText>
+                  </div>
+                </div>
+
+                {/* Sub-step 0: WHEN */}
+                {riseSubStep === 0 && (
+                  <div>
+                    <DialogBox speaker="DARA">
+                      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                        Before you step into the arena,{"\n"}tell me — when will you face{"\n"}this battle? Choose a time{"\n"}that feels real and within reach.
+                      </PixelText>
+                    </DialogBox>
+                    <div style={{ marginTop: 14 }}>
+                      {[
+                        "Today — as soon as I'm ready",
+                        "Later today — within a few hours",
+                        "Tomorrow — I'll plan it in",
+                        "Within the next 3 days",
+                        "This week — I'll pick a day",
+                      ].map(opt => (
+                        <button key={opt} onClick={() => { setExposureWhen(opt); setRiseSubStep(1); }} style={{
+                          display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
+                          borderRadius: 4, border: "2px solid #5C3A50",
+                          background: exposureWhen === opt ? C.teal + "20" : "#1A1218",
+                          cursor: "pointer", textAlign: "left",
+                        }}>
+                          <PixelText size={7} color={exposureWhen === opt ? C.teal : C.grayLt}>{opt}</PixelText>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sub-step 1: WHERE */}
+                {riseSubStep === 1 && (
+                  <div>
+                    <DialogBox speaker="DARA">
+                      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                        Good. You know when.{"\n"}{"\n"}
+                        Now — where will you step into{"\n"}the territory? Name the place.{"\n"}Be specific. This is your map.
+                      </PixelText>
+                    </DialogBox>
+                    <input
+                      type="text"
+                      placeholder="e.g. the coffee shop on Main St..."
+                      value={exposureWhere}
+                      onChange={e => setExposureWhere(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && exposureWhere.trim()) setRiseSubStep(2); }}
+                      style={{
+                        display: "block", width: "100%", marginTop: 14, padding: "12px 14px",
+                        borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                        color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <PixelBtn
+                      onClick={() => setRiseSubStep(2)}
+                      disabled={!exposureWhere.trim()}
+                      color={C.gold} textColor={C.charcoal}
+                      style={{ width: "100%", marginTop: 10 }}
+                    >
+                      NEXT →
+                    </PixelBtn>
+                  </div>
+                )}
+
+                {/* Sub-step 2: ARMORY */}
+                {riseSubStep === 2 && (
+                  <div>
+                    <DialogBox speaker="DARA">
+                      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                        You've chosen your time and{"\n"}your battlefield.{"\n"}{"\n"}
+                        Before you go — which tool{"\n"}from the Armory will you carry?{"\n"}Choose the one that steadies you.
+                      </PixelText>
+                    </DialogBox>
+                    <div style={{ marginTop: 14 }}>
+                      {[
+                        { key: "breathing", icon: "🌬️", label: "Paced Breathing (4-2-6-2)" },
+                        { key: "allowing", icon: "🛡️", label: "Allow the Storm (don't fight it)" },
+                        { key: "grounding", icon: "⚓", label: "Grounding (5-4-3-2-1 senses)" },
+                        { key: "values", icon: "💎", label: `Anchor to "${heroValue}"` },
+                        { key: "none", icon: "🗡️", label: "I'll trust the strategy alone" },
+                      ].map(tool => (
+                        <button key={tool.key} onClick={() => { setExposureArmory(tool.label); setRiseSubStep(3); }} style={{
+                          display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
+                          borderRadius: 4, border: `2px solid ${exposureArmory === tool.label ? C.teal : "#5C3A50"}`,
+                          background: exposureArmory === tool.label ? C.teal + "20" : "#1A1218",
+                          cursor: "pointer", textAlign: "left",
+                        }}>
+                          <span style={{ fontSize: 18 }}>{tool.icon}</span>
+                          <PixelText size={7} color={exposureArmory === tool.label ? C.teal : C.grayLt}>{tool.label}</PixelText>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sub-step 3: SUDs before */}
+                {riseSubStep === 3 && (
+                  <div>
+                    <DialogBox speaker="DARA">
+                      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                        You're armed and ready.{"\n"}{"\n"}
+                        One last thing before you{"\n"}step through — how intense is{"\n"}the Storm right now? Rate it{"\n"}honestly. There's no wrong answer.
+                      </PixelText>
+                    </DialogBox>
+                    <div style={{ margin: "12px 0" }}>
+                      <PixelText size={7} color={C.grayLt}>STORM INTENSITY (before):</PixelText>
+                      <input type="range" min="0" max="100" value={suds.before} onChange={e => setSuds(s => ({...s, before: +e.target.value}))}
+                        style={{ width: "100%", accentColor: C.teal }} />
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                        <PixelText size={8} color={C.cream}>{suds.before}</PixelText>
+                        <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                      </div>
+                    </div>
+                    <PixelBtn onClick={() => setPrepStep(s => s + 1)} color={vs.color} textColor={C.charcoal} style={{ width: "100%" }}>
+                      I'M GOING IN → RISE!
+                    </PixelBtn>
+                    {riseSubStep > 0 && (
+                      <button onClick={() => setRiseSubStep(riseSubStep - 1)} style={{ marginTop: 10, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
+                        <PixelText size={6} color={C.grayLt}>← Back</PixelText>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+
+            // D, A steps — text input
             return (
               <div key={prepStep} style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
