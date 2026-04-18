@@ -22,7 +22,7 @@ const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&displ
 // ============ AI HELPER ============
 async function callClaude(systemPrompt, messages) {
   try {
-    const r = await fetch("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions", {
+    const r = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
