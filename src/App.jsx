@@ -247,9 +247,10 @@ function OnboardingProgress({ screen }) {
   const pct = ((idx + 1) / ONBOARDING.length) * 100;
   return (
     <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+      position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, zIndex: 200,
       background: "#1A1218", borderBottom: "2px solid #5C3A50",
       padding: "8px 12px 6px",
+      boxSizing: "border-box",
     }}>
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
@@ -3814,7 +3815,7 @@ export default function DARERQuest() {
       {/* Global back button — shown on all screens except login and map */}
       {!["login", "map", "battle"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} style={{
-          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 12, zIndex: 100,
+          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: "50%", marginLeft: -228, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
@@ -3832,7 +3833,7 @@ export default function DARERQuest() {
       {screen === "login" && authReady && <LoginScreen onLogin={handleLogin} />}
       {isAuthenticated && screen !== "login" && (
         <button onClick={handleLogout} style={{
-          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 12, zIndex: 100,
+          position: "fixed", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: "50%", marginLeft: 160, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           backdropFilter: "blur(4px)",
