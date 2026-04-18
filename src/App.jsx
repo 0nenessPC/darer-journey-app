@@ -2053,7 +2053,7 @@ function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
     { render: () => (
       <div>
         <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>⚔️</div>
-        <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>YOUR STRATEGIES</PixelText>
+        <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>THE DARER STRATEGY</PixelText>
         <DialogBox speaker="DARA">
           <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
             Now you've seen your Shadow's{"\n"}true nature — its territory, its{"\n"}storm, and its escape.{"\n"}{"\n"}
