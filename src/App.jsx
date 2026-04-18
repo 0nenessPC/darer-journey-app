@@ -2550,7 +2550,7 @@ No other text.`,
           <div style={{ textAlign: "center", animation: "fadeIn 0.6s ease-out" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🏕</div>
             <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>TRAINING GROUNDS</PixelText>
-            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>Your first battle — guided by Dara</PixelText>
+            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>Practice the DARER Strategy � guided by Dara</PixelText>
 
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
