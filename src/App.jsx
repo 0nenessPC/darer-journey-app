@@ -20,7 +20,7 @@ const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
 // ============ AI HELPER ============
-async function callClaude(systemPrompt, messages) {
+async function callClaude(systemPrompt, messages, maxTokens = 1000) {
   try {
     const r = await fetch("/api/qwen-chat", {
       method: "POST",
@@ -28,7 +28,7 @@ async function callClaude(systemPrompt, messages) {
       body: JSON.stringify({
         systemPrompt,
         messages: messages.map(m => ({ role: m.role, text: m.text })),
-        options: { model: "qwen3.5-flash", maxTokens: 1000 },
+        options: { model: "qwen3.5-flash", maxTokens },
       }),
     });
     const d = await r.json();
@@ -4029,7 +4029,8 @@ No other text.`,
 - Core strengths: ${strengthsText || "Not specified"}
 - Values (why they fight): ${valuesText || "Build meaningful social connections"}
 - Social challenges: ${traitsText || "General social avoidance and discomfort"}
-- Shadow assessment: ${shadowText || "Avoidance of social situations, fear of judgment"}` }]
+- Shadow assessment: ${shadowText || "Avoidance of social situations, fear of judgment"}` }],
+        4000
       );
       const jsonMatch = res.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -4068,6 +4069,23 @@ No other text.`,
 
   // === COMPLETION: PATH FORGED ===
   if (done) {
+    // Guard: if no battles were accepted, offer retry instead of blank screen
+    if (accepted.length === 0) {
+      return (
+        <div style={{ minHeight: "100vh", background: C.mapBg, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <link href={FONT_LINK} rel="stylesheet" />
+          <PixelText size={12} color={C.bossRed} style={{ display: "block", marginBottom: 4 }}>THE FORGE IS COLD</PixelText>
+          <DialogBox speaker="DARA">
+            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+              You passed on all the battles I suggested.{"\n"}{"\n"}That's okay — sometimes I miss the mark.{"\n"}Let me try again with a different approach.
+            </PixelText>
+          </DialogBox>
+          <PixelBtn onClick={() => { setDone(false); setAccepted([]); setRejected([]); setCurrentCard(0); generateExposures(); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", maxWidth: 340, marginTop: 12 }}>
+            FORGE AGAIN →
+          </PixelBtn>
+        </div>
+      );
+    }
     const finalBosses = accepted.sort((a, b) => a.level - b.level).map((e, i) => ({
       id: "boss" + i, name: e.name, desc: e.activity, level: e.level, hp: 100, defeated: false,
     }));
