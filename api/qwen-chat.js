@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   const { systemPrompt, messages, options = {} } = req.body;
 
   try {
-    const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+    const response = await fetch('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
