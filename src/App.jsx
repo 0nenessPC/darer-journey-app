@@ -22,20 +22,18 @@ const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&displ
 // ============ AI HELPER ============
 async function callClaude(systemPrompt, messages) {
   try {
-    const r = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
+    const r = await fetch("/api/qwen-chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${import.meta.env.VITE_QWEN_API_KEY}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "qwen3.5-flash", max_tokens: 1000,
-        messages: [{ role: "system", content: systemPrompt }, ...messages.map(m => ({ role: m.role, content: m.text }))],
+        systemPrompt,
+        messages: messages.map(m => ({ role: m.role, text: m.text })),
+        options: { model: "qwen3.5-flash", maxTokens: 1000 },
       }),
     });
     const d = await r.json();
-    return d.choices?.[0]?.message?.content || "...";
-  } catch(e) { return "Dara gathers her thoughts..."; }
+    return d.reply || "...";
+  } catch(e) { console.error("AI call failed:", e); return "Dara gathers her thoughts..."; }
 }
 
 function useAIChat(systemPrompt, ctx = "") {
