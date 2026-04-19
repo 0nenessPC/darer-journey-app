@@ -2398,7 +2398,7 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
   const [tutorialExposures, setTutorialExposures] = useState([]);
   const [exposuresLoading, setExposuresLoading] = useState(true);
   const [prevExposureTexts, setPrevExposureTexts] = useState([]);
-  let fallbackRound = 0;
+  const fallbackRoundRef = useRef(0);
 
 
   const generateTutorialExposures = async (avoidTexts = []) => {
@@ -2408,7 +2408,7 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
       const strengthsText = heroStrengths.length > 0 ? heroStrengths.join(", ") : "Not specified";
       const valuesText = heroCoreValues.length > 0 ? heroCoreValues.map(v => v.word || v.text).join(", ") : (heroValues?.[0]?.text || "courage");
       const avoidBlock = avoidTexts.length > 0
-        ? `\n\nIMPORTANT: Do NOT include these exposures — the user has already seen them and wants DIFFERENT ones:\n${avoidTexts.map(t => "- " + t).join("\n")}`
+        ? `\n\nPREVIOUSLY SHOWN — DO NOT REPEAT:\n${avoidTexts.map(t => "❌ " + t).join("\n")}\n\nGenerate 3 COMPLETELY DIFFERENT exposures from the above.`
         : "";
       const res = await callClaude(
         `You are a clinical psychologist designing micro-exposures for someone with social anxiety. Generate exactly 3 very low-SUDS (1-2 out of 10) training exposures for a user's FIRST exposure experience.
@@ -2431,7 +2431,7 @@ Clinical rules:
 
 Return ONLY a JSON array: [{"name":"Boss Name","text":"specific micro-exposure activity","icon":"emoji_name","where":"where to do it","time":"X seconds","suds":1}]
 No other text.`,
-        [{ role: "user", text: "Generate 3 training exposures for my first battle." }]
+        [{ role: "user", text: `Generate 3 DIFFERENT training exposures. ${avoidTexts.length > 0 ? "The user has seen " + avoidTexts.length + " already and wants NEW ones." : "This is the first batch."}` }]
       );
       const jsonMatch = res.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -2444,6 +2444,13 @@ No other text.`,
             time: e.time || "10 seconds",
             icon: e.icon || "star",
           }));
+          // Deduplication: if any new text matches a previously shown text, force fallback
+          const allPrev = [...avoidTexts];
+          const hasDupe = newExposures.some(ne => allPrev.some(p => p.toLowerCase().trim() === ne.text.toLowerCase().trim()));
+          if (hasDupe) {
+            console.warn("AI returned duplicate exposures — falling back");
+            throw new Error("AI returned duplicates");
+          }
           setTutorialExposures(newExposures);
           // Track the texts so next regenerate avoids them
           setPrevExposureTexts(prev => [...prev, ...newExposures.map(e => e.text)]);
@@ -2472,8 +2479,17 @@ No other text.`,
           { id: "ask", text: "Ask a stranger for simple directions you already know", icon: "🗺️", where: "Street, mall, campus", time: "10 seconds", suds: 2, name: "The Seeker" },
         ],
       ];
-      fallbackRound = (fallbackRound + 1) % fallbackSets.length;
-      setTutorialExposures(fallbackSets[fallbackRound]);
+      // Skip fallback sets that overlap with previously shown exposures
+      const prevSet = new Set(avoidTexts.map(t => t.toLowerCase().trim()));
+      let startIdx = (fallbackRoundRef.current + 1) % fallbackSets.length;
+      let chosenIdx = startIdx;
+      for (let i = 0; i < fallbackSets.length; i++) {
+        const idx = (startIdx + i) % fallbackSets.length;
+        const hasOverlap = fallbackSets[idx].some(e => prevSet.has(e.text.toLowerCase().trim()));
+        if (!hasOverlap) { chosenIdx = idx; break; }
+      }
+      fallbackRoundRef.current = chosenIdx;
+      setTutorialExposures(fallbackSets[chosenIdx]);
       setExposuresLoading(false);
     }
   };
