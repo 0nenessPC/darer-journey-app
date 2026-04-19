@@ -2370,8 +2370,9 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
   );
 }
 
-function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete }) {
-  const [phase, setPhase] = useState("intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
+function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete, obState = {}, setOBState }) {
+  const [phase, setPhase] = useState(obState.phase || "intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
+  const advancePhase = (newPhase) => { setPhase(newPhase); if (setOBState) setOBState({ phase: newPhase }); };
   const [chosenExposure, setChosenExposure] = useState(null);
   const [sudsBefore, setSudsBefore] = useState(null);
   const [sudsAfter, setSudsAfter] = useState(null);
@@ -2580,7 +2581,7 @@ No other text.`,
               </PixelText>
             </DialogBox>
 
-            <PixelBtn onClick={() => setPhase("choose")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+            <PixelBtn onClick={() => advancePhase("choose")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
               SHOW ME THE BATTLES →
             </PixelBtn>
           </div>
@@ -2632,7 +2633,7 @@ No other text.`,
                   );
                 })}
 
-                <PixelBtn onClick={() => chosenExposure && setPhase("decide")} disabled={!chosenExposure} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
+                <PixelBtn onClick={() => chosenExposure && advancePhase("decide")} disabled={!chosenExposure} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
                   BEGIN TRAINING →
                 </PixelBtn>
                 <button onClick={() => generateTutorialExposures(prevExposureTexts)} style={{
@@ -2669,7 +2670,7 @@ No other text.`,
               </PixelText>
             </div>
 
-            <PixelBtn onClick={() => setPhase("allow")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+            <PixelBtn onClick={() => advancePhase("allow")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
               I DECIDE → NEXT: ALLOW
             </PixelBtn>
           </div>
@@ -2703,7 +2704,7 @@ No other text.`,
             </div>
 
             <PixelBtn onClick={() => {
-              setPhase("rehearse");
+              advancePhase("rehearse");
               coachChat.init(`The hero ${heroName} is doing their FIRST ever exposure — a tutorial battle. The exposure is: "${chosenExposure.text}". They just imagined doing it and reported: "${allowInput}". Coach them through ALLOWING: validate what they're feeling is normal, that the Storm is doing its job, and that these feelings are passengers not drivers. Then guide a brief grounding exercise (3 deep breaths, feet on the floor). Keep it warm, brief, 2-3 sentences. Use game language.`);
             }} disabled={!allowInput.trim()} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
               THE STORM IS HERE →
@@ -2748,7 +2749,7 @@ No other text.`,
                   <PixelBtn onClick={() => { if (coachInput.trim()) { coachChat.sendMessage(coachInput); setCoachInput(""); } }}>→</PixelBtn>
                 </div>
 
-                <PixelBtn onClick={() => setPhase("rise")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 14 }}>
+                <PixelBtn onClick={() => advancePhase("rise")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 14 }}>
                   I'M ALLOWING IT → NEXT: RISE
                 </PixelBtn>
               </div>
@@ -2883,7 +2884,7 @@ No other text.`,
                     })}
                   </div>
                 </div>
-                <PixelBtn onClick={() => { setPhase("waiting"); setTimerActive(true); }} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                <PixelBtn onClick={() => { advancePhase("waiting"); setTimerActive(true); }} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                   I'M GOING IN → RISE!
                 </PixelBtn>
               </div>
@@ -2920,10 +2921,10 @@ No other text.`,
               </PixelText>
             </DialogBox>
 
-            <PixelBtn onClick={() => { setTimerActive(false); setPhase("engage"); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+            <PixelBtn onClick={() => { setTimerActive(false); advancePhase("engage"); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
               ✅ I DID IT!
             </PixelBtn>
-            <button onClick={() => { setTimerActive(false); setPhase("engage"); }} style={{ background: "none", border: "none", marginTop: 10, cursor: "pointer" }}>
+            <button onClick={() => { setTimerActive(false); advancePhase("engage"); }} style={{ background: "none", border: "none", marginTop: 10, cursor: "pointer" }}>
               <PixelText size={7} color={C.grayLt}>I tried but couldn't finish</PixelText>
             </button>
 
@@ -2976,7 +2977,7 @@ No other text.`,
               </div>
             </div>
 
-            <PixelBtn onClick={() => setPhase("debrief")} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+            <PixelBtn onClick={() => advancePhase("debrief")} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
               NEXT: REPEAT (DEBRIEF) →
             </PixelBtn>
           </div>
