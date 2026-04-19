@@ -4313,7 +4313,7 @@ export default function DARERQuest() {
   const lastSavedAt = useRef(0);
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (screen === "login" || screen === "map" || screen === "profile") return;
+    if (screen === "login" || screen === "profile") return;
     const now = Date.now();
     if (now - lastSavedAt.current < 2000) return; // throttle to every 2s
     lastSavedAt.current = now;
