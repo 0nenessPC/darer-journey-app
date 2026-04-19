@@ -4462,7 +4462,7 @@ export default function DARERQuest() {
     setShadowText(summaryText || "");
     setScreen("shadowReveal");
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await saveProgress(user.id, { screen: "shadowReveal", hero, quest, shadow_text: summaryText || "" });
+    if (user) await saveProgress(user.id, { screen: "shadowReveal", hero, quest, shadow_text: summaryText || "", intake_complete: true });
   };
 
   const handleBossVictory = async (outcome) => {
