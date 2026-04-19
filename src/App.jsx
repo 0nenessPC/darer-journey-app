@@ -4413,7 +4413,7 @@ export default function DARERQuest() {
         setScreen("map");
       } else if (progress.onboarding_state?.exposureSort?.done) {
         setScreen("map");
-      } else if (progress.onboarding_state?.tutorial?.tutorialComplete) {
+      } else if (progress.tutorial_complete || progress.onboarding_state?.tutorial?.tutorialComplete) {
         // Finished tutorial but not exposure sort — go pick battles
         setScreen("exposureSort");
       } else if (progress.screen && progress.screen !== 'login') {
