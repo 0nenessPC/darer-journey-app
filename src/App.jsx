@@ -4408,8 +4408,10 @@ export default function DARERQuest() {
       setShadowText(progress.shadow_text || '');
       if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
       setScreenHistory([]); // Clear history on fresh login
-      // If onboarding is already complete, skip to the map regardless of saved screen
-      if (progress.onboarding_state?.exposureSort?.done) {
+      // Priority routing: check quest data first (most reliable signal of completion)
+      if (progress.quest?.bosses?.length > 0) {
+        setScreen("map");
+      } else if (progress.onboarding_state?.exposureSort?.done) {
         setScreen("map");
       } else if (progress.onboarding_state?.tutorial?.tutorialComplete) {
         // Finished tutorial but not exposure sort — go pick battles
