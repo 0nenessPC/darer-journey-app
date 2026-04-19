@@ -2373,16 +2373,16 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
 function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete, obState = {}, setOBState }) {
   const [phase, setPhase] = useState(obState.phase || "intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
   const advancePhase = (newPhase) => { setPhase(newPhase); if (setOBState) setOBState({ phase: newPhase }); };
-  const [chosenExposure, setChosenExposure] = useState(null);
-  const [sudsBefore, setSudsBefore] = useState(null);
+  const [chosenExposure, setChosenExposure] = useState(obState.chosenExposure || null);
+  const [sudsBefore, setSudsBefore] = useState(obState.sudsBefore ?? null);
   const [sudsAfter, setSudsAfter] = useState(null);
   const [rehearsalStep, setRehearsalStep] = useState(0);
   const [allowInput, setAllowInput] = useState("");
   const [engageInput, setEngageInput] = useState("");
-  const [riseSubStep, setRiseSubStep] = useState(0);
-  const [exposureWhen, setExposureWhen] = useState("");
-  const [exposureWhere, setExposureWhere] = useState("");
-  const [exposureArmory, setExposureArmory] = useState("");
+  const [riseSubStep, setRiseSubStep] = useState(obState.riseSubStep ?? 0);
+  const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || "");
+  const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || "");
+  const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || "");
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
@@ -2394,6 +2394,14 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
   const [coachInput, setCoachInput] = useState("");
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [coachChat.messages, coachChat.typing]);
+
+  // Persist tutorial state to obState for resume-anywhere
+  const initRef = useRef(true);
+  useEffect(() => {
+    if (initRef.current) { initRef.current = false; return; }
+    if (!setOBState) return;
+    setOBState({ chosenExposure, sudsBefore, riseSubStep, exposureWhen, exposureWhere, exposureArmory });
+  }, [chosenExposure, sudsBefore, riseSubStep, exposureWhen, exposureWhere, exposureArmory, setOBState]);
 
   // AI-generated micro-exposures tailored to the user's profile
   const [tutorialExposures, setTutorialExposures] = useState([]);
