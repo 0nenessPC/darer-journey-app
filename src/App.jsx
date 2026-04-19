@@ -3042,7 +3042,7 @@ No other text.`,
               </PixelText>
             </DialogBox>
 
-            <PixelBtn onClick={onComplete} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+            <PixelBtn onClick={() => { if (setOBState) setOBState({ tutorialComplete: true }); onComplete(); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
               FORGE YOUR PATH →
             </PixelBtn>
           </div>
@@ -4405,6 +4405,9 @@ export default function DARERQuest() {
       // If onboarding is already complete, skip to the map regardless of saved screen
       if (progress.onboarding_state?.exposureSort?.done) {
         setScreen("map");
+      } else if (progress.onboarding_state?.tutorial?.tutorialComplete) {
+        // Finished tutorial but not exposure sort — go pick battles
+        setScreen("exposureSort");
       } else if (progress.screen && progress.screen !== 'login') {
         setScreen(progress.screen); // Use setScreen to track history
       } else {
