@@ -4029,6 +4029,13 @@ function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBS
     setOBState({ currentCard, accepted, rejected, done });
   }, [currentCard, accepted, rejected, done, setOBState]);
 
+  // Mark done when all cards have been seen
+  useEffect(() => {
+    if (!loading && exposures.length > 0 && currentCard >= exposures.length && !done) {
+      setDone(true);
+    }
+  }, [loading, exposures.length, currentCard, done]);
+
   const generateExposures = async () => {
     try {
       const valuesText = (hero.values || []).map(v => v.text).join(", ");
@@ -4090,12 +4097,11 @@ No other text.`,
   const onMouseMove = (e) => { if (!dragging) return; touchCurrentRef.current = e.clientX; setDragX(e.clientX - touchStartRef.current); };
   const onMouseUp = () => { if (!touchStartRef.current) return; const diff = touchCurrentRef.current - touchStartRef.current; if (diff > 60) handleAccept(); else if (diff < -60) handleReject(); else { setDragX(0); setDragging(false); } touchStartRef.current = null; };
 
-  if (!loading && currentCard >= exposures.length && !done) setDone(true);
-
   // === COMPLETION: PATH FORGED ===
   if (done) {
-    // Guard: if no battles were accepted, offer retry instead of blank screen
-    if (accepted.length === 0) {
+    // "Forge is Cold" only when AI generated cards but user rejected ALL of them
+    // (not when AI failed to generate — that shows a different screen)
+    if (accepted.length === 0 && exposures.length > 0) {
       return (
         <div style={{ minHeight: "100vh", background: C.mapBg, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
           <link href={FONT_LINK} rel="stylesheet" />
