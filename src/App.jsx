@@ -4506,6 +4506,12 @@ export default function DARERQuest() {
     }
   };
 
+  const handleTutorialComplete = async () => {
+    setScreen("exposureSort");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await saveProgress(user.id, { screen: "exposureSort", hero, quest, tutorial_complete: true });
+  };
+
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'DM Sans', sans-serif", position: "relative" }}>
       {/* Global back button — shown on all screens except login and map */}
@@ -4556,7 +4562,7 @@ export default function DARERQuest() {
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerWeapons")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
       {screen === "darerWeapons" && <DARERWeapons heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armory")} obState={getOBState("darerWeapons", { step: 0 })} setOBState={(s) => setOBState("darerWeapons", s)} />}
       {screen === "armory" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armory", { step: "intro" })} setOBState={(s) => setOBState("armory", s)} />}
-      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={() => setScreen("exposureSort")} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
+      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
