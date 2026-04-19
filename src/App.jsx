@@ -2284,7 +2284,7 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
 
         {armoryStep === "ready" && (
           <div style={{ animation: "fadeIn 0.6s ease-out" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>dYOS</div>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🫁</div>
             <PixelText size={10} color={C.teal} style={{ display: "block", marginBottom: 6 }}>PACED BREATHING</PixelText>
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
@@ -2294,14 +2294,14 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
               </PixelText>
             </DialogBox>
             <PixelBtn onClick={() => setArmoryStep("practice")} color={C.teal} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-              BEGIN BREATHING EXERCISE +'
+              BEGIN BREATHING EXERCISE →
             </PixelBtn>
             <button onClick={onContinue} style={{
               width: "100%", marginTop: 10, padding: 10,
               background: "transparent", border: "1px dashed #5C3A50",
               borderRadius: 4, cursor: "pointer",
             }}>
-              <PixelText size={6} color={C.grayLt}>Skip the practice ?</PixelText>
+              <PixelText size={6} color={C.grayLt}>Skip the practice?</PixelText>
             </button>
           </div>
         )}
