@@ -4489,7 +4489,21 @@ export default function DARERQuest() {
     setActiveBoss(null);
     setScreen("map");
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await saveProgress(user.id, { screen: "map", hero, quest });
+    if (user) {
+      // Load existing battle_history, append this result, save back
+      const existing = await loadProgress(user.id);
+      const prevHistory = Array.isArray(existing?.battle_history) ? existing.battle_history : [];
+      const battleRecord = {
+        bossId: activeBoss?.id,
+        bossName: activeBoss?.name,
+        bossDesc: activeBoss?.desc,
+        outcome,
+        date: new Date().toISOString(),
+        heroStats: hero?.stats,
+      };
+      const newHistory = [...prevHistory, battleRecord];
+      await saveProgress(user.id, { screen: "map", hero, quest, battle_history: newHistory });
+    }
   };
 
   return (
