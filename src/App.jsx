@@ -4377,7 +4377,10 @@ export default function DARERQuest() {
       setShadowText(progress.shadow_text || '');
       if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
       setScreenHistory([]); // Clear history on fresh login
-      if (progress.screen && progress.screen !== 'login') {
+      // If onboarding is already complete, skip to the map regardless of saved screen
+      if (progress.onboarding_state?.exposureSort?.done) {
+        setScreen("map");
+      } else if (progress.screen && progress.screen !== 'login') {
         setScreen(progress.screen); // Use setScreen to track history
       } else {
         setScreen("intro");
