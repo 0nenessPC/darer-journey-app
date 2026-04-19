@@ -4435,13 +4435,17 @@ export default function DARERQuest() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await saveProgress(user.id, {
+        const payload = {
           screen,
           hero,
           quest,
           shadow_text: shadowText,
           onboarding_state: onboardingState,
-        });
+        };
+        if (onboardingState.tutorialComplete) {
+          payload.tutorial_complete = true;
+        }
+        await saveProgress(user.id, payload);
       }
     } catch (e) { /* ignore save errors on logout */ }
     await supabase.auth.signOut();
