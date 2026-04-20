@@ -220,40 +220,68 @@ test.describe('DARER Journey', () => {
     await screen(page, 'courage', 30000);
     console.log('✅ Intake started');
     await page.waitForTimeout(1000);
-    // Dispatch native input events that React will recognize
-    async function sendIntakeMessage(text) {
-      const result = await page.evaluate(async (msg) => {
-        const input = document.querySelector('input[placeholder="Speak to Dara..."]');
-        if (!input) return { ok: false, reason: 'input not found' };
+    // Send a message in the intake chat with retries and verification
+    async function sendIntakeMessage(text, maxRetries = 3) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          // Wait for input to exist
+          const input = await page.waitForSelector('input[placeholder="Speak to Dara..."]', { timeout: 5000 }).catch(() => null);
+          if (!input) {
+            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): input not found`);
+            await page.waitForTimeout(attempt * 1000);
+            continue;
+          }
 
-        // 1) Set the DOM value via native setter
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype, 'value'
-        ).set;
-        nativeInputValueSetter.call(input, msg);
+          // Set value and dispatch React-compatible events via evaluate
+          const result = await page.evaluate((msg) => {
+            const input = document.querySelector('input[placeholder="Speak to Dara..."]');
+            if (!input) return { ok: false, reason: 'input not found in evaluate' };
 
-        // 2) Dispatch input event — this fires React's onChange, which calls setInput()
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+            // Set DOM value via native setter (bypasses React's controlled input guard)
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+              window.HTMLInputElement.prototype, 'value'
+            ).set;
+            nativeSetter.call(input, msg);
 
-        // 3) Yield to the event loop so React can process the state update and re-render
-        //    BEFORE we try to click send (send() reads from React state, not DOM)
-        await new Promise(r => setTimeout(r, 100));
+            // Dispatch events that trigger React's onChange
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
 
-        // 4) Find the send button specifically by its arrow text (not just first button)
-        const sendBtn = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === '→');
-        if (!sendBtn) return { ok: false, reason: 'send button not found' };
-        if (sendBtn.disabled) return { ok: false, reason: 'send button disabled — React state not updated' };
+            return { ok: true };
+          }, text);
 
-        // 5) Click it — send() will now read the updated input state
-        sendBtn.click();
-        return { ok: true };
-      }, text);
+          if (!result.ok) {
+            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${result.reason}`);
+            await page.waitForTimeout(attempt * 1000);
+            continue;
+          }
 
-      if (!result?.ok) {
-        console.log(`  ⚠️ sendIntakeMessage failed: ${result?.reason || 'unknown'}`);
+          // Wait for React to update state, then wait for send button to become enabled
+          await page.waitForTimeout(500);
+          const sendBtn = page.locator('button').filter({ hasText: /→/ }).first();
+          const isEnabled = await sendBtn.isEnabled({ timeout: 5000 }).catch(() => false);
+
+          if (!isEnabled) {
+            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): send button still disabled`);
+            await page.waitForTimeout(attempt * 1000);
+            continue;
+          }
+
+          // Click send
+          await sendBtn.click();
+
+          // Wait for the AI to start typing (shows the message was received)
+          await page.waitForTimeout(1500);
+
+          console.log(`  ✓ Sent: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+          return;
+
+        } catch (err) {
+          console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${err.message}`);
+          await page.waitForTimeout(attempt * 1000);
+        }
       }
-
-      await page.waitForTimeout(3000);
+      console.log(`  ❌ sendIntakeMessage failed after ${maxRetries} attempts: "${text.substring(0, 50)}..."`);
     }
     await sendIntakeMessage('I get anxious speaking in class');
     await sendIntakeMessage('My phone is my shield at events');
