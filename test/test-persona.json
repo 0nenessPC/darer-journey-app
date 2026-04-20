@@ -1,0 +1,15 @@
+{
+  "name": "Priya",
+  "age": 20,
+  "background": "Sophomore from Mumbai, India — Business Admin at UT Austin, 1 year in US",
+  "email": "priya.test.darer@gmail.com",
+  "password": "PriyaTest2026!",
+  "strengths": ["empathetic", "hardworking", "creative"],
+  "challenges": ["apologizes too much", "over-explains", "avoids center of attention"],
+  "values": ["authenticity", "courage", "community"],
+  "sads": 62,
+  "shadow": {
+    "fears": ["sounding boring", "accent judgment", "being desperate"],
+    "escapeBehaviors": ["stands at edges", "uses phone as shield", "over-prepares conversation scripts", "cancels plans"]
+  }
+}
