@@ -32,17 +32,26 @@ test.describe('DARER Journey', () => {
       const sys = (req.systemPrompt || '').toLowerCase();
       const userMsgs = req.messages || [];
       let reply;
-      // Intake — use a Page-level counter that we reset when the Intake screen appears
-      // Track by message count to handle pre-Intake API calls gracefully
+      // Intake — simulate 6 Q&A exchanges before generating the shadow summary
+      // Uses a call counter since sendIntakeMessage doesn't work on the deployed app
+      const INTAKE_CALLS = 6;
+      const intakeCall = page.__intakeCall || 0;
+      page.__intakeCall = intakeCall + 1;
       const msgCount = userMsgs.length;
       if (sys.includes('intake') || sys.includes('soul companion') || sys.includes('cbt') || (sys.includes('courage') && sys.includes('shadow'))) {
-        if (msgCount <= 1) {
-          reply = "Hey, I'm Dara — which means courage. Where does the Shadow show up most in your daily life?";
-        } else if (msgCount === 2) {
-          reply = "Thank you for sharing that. The Inner Storm must be loud in those moments. What else do you notice?";
+        const intakeQuestions = [
+          "Hey, I'm Dara — which means courage. Where does the Shadow show up most in your daily life?",
+          "I hear you. Speaking up is tough. When the Shadow has you in its territory, where do you feel it in your body?",
+          "That tightness is real — your body's alarm system. What do you usually do when those feelings hit? Do you push through, or find a way to escape?",
+          "Using your phone as a shield makes sense — it gives you cover. But it also keeps you from connecting. How does the Shadow affect the things you actually want to do?",
+          "That's a real cost. Those are the moments that matter. If you could change one thing about how the Shadow controls your choices, what would it look like?",
+          "That's the goal right there. I'm starting to see the full picture of how the Shadow operates in your life. Let me piece it all together...",
+        ];
+        if (intakeCall < INTAKE_CALLS) {
+          reply = intakeQuestions[intakeCall];
         } else {
           // Shadow summary — triggers auto-transition to Shadow Reveal
-          reply = "Based on what you've shared, I can now see the Shadow's patterns. Here's what I've learned about the SHADOW'S TRUE NATURE — where it appears most in your life, what storms it stirs, and how it keeps you trapped. This will help us map the road ahead.";
+          reply = "SHADOW'S TRUE NATURE:\n\nWHERE IT APPEARS: Your Shadow dominates the territory of speaking up — in class, in groups, when meeting new people. It tells you that your words aren't worth hearing, that you'll sound boring or wrong.\n\nWHAT STORMS IT STIRS: Your body reacts before your mind can catch up — tight chest, racing thoughts, the urge to grab your phone and disappear. Your Inner Storm amplishes every imagined judgment into a threat.\n\nHOW IT KEEPS YOU TRAPPED: You use avoidance as armor — staying quiet, staying invisible, staying safe. But safety is the cage. Every time you don't speak up, the Shadow grows stronger. You want connection, but the Shadow won't let you risk it.";
         }
       } else if (sys.includes('shadow') && (sys.includes('summary') || sys.includes('true nature')) && sys.includes('reveal')) {
         reply = "YOUR SHADOW — THE INFINITE TRAP\n\nYour Shadow claims social evaluation — speaking in class, meeting new people. The Inner Storm whispers your accent marks you different. Your Escape? Standing at edges, phone as shield.";
@@ -249,6 +258,9 @@ test.describe('DARER Journey', () => {
     await sendIntakeMessage('I get anxious speaking in class');
     await sendIntakeMessage('My phone is my shield at events');
     await sendIntakeMessage('I over-prepare everything because I worry I will sound boring');
+    await sendIntakeMessage('I avoid group projects and eat lunch alone');
+    await sendIntakeMessage('I just want to feel comfortable being myself around others');
+    await sendIntakeMessage('Yeah, I want to stop avoiding social situations');
     await page.waitForTimeout(5000);
     console.log('✅ Intake complete');
 

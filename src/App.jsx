@@ -237,7 +237,7 @@ const ONBOARDING = [
   { key: "shadowLorePost", label: "Shadow Lore" },
   { key: "intake", label: "Intake" },
   { key: "shadowReveal", label: "Reveal" },
-  { key: "darerWeapons", label: "Strategies" },
+  { key: "darerStrategy", label: "DARER STRATEGY" },
   { key: "armory", label: "Armory" },
   { key: "tutorial", label: "Training" },
 ];
@@ -2006,7 +2006,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
 }
 
 // --- DARER'S STRATEGIES (post-intake split-screen psychoeducation) ---
-function DARERWeapons({ heroName, shadowText, heroValues, onContinue }) {
+function DARERStrategy({ heroName, shadowText, heroValues, onContinue }) {
   const [step, setStep] = useState(0);
   const valueName = heroValues?.[0]?.word || heroValues?.[0]?.text || "the life you want";
 
@@ -4558,13 +4558,13 @@ export default function DARERQuest() {
         setScreen("shadowLore");
       }} obState={getOBState("values", { step: "default", values: [], guideAnswers: [], guideStep: 0 })} setOBState={(s) => setOBState("values", s)} />}
       {/* === FULL CLINICAL FLOW === */}
-      {/* shadowLore → psychoed → shadowLorePost → intake → shadowReveal → darerWeapons → tutorial → exposureSort */}
+      {/* shadowLore → psychoed → shadowLorePost → intake → shadowReveal → darerStrategy → tutorial → exposureSort */}
       {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 0 })} setOBState={(s) => setOBState("shadowLore", s)} />}
       {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} obState={getOBState("psychoed", { step: 0 })} setOBState={(s) => setOBState("psychoed", s)} />}
       {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLorePost", { step: 2 })} setOBState={(s) => setOBState("shadowLorePost", s)} />}
       {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
-      {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerWeapons")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
-      {screen === "darerWeapons" && <DARERWeapons heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armory")} obState={getOBState("darerWeapons", { step: 0 })} setOBState={(s) => setOBState("darerWeapons", s)} />}
+      {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerStrategy")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
+      {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armory")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
       {screen === "armory" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armory", { step: "intro" })} setOBState={(s) => setOBState("armory", s)} />}
       {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
