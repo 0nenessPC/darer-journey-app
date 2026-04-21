@@ -3016,17 +3016,22 @@ No other text.`,
                   </PixelText>
                 </DialogBox>
                 <div style={{ marginTop: 14 }}>
-                  {(hero.armory || []).filter(t => t.unlocked).map(tool => (
-                    <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(4); }} style={{
-                      display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
-                      background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
-                      cursor: "pointer", textAlign: "left",
-                    }}>
-                      <span style={{ fontSize: 18 }}>{tool.icon}</span>
-                      <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>{tool.name}</PixelText>
-                    </button>
-                  ))}
+                  {/* Training phase: only show Paced Breathing (the only tool learned so far) */}
+                  {(() => {
+                    const breathingTool = (hero.armory || []).find(t => t.id === "breathing");
+                    const toolsToShow = breathingTool ? [breathingTool] : [];
+                    return toolsToShow.map(tool => (
+                      <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(4); }} style={{
+                        display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
+                        borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
+                        background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
+                        cursor: "pointer", textAlign: "left",
+                      }}>
+                        <span style={{ fontSize: 18 }}>{tool.icon}</span>
+                        <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>{tool.name}</PixelText>
+                      </button>
+                    ));
+                  })()}
                   <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(4); }} style={{
                     display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                     borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : "#5C3A50"}`,
@@ -5206,6 +5211,15 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
       <div style={{ padding: 12, borderTop: phase !== "prep" ? "2px solid #5C3A50" : "none" }}>
         {phase === "battle" && (
           <>
+            {/* AI error notification */}
+            {battleChat.error && (
+              <div style={{ marginBottom: 8, padding: 8, background: C.bossRed + "20", border: `1px solid ${C.bossRed}`, borderRadius: 4 }}>
+                <PixelText size={7} color={C.bossRed}>{battleChat.error}</PixelText>
+                <button onClick={() => battleChat.reset()} style={{ background: "none", border: "none", color: C.teal, cursor: "pointer", marginLeft: 8, textDecoration: "underline" }}>
+                  <PixelText size={7} color={C.teal}>Retry</PixelText>
+                </button>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
               {[
                 `Remember: ${prepAnswers.rise?.split(".")[0] || "breathe"}`,
@@ -5221,9 +5235,21 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                   }}><PixelText size={7} color={C.cream}>{q}</PixelText></button>
               ))}
             </div>
-            <PixelBtn onClick={() => setPhase("log")} color={C.gold} textColor={C.charcoal} style={{ width: "100%" }}>
-              BATTLE COMPLETE →
-            </PixelBtn>
+            {/* Free text input during battle */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }}
+                placeholder="Say anything to Dara..." disabled={battleChat.typing}
+                style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
+              <PixelBtn onClick={() => { if (chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }} disabled={battleChat.typing || !chatInput.trim()}>→</PixelBtn>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <PixelBtn onClick={() => setPhase("log")} color={C.gold} textColor={C.charcoal} style={{ flex: 1 }}>
+                BATTLE COMPLETE →
+              </PixelBtn>
+              <PixelBtn onClick={onRetreat} color={C.plum} textColor={C.cream} style={{ flex: 1 }}>
+                🛡 RETREAT
+              </PixelBtn>
+            </div>
           </>
         )}
 
