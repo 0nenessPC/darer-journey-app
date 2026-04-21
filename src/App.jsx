@@ -2888,23 +2888,26 @@ No other text.`,
                   </PixelText>
                 </DialogBox>
                 <div style={{ marginTop: 14 }}>
-                  {[
-                    { key: "breathing", icon: "🌬️", label: "Paced Breathing (4-2-6-2)" },
-                    { key: "allowing", icon: "🛡️", label: "Allow the Storm (don't fight it)" },
-                    { key: "grounding", icon: "⚓", label: "Grounding (5-4-3-2-1 senses)" },
-                    { key: "values", icon: "💎", label: `Anchor to "${valueName}"` },
-                    { key: "none", icon: "🗡️", label: "I'll trust the strategy alone" },
-                  ].map(tool => (
-                    <button key={tool.key} onClick={() => { setExposureArmory(tool.label); setRiseSubStep(3); }} style={{
+                  {(hero.armory || []).filter(t => t.unlocked).map(tool => (
+                    <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(3); }} style={{
                       display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.label ? C.teal : "#5C3A50"}`,
-                      background: exposureArmory === tool.label ? C.teal + "20" : "#1A1218",
+                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
+                      background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
                       cursor: "pointer", textAlign: "left",
                     }}>
                       <span style={{ fontSize: 18 }}>{tool.icon}</span>
-                      <PixelText size={7} color={exposureArmory === tool.label ? C.teal : C.grayLt}>{tool.label}</PixelText>
+                      <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>{tool.name}</PixelText>
                     </button>
                   ))}
+                  <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(3); }} style={{
+                    display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
+                    borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : "#5C3A50"}`,
+                    background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : "#1A1218",
+                    cursor: "pointer", textAlign: "left",
+                  }}>
+                    <span style={{ fontSize: 18 }}>🗡️</span>
+                    <PixelText size={7} color={exposureArmory === "I'll trust the strategy alone" ? C.teal : C.grayLt}>I'll trust the strategy alone</PixelText>
+                  </button>
                 </div>
               </div>
             )}
