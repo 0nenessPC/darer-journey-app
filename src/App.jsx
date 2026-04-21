@@ -3160,11 +3160,218 @@ No other text.`,
 }
 
 // --- GAME MAP ---
-function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder }) {
+// ============ ADD EXPOSURE MODAL ============
+function AddExposureModal({ onClose, onManualEntry, onAskDara }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.8)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%", maxWidth: 480, background: "#1A1218",
+          borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
+          padding: "24px 20px 32px",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <PixelText size={12} color={C.teal}>Add New Exposure</PixelText>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              color: C.grayLt, fontSize: 18, padding: "4px 8px",
+            }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Two options */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button
+            onClick={onManualEntry}
+            style={{
+              width: "100%", padding: "16px 20px",
+              background: C.plum + "20", border: `2px solid ${C.plum}`,
+              borderRadius: 8, cursor: "pointer", textAlign: "left",
+              display: "flex", alignItems: "center", gap: 14,
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{ fontSize: 28 }}>✏️</span>
+            <div>
+              <PixelText size={10} color={C.cream} style={{ display: "block" }}>Write it myself</PixelText>
+              <PixelText size={7} color={C.grayLt}>Type in your own exposure</PixelText>
+            </div>
+          </button>
+
+          <button
+            onClick={onAskDara}
+            style={{
+              width: "100%", padding: "16px 20px",
+              background: C.teal + "20", border: `2px solid ${C.teal}`,
+              borderRadius: 8, cursor: "pointer", textAlign: "left",
+              display: "flex", alignItems: "center", gap: 14,
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{ fontSize: 28 }}>🤖</span>
+            <div>
+              <PixelText size={10} color={C.cream} style={{ display: "block" }}>Ask Dara to help</PixelText>
+              <PixelText size={7} color={C.grayLt}>Dara guides you through it</PixelText>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ ADD MANUAL ENTRY FORM ============
+function AddManualEntryForm({ onClose, onSubmit }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [difficulty, setDifficulty] = useState(3);
+
+  const difficultyLabels = {
+    1: "Very Easy", 2: "Easy", 3: "Moderate",
+    4: "Challenging", 5: "Hard", 6: "Very Hard",
+    7: "Intense", 8: "Very Intense", 9: "Extreme", 10: "Maximum",
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) return;
+    onSubmit({
+      name: name.trim(),
+      desc: description.trim() || "Custom exposure",
+      difficulty,
+    });
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.8)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%", maxWidth: 480, background: "#1A1218",
+          borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
+          padding: "24px 20px 32px",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <PixelText size={12} color={C.teal}>Write Your Exposure</PixelText>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              color: C.grayLt, fontSize: 18, padding: "4px 8px",
+            }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Name input */}
+        <div style={{ marginBottom: 16 }}>
+          <PixelText size={8} color={C.cream} style={{ display: "block", marginBottom: 6 }}>Exposure name *</PixelText>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Say hi to a coworker"
+            style={{
+              width: "100%", padding: "12px 14px",
+              background: "#222", border: `2px solid ${name.trim() ? C.teal : "#5C3A50"}`,
+              borderRadius: 6, color: C.cream, fontSize: 14,
+              fontFamily: "inherit", outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Description input */}
+        <div style={{ marginBottom: 16 }}>
+          <PixelText size={8} color={C.cream} style={{ display: "block", marginBottom: 6 }}>Description (optional)</PixelText>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What makes this challenging?"
+            rows={3}
+            style={{
+              width: "100%", padding: "12px 14px",
+              background: "#222", border: `2px solid #5C3A50`,
+              borderRadius: 6, color: C.cream, fontSize: 14,
+              fontFamily: "inherit", outline: "none",
+              resize: "vertical", boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Difficulty slider */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <PixelText size={8} color={C.cream}>Anxiety level</PixelText>
+            <PixelText size={9} color={difficulty >= 7 ? C.amber : difficulty >= 4 ? C.goldMd : C.hpGreen}>
+              LV.{difficulty} — {difficultyLabels[difficulty]}
+            </PixelText>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={difficulty}
+            onChange={(e) => setDifficulty(Number(e.target.value))}
+            style={{ width: "100%", accentColor: C.teal }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <PixelText size={6} color={C.grayLt}>1 — Easy</PixelText>
+            <PixelText size={6} color={C.grayLt}>10 — Extreme</PixelText>
+          </div>
+        </div>
+
+        {/* Submit button */}
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim()}
+          style={{
+            width: "100%", padding: "14px 20px",
+            background: name.trim() ? C.teal : C.gray,
+            border: `3px solid ${name.trim() ? C.teal : C.gray}`,
+            borderRadius: 6, cursor: name.trim() ? "pointer" : "default",
+            color: C.cream, fontSize: 12, fontFamily: PIXEL_FONT,
+            boxShadow: name.trim() ? `0 4px 0 #4A7A60` : "none",
+            transition: "all 0.2s",
+          }}
+        >
+          Add to My Journey
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
   const [pendingBoss, setPendingBoss] = useState(null); // boss pending high-SUDs warning
+  const [addPulse, setAddPulse] = useState(false); // FAB pulse animation trigger
 
   const handleBossSelect = (boss) => {
     if (!nextBoss || boss.difficulty - nextBoss.difficulty >= 2) {
@@ -3320,6 +3527,30 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating "+" FAB for adding exposures */}
+      {onAddExposure && (
+        <button
+          onClick={() => { setAddPulse(true); setTimeout(() => setAddPulse(false), 400); onAddExposure(); }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = `0 0 24px ${C.teal}50, 0 6px 0 #4A7A60`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = `0 0 16px ${C.teal}40, 0 4px 0 #4A7A60`; }}
+          style={{
+            position: "fixed", bottom: 64, right: 16,
+            width: 48, height: 48, borderRadius: "50%",
+            background: C.teal, border: `3px solid ${C.teal}`,
+            color: C.cream, fontSize: 24, fontWeight: "bold",
+            cursor: "pointer", zIndex: 40,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 0 16px ${C.teal}40, 0 4px 0 #4A7A60`,
+            transition: "transform 0.15s, box-shadow 0.15s",
+            transform: addPulse ? "scale(1.15)" : "scale(1)",
+            maxWidth: 480,
+          }}
+          aria-label="Add new exposure"
+        >
+          +
+        </button>
       )}
 
       {/* Bottom nav */}
@@ -5087,6 +5318,10 @@ export default function DARERQuest() {
   // Shadow text from intake (declared here so auto-save can reference it)
   const [shadowText, setShadowText] = useState("");
 
+  // Add exposure modal state
+  const [showAddModal, setShowAddModal] = useState(false); // false | 'menu' | 'manual'
+  const [addMode, setAddMode] = useState(null); // 'menu' | 'manual' | 'ask-dara'
+
   // Check for active session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -5424,11 +5659,41 @@ export default function DARERQuest() {
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
-      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} />}
+      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
+
+      {/* Add Exposure Modal — menu */}
+      {addMode === "menu" && (
+        <AddExposureModal
+          onClose={() => setAddMode(null)}
+          onManualEntry={() => setAddMode("manual")}
+          onAskDara={() => { setAddMode(null); alert("Ask Dara to help — coming soon!"); }}
+        />
+      )}
+
+      {/* Add Exposure Modal — manual entry form */}
+      {addMode === "manual" && (
+        <AddManualEntryForm
+          onClose={() => setAddMode(null)}
+          onSubmit={(data) => {
+            const newBoss = {
+              id: `custom_${Date.now()}`,
+              name: data.name,
+              desc: data.desc,
+              difficulty: data.difficulty,
+              defeated: false,
+              hp: 100,
+              maxHp: 100,
+              isCustom: true,
+            };
+            setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
+            setAddMode(null);
+          }}
+        />
+      )}
       </div>
     </div>
   );
