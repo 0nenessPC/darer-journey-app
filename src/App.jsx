@@ -3808,13 +3808,20 @@ function closeAllOtherSwipes(id) {
 }
 
 function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
-  // Track the ref for scrolling to newly added boss
-  const addedRef = useRef(null);
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
   const [pendingBoss, setPendingBoss] = useState(null); // boss pending high-SUDs warning
   const [addPulse, setAddPulse] = useState(false); // FAB pulse animation trigger
+
+  // Scroll to newly added boss
+  useEffect(() => {
+    if (!justAddedBossId) return;
+    const el = document.getElementById(`boss-${justAddedBossId}`);
+    if (el) {
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
+    }
+  }, [justAddedBossId]);
 
   const handleBossSelect = (boss) => {
     if (!nextBoss || boss.difficulty - nextBoss.difficulty >= 2) {
