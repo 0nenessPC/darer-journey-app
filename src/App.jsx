@@ -3784,10 +3784,13 @@ function SwipeableBoss({ boss, onBossSelect, onAchieve, onDelete, children }) {
         onTouchMove={handlePointerMove}
         onTouchEnd={handlePointerUp}
         style={{
-          transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
+          transform: `translateX(${swipeOffset}px)`,
           transition: isDragging ? "none" : "transform 0.3s ease-out",
           position: "relative",
           zIndex: 1,
+          width: "100%",
+          overflow: "hidden",
+          boxSizing: "border-box",
           background: "inherit",
           touchAction: "pan-y", // Allow vertical scroll, prevent horizontal
         }}
