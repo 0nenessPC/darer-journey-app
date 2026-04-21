@@ -4656,6 +4656,9 @@ function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBS
   const [swipeDir, setSwipeDir] = useState(null);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [levelRejectCounts, setLevelRejectCounts] = useState(obState.levelRejectCounts || {});
+  const [generatingReplacement, setGeneratingReplacement] = useState(false);
+  const [allSuggestions, setAllSuggestions] = useState(obState.allSuggestions || []);
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
 
@@ -4667,8 +4670,8 @@ function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBS
   // Persist card-sort progress so resume-anywhere survives refresh/close
   useEffect(() => {
     if (!setOBState) return;
-    setOBState({ currentCard, accepted, rejected, done });
-  }, [currentCard, accepted, rejected, done, setOBState]);
+    setOBState({ currentCard, accepted, rejected, done, levelRejectCounts, allSuggestions });
+  }, [currentCard, accepted, rejected, done, levelRejectCounts, allSuggestions, setOBState]);
 
   // Mark done when all cards have been seen
   useEffect(() => {
@@ -4695,6 +4698,7 @@ Clinical rules:
 - Tailor to the user's specific feared situations and avoidance patterns
 - Connect higher-level exposures to the user's stated values where possible
 - Give each a creative 2-3 word RPG boss name (fantasy/game themed)
+- IMPORTANT: Each activity must be clearly distinct from activities at other levels, in case the system needs to generate alternatives at a specific level later.
 
 Return ONLY a JSON array: [{"name":"Boss Name","activity":"specific activity","level":1}]
 No other text.`,
@@ -4709,23 +4713,90 @@ No other text.`,
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setExposures(parsed.slice(0, 10).map((e, i) => ({ ...e, id: "exp" + i, level: e.level || i + 1 })));
+          const initial = parsed.slice(0, 10).map((e, i) => ({ ...e, id: "exp" + i, level: e.level || i + 1 }));
+          setExposures(initial);
+          setAllSuggestions(initial.map(e => ({ name: e.name, activity: e.activity, level: e.level })));
         }
       }
     } catch (e) { /* AI generation failed — will show retry */ }
     setLoading(false);
   };
 
+  // Generate a single replacement exposure at a specific SUDS level
+  const generateReplacementForLevel = async (level, exclusions) => {
+    try {
+      const valuesText = (hero.values || []).map(v => v.text).join(", ");
+      const strengthsText = (hero.coreValues || []).map(v => v.word).join(", ");
+      const traitsText = (hero.traits || []).filter(t => t.type === "challenge").map(t => t.text).join("; ");
+      const exclusionList = exclusions.map(e => `"${e.name}" - ${e.activity}`).join("; ");
+      const res = await callClaude(
+        `You are a clinical psychologist designing a graduated exposure hierarchy. Generate EXACTLY ONE exposure activity at SUDS level ${level} (out of 10). It must be concrete, specific, and completable in a single real-world attempt. Give it a creative 2-3 word RPG boss name (fantasy/game themed).
+
+CRITICAL: The new exposure must be DIFFERENT from these already-suggested activities:
+${exclusionList || "None"}
+
+Return ONLY a JSON object: {"name":"Boss Name","activity":"specific activity","level":${level}}
+No other text.`,
+        [{ role: "user", text: `User profile:
+- Core strengths: ${strengthsText || "Not specified"}
+- Values (why they fight): ${valuesText || "Build meaningful social connections"}
+- Social challenges: ${traitsText || "General social avoidance and discomfort"}
+- Shadow assessment: ${shadowText || "Avoidance of social situations, fear of judgment"}` }],
+        2000
+      );
+      const jsonMatch = res.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.name && parsed.activity) {
+          return { ...parsed, id: "exp_r_" + Date.now(), level: parsed.level || level };
+        }
+      }
+    } catch (e) { console.warn("Replacement generation failed:", e); }
+    return null;
+  };
+
   const card = exposures[currentCard];
 
   const handleAccept = () => {
-    if (!card) return;
+    if (!card || generatingReplacement) return;
     setSwipeDir("right");
     setAccepted(prev => [...prev, card]);
+    // Reset reject counter for this level — they found one they like
+    setLevelRejectCounts(prev => { const next = { ...prev }; delete next[card.level]; return next; });
     setTimeout(() => { setSwipeDir(null); setDragX(0); setDragging(false); setCurrentCard(i => i + 1); }, 300);
   };
-  const handleReject = () => {
-    if (!card) return;
+
+  const handleReject = async () => {
+    if (!card || generatingReplacement) return;
+    const level = card.level;
+    const rejectionsSoFar = levelRejectCounts[level] || 0;
+
+    if (rejectionsSoFar < 2) {
+      // Generate a replacement at the same SUDS level
+      setSwipeDir("left");
+      setGeneratingReplacement(true);
+      const replacement = await generateReplacementForLevel(level, allSuggestions);
+      setGeneratingReplacement(false);
+
+      if (replacement) {
+        // Insert replacement at current position
+        setExposures(prev => {
+          const next = [...prev];
+          next[currentCard] = replacement;
+          return next;
+        });
+        // Track this suggestion for duplicate avoidance
+        setAllSuggestions(prev => [...prev, { name: replacement.name, activity: replacement.activity, level }]);
+        // Increment reject count for this level
+        setLevelRejectCounts(prev => ({ ...prev, [level]: rejectionsSoFar + 1 }));
+        // Reset swipe and stay on same card (replacement will be shown next)
+        setTimeout(() => { setSwipeDir(null); setDragX(0); setDragging(false); }, 300);
+        return;
+      }
+      // AI failed to generate replacement — fall through to normal reject
+    }
+
+    // No more alternatives or AI failed — move to next card
     setSwipeDir("left");
     setRejected(prev => [...prev, card]);
     setTimeout(() => { setSwipeDir(null); setDragX(0); setDragging(false); setCurrentCard(i => i + 1); }, 300);
@@ -4857,6 +4928,14 @@ No other text.`,
             <div style={{ height: "100%", width: `${(currentCard / exposures.length) * 100}%`, background: C.goldMd, borderRadius: 2, transition: "width 0.3s" }} />
           </div>
 
+          {/* Replacement loading indicator */}
+          {generatingReplacement && (
+            <div style={{ textAlign: "center", marginBottom: 14, padding: "12px 16px", animation: "fadeIn 0.3s ease-out" }}>
+              <div style={{ fontSize: 28, marginBottom: 8, animation: "pulse 1.2s ease-in-out infinite" }}>🔨</div>
+              <PixelText size={8} color={C.goldMd} style={{ display: "block" }}>Dara is finding another option...</PixelText>
+            </div>
+          )}
+
           {/* Exposure card */}
           <div
             onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
@@ -4878,6 +4957,18 @@ No other text.`,
               <PixelText size={6} color={levelColor(card.level)}>LV.{card.level} · {levelLabel(card.level)}</PixelText>
             </div>
 
+            {/* Alternative badge — shown when this is a replacement card */}
+            {levelRejectCounts[card.level] > 0 && (
+              <div style={{
+                position: "absolute", top: 10, right: 10,
+                padding: "2px 8px", borderRadius: 3,
+                background: C.plum + "80", border: `1px solid ${C.goldMd}60`,
+                animation: "fadeIn 0.3s ease-out",
+              }}>
+                <PixelText size={5} color={C.goldMd}>Alt {levelRejectCounts[card.level]} of 2</PixelText>
+              </div>
+            )}
+
             <PixelText size={11} color={C.cream} style={{ display: "block", marginBottom: 10 }}>{card.name}</PixelText>
             <PixelText size={8} color={C.grayLt} style={{ display: "block", lineHeight: 1.7 }}>{card.activity}</PixelText>
 
@@ -4894,7 +4985,7 @@ No other text.`,
           </div>
 
           {/* Buttons */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 24, opacity: generatingReplacement ? 0.4 : 1, pointerEvents: generatingReplacement ? "none" : "auto" }}>
             <button onClick={handleReject} style={{
               width: 48, height: 48, borderRadius: "50%", border: "2px solid #5C3A50",
               background: C.plum, cursor: "pointer", display: "flex",
@@ -4917,7 +5008,7 @@ No other text.`,
         </div>
       ) : null}
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} } @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }`}</style>
     </div>
   );
 }
