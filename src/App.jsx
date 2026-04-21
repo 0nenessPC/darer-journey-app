@@ -3789,9 +3789,8 @@ function SwipeableBoss({ boss, onBossSelect, onAchieve, onDelete, children }) {
           position: "relative",
           zIndex: 1,
           width: "100%",
-          overflow: "hidden",
           boxSizing: "border-box",
-          background: "inherit",
+          background: C.mapBg,
           touchAction: "pan-y", // Allow vertical scroll, prevent horizontal
         }}
       >
