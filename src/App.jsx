@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase, saveProgress, loadProgress } from "./utils/supabase";
+import { supabase, saveProgress, loadProgress, NDA_VERSION, saveNdaAgreement, checkNdaAgreed } from "./utils/supabase";
+import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
 
 // ============ DESIGN TOKENS — Warm Dusk + Pixel Game ============
 const C = {
@@ -5189,6 +5190,15 @@ export default function DARERQuest() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
+    // Check NDA agreement before routing
+    const ndaAgreed = await checkNdaAgreed(user.id, NDA_VERSION);
+    if (!ndaAgreed) {
+      // Must agree to NDA before anything else
+      setScreen("nda");
+      setIsAuthenticated(true);
+      return;
+    }
+    
     const progress = await loadProgress(user.id);
     if (progress) {
       // Restore saved state — migrate armory if missing
@@ -5222,6 +5232,46 @@ export default function DARERQuest() {
       setScreen("intro");
     }
     setIsAuthenticated(true);
+  };
+
+  // Called when user agrees to the NDA — saves the agreement and continues onboarding
+  const handleNdaComplete = async (participantName, ndaText) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const result = await saveNdaAgreement(user.id, participantName, hero.darerId || "", NDA_VERSION, ndaText);
+    if (!result) return false;
+    // NDA signed — route to intro (new user) or restore progress (returning)
+    const progress = await loadProgress(user.id);
+    if (progress) {
+      // Returning user who just signed NDA — restore state
+      const loadedHero = progress.hero || {};
+      const migratedArmory = loadedHero.armory ? loadedHero.armory.map((item, i) => {
+        const def = DEFAULT_ARMORY[i];
+        return def ? { ...def, ...item } : item;
+      }) : JSON.parse(JSON.stringify(DEFAULT_ARMORY));
+      setHero({ ...loadedHero, armory: migratedArmory });
+      if (progress.quest) setQuest(progress.quest);
+      setShadowText(progress.shadow_text || '');
+      if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
+      setScreenHistory([]);
+      if (progress.quest?.bosses?.length > 0) {
+        setScreen("map");
+      } else if (progress.onboarding_state?.exposureSort?.done) {
+        setScreen("map");
+      } else if (progress.tutorial_complete || progress.onboarding_state?.tutorial?.tutorialComplete) {
+        setScreen("exposureSort");
+      } else if (progress.screen && progress.screen !== 'login') {
+        setScreen(progress.screen);
+      } else {
+        setScreen("intro");
+      }
+    } else {
+      // Brand new user — set DARER ID and go to intro
+      const id = "DARER_" + Math.floor(100000 + Math.random() * 900000);
+      setHero(h => ({ ...h, darerId: id, name: id }));
+      setScreen("intro");
+    }
+    return true;
   };
 
   const handleLogout = async () => {
@@ -5331,7 +5381,15 @@ export default function DARERQuest() {
         </div>
       )}
       {screen === "login" && authReady && <LoginScreen onLogin={handleLogin} />}
-      {isAuthenticated && screen !== "login" && (
+      {isAuthenticated && screen === "nda" && (
+        <NdaAgreementScreen
+          heroName={hero.name}
+          darerId={hero.darerId}
+          onAgree={handleNdaComplete}
+          onDecline={handleLogout}
+        />
+      )}
+      {isAuthenticated && screen !== "login" && screen !== "nda" && (
         <button onClick={handleLogout} style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 8, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
