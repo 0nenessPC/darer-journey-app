@@ -3106,6 +3106,16 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
+  const [pendingBoss, setPendingBoss] = useState(null); // boss pending high-SUDs warning
+
+  const handleBossSelect = (boss) => {
+    if (!nextBoss || boss.difficulty - nextBoss.difficulty >= 2) {
+      // Show warning dialog
+      setPendingBoss(boss);
+    } else {
+      onSelectBoss(boss);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
@@ -3136,9 +3146,9 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
       <div style={{ padding: 16 }}>
         {quest.bosses.map((boss, i) => {
           const isNext = nextBoss?.id === boss.id;
-          const locked = !boss.defeated && !isNext;
+          const isHighLevel = nextBoss && boss.difficulty - nextBoss.difficulty >= 2;
           const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : "#1A1218";
-          const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : "#5C3A50";
+          const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : "#5C3A50";
 
           return (
             <div key={boss.id}>
@@ -3148,13 +3158,24 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
                   <div style={{ width: 3, height: 20, background: boss.defeated || isNext ? C.plumMd : "#5C3A50" }} />
                 </div>
               )}
-              <button onClick={() => !locked && onSelectBoss(boss)} disabled={locked} style={{
+              <button onClick={() => handleBossSelect(boss)} style={{
                 width: "100%", padding: 14, background: bgColor,
                 border: `3px solid ${borderColor}`, borderRadius: 6,
-                cursor: locked ? "default" : "pointer", textAlign: "left",
-                opacity: locked ? 0.4 : 1, transition: "all 0.2s",
+                cursor: "pointer", textAlign: "left",
+                opacity: boss.defeated ? 0.6 : 1, transition: "all 0.2s",
                 boxShadow: isNext ? `0 0 16px ${C.goldMd}20` : "none",
+                position: "relative",
               }}>
+                {isHighLevel && !boss.defeated && (
+                  <div style={{
+                    position: "absolute", top: -6, right: -6,
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: C.amber, border: `2px solid #1A1218`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <span style={{ fontSize: 10 }}>⚠</span>
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: 4,
@@ -3163,7 +3184,7 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     <PixelText size={boss.defeated ? 16 : 12} color={boss.defeated ? C.hpGreen : isNext ? C.bossRed : C.grayLt}>
-                      {boss.defeated ? "✓" : locked ? "🔒" : "👾"}
+                      {boss.defeated ? "✓" : "👾"}
                     </PixelText>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -3180,7 +3201,7 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
                     )}
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <PixelText size={8} color={boss.defeated ? C.hpGreen : C.grayLt}>
+                    <PixelText size={8} color={boss.defeated ? C.hpGreen : isHighLevel ? C.amber : C.grayLt}>
                       LV.{boss.difficulty}
                     </PixelText>
                   </div>
@@ -3208,6 +3229,40 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder 
           <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>Defeat all bosses to reach your goal</PixelText></div>
         </div>
       </div>
+
+      {/* High-SUDs Warning Dialog */}
+      {pendingBoss && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          background: "rgba(0,0,0,0.7)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 20,
+        }}>
+          <div style={{
+            width: "100%", maxWidth: 400, background: "#1A1218",
+            border: `3px solid ${C.amber}`, borderRadius: 8,
+            padding: 20, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+            <PixelText size={11} color={C.amber} style={{ display: "block", marginBottom: 8 }}>HIGH DIFFICULTY WARNING</PixelText>
+            <div style={{ padding: 12, background: "#222", borderRadius: 6, marginBottom: 16 }}>
+              <PixelText size={9} color={C.cream}>{pendingBoss.name}</PixelText>
+              <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingBoss.desc}</PixelText></div>
+              <div style={{ marginTop: 6 }}>
+                <PixelText size={8} color={C.amber}>LV.{pendingBoss.difficulty}</PixelText>
+                <PixelText size={6} color={C.grayLt}> · Recommended: LV.{nextBoss?.difficulty || 1}-{(nextBoss?.difficulty || 1) + 1}</PixelText>
+              </div>
+            </div>
+            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16, lineHeight: 1.6 }}>
+              This exposure has a significantly higher anxiety level than your current path. It's recommended to work through lower-SUDs activities first to build confidence.
+            </PixelText>
+            <div style={{ display: "flex", gap: 8 }}>
+              <PixelBtn onClick={() => setPendingBoss(null)} color={C.plum} style={{ flex: 1 }}>← GO BACK</PixelBtn>
+              <PixelBtn onClick={() => { setPendingBoss(null); onSelectBoss(pendingBoss); }} color={C.amber} textColor={C.charcoal} style={{ flex: 1 }}>I'M READY →</PixelBtn>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom nav */}
       <div style={{
