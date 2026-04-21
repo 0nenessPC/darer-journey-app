@@ -3370,7 +3370,7 @@ function AddManualEntryForm({ onClose, onSubmit }) {
 }
 
 // ============ ASK DARA CHAT ============
-function AskDaraChat({ onClose, onSubmit, onFallback }) {
+function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
@@ -3380,15 +3380,17 @@ function AskDaraChat({ onClose, onSubmit, onFallback }) {
   const messagesEndRef = useRef(null);
   const chatHistory = useRef([]);
 
-  const USER_NAME = "Hero"; // Will be passed as prop later if needed
+  const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || "Hero"; // Extract name from hero context
 
   // Dara's system prompt for exposure design
-  const DARA_SYS = `You are Dara, a warm clinical psychologist helping someone design a personalized micro-exposure for social anxiety.
+  const DARA_SYS = `${heroContext ? heroContext + "\n\n" : ""}You are Dara, a warm clinical psychologist helping someone design a personalized micro-exposure for social anxiety.
 
 RULES:
 - Ask exactly ONE question per turn, keep responses to 2-3 sentences max.
 - Use game language but anchor to real world.
 - After 4-5 exchanges, generate a JSON exposure card.
+- Reference the user's strengths, values, and shadow profile to make exposures personally meaningful.
+- Design exposures that align with their journey goal.
 
 CONVERSATION FLOW:
 1. FIRST MESSAGE: Start with the greeting below. Ask what situation makes them most anxious right now.
@@ -3406,7 +3408,7 @@ Always keep the exposure small, actionable, and specific.`;
   useEffect(() => {
     if (step === 0 && messages.length === 0) {
       setTyping(true);
-      const initMsg = { role: "assistant", text: `Hey there. I'm Dara — and I'm here to help you design your very own exposure challenge. Think of it as a small, brave step toward the things that feel hard right now.\n\nWhat's one social situation that makes you feel the most anxious lately?` };
+      const initMsg = { role: "assistant", text: `Hey there. I'm Dara — and I'm here to help you design your very own exposure challenge. Think of it as a small, brave step toward ${heroContext ? "your goal" : "the things that feel hard right now"}.\n\nWhat's one social situation that makes you feel the most anxious lately?` };
       chatHistory.current = [initMsg];
       setMessages([initMsg]);
       setTyping(false);
@@ -3872,6 +3874,30 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         <div style={{ marginTop: 4 }}><PixelText size={9} color={C.goalGold}>🏰 {quest.goal}</PixelText></div>
       </div>
 
+      {/* Add exposure bar */}
+      {onAddExposure && (
+        <button
+          onClick={onAddExposure}
+          style={{
+            width: "100%",
+            padding: "10px 16px",
+            background: "#1A1218",
+            borderBottom: "2px solid #5C3A50",
+            borderLeft: "none",
+            borderRight: "none",
+            borderTop: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 16 }}>➕</span>
+          <PixelText size={9} color={C.teal}>ADD NEW EXPOSURE</PixelText>
+        </button>
+      )}
+
       {/* Boss path */}
       <div style={{ padding: 16 }}>
         {sortedBosses.map((boss, i) => {
@@ -4057,8 +4083,9 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         </div>
       )}
 
-      {/* Floating "+" FAB for adding exposures */}
-      {onAddExposure && (
+      {/* Floating "+" FAB for adding exposures — replaced by bar at top of list */}
+      {/* Kept as backup but hidden */}
+      {false && onAddExposure && (
         <button
           onClick={() => { setAddPulse(true); setTimeout(() => setAddPulse(false), 400); onAddExposure(); }}
           onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = `0 0 24px ${C.teal}50, 0 6px 0 #4A7A60`; }}
@@ -6307,6 +6334,7 @@ export default function DARERQuest() {
       {addMode === "ask-dara" && (
         <AskDaraChat
           onClose={() => setAddMode(null)}
+          heroContext={buildHeroContext(hero, quest, shadowText, battleHistory)}
           onSubmit={(data) => {
             const id = `custom_${Date.now()}`;
             const newBoss = {
