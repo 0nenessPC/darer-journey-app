@@ -20,44 +20,77 @@ const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
 // ============ AI HELPER ============
-async function callClaude(systemPrompt, messages, maxTokens = 1000) {
-  try {
-    const r = await fetch("/api/qwen-chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemPrompt,
-        messages: messages.map(m => ({ role: m.role, text: m.text })),
-        options: { model: "qwen3.5-flash", maxTokens },
-      }),
-    });
-    const d = await r.json();
-    return d.reply || "...";
-  } catch(e) { console.error("AI call failed:", e); return "Dara gathers her thoughts..."; }
+async function callClaude(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
+  const FALLBACK = "Dara gathers her thoughts...";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1500)); // 1.5s pause before retry
+      const r = await fetch("/api/qwen-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemPrompt,
+          messages: messages.map(m => ({ role: m.role, text: m.text })),
+          options: { model: "qwen3.5-flash", maxTokens },
+        }),
+        signal: controller.signal,
+      });
+      const d = await r.json();
+      return d.reply || "...";
+    } catch(e) {
+      console.error(`AI call failed (attempt ${attempt + 1}):`, e);
+    }
+    finally { clearTimeout(timer); }
+  }
+  return FALLBACK;
 }
 
 function useAIChat(systemPrompt, ctx = "") {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
+  const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // 'init' or 'send'
   const hist = useRef([]);
+  const FALLBACK = "Dara gathers her thoughts...";
+
   const sendMessage = useCallback(async (text) => {
     const u = { role: "user", text };
-    setMessages(p => [...p, u]); hist.current.push(u); setTyping(true);
+    setMessages(p => [...p, u]); hist.current.push(u); setTyping(true); setError(null); setErrorType(null);
     const api = ctx ? [{ role: "user", text: ctx }, { role: "assistant", text: "Understood." }, ...hist.current] : hist.current;
     const res = await callClaude(systemPrompt, api);
+    if (res === FALLBACK) {
+      // AI call failed — don't pollute chat with fallback text
+      hist.current.pop(); // remove the user message from history too
+      setMessages(p => p.slice(0, -1)); // remove user message from display
+      setError("Dara lost her thread — tap Send to try again.");
+      setErrorType("send");
+      setTyping(false);
+      return null;
+    }
     const a = { role: "assistant", text: res };
     hist.current.push(a); setMessages(p => [...p, a]); setTyping(false);
     return res;
   }, [systemPrompt, ctx]);
+
   const init = useCallback(async (prompt) => {
-    setTyping(true); hist.current = [];
+    setTyping(true); hist.current = []; setError(null); setErrorType(null);
     const res = await callClaude(systemPrompt, [{ role: "user", text: prompt }]);
+    if (res === FALLBACK) {
+      setError("Dara is still preparing... retrying.");
+      setErrorType("init");
+      setTyping(false);
+      return null;
+    }
     const a = { role: "assistant", text: res };
     hist.current = [{ role: "user", text: prompt }, a];
     setMessages([a]); setTyping(false);
+    return res;
   }, [systemPrompt]);
-  const reset = useCallback(() => { setMessages([]); hist.current = []; setTyping(false); }, []);
-  return { messages, typing, sendMessage, init, reset };
+
+  const reset = useCallback(() => { setMessages([]); hist.current = []; setTyping(false); setError(null); setErrorType(null); }, []);
+  return { messages, typing, sendMessage, init, reset, error, errorType };
 }
 
 // ============ SYSTEM PROMPTS ============
@@ -1827,13 +1860,18 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
 
 // --- INTAKE (Dara conversation — mapping the bosses) ---
 function IntakeScreen({ heroName, onComplete }) {
-  const { messages, typing, sendMessage, init } = useAIChat(SYS.intake);
+  const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const chatRef = useRef(null);
-  useEffect(() => { if (!started) { setStarted(true); init(`The hero's name is ${heroName}. They have just seen the lore about the Shadow's true nature and said they are ready to look into its eyes. Begin by acknowledging their courage, mention this will take about 5 to 10 minutes, then ask your first question about where the Shadow shows up in their daily life. Keep it to 2-3 sentences. This should feel like a companion helping them understand their enemy, not a clinical interview.`); } }, [started, init, heroName]);
+  const initPromptRef = useRef(`The hero's name is ${heroName}. They have just seen the lore about the Shadow's true nature and said they are ready to look into its eyes. Begin by acknowledging their courage, mention this will take about 5 to 10 minutes, then ask your first question about where the Shadow shows up in their daily life. Keep it to 2-3 sentences. This should feel like a companion helping them understand their enemy, not a clinical interview.`);
+  useEffect(() => {
+    if (!started) { setStarted(true); init(initPromptRef.current); }
+  }, [started, init, heroName]);
+  // Retry init when it failed
+  const retryInit = () => { init(initPromptRef.current); };
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, typing]);
-  const send = async () => { if (!input.trim() || typing) return; const t = input; setInput(""); await sendMessage(t); };
+  const send = async () => { if (!input.trim() || typing) return; const t = input; const ok = await sendMessage(t); if (ok) setInput(""); };
   const assistantCount = messages.filter(m => m.role === "assistant").length;
   const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
   const hasShadowSummary = lastAssistant?.text?.includes("SHADOW'S TRUE NATURE") || lastAssistant?.text?.includes("WHERE IT APPEARS");
@@ -1869,6 +1907,25 @@ function IntakeScreen({ heroName, onComplete }) {
           </div>
         ))}
         {typing && <DialogBox speaker="DARA" typing />}
+        {error && (
+          <div style={{ textAlign: "center", marginTop: 16, marginBottom: 10, animation: "fadeIn 0.3s ease-out" }}>
+            <div style={{
+              padding: "10px 16px", background: "#1A1218", border: "1px solid #FF444440",
+              borderRadius: 4, display: "inline-block",
+            }}>
+              <PixelText size={7} color={C.amber} style={{ display: "block", marginBottom: 6 }}>{error}</PixelText>
+              {errorType === "init" ? (
+                <PixelBtn onClick={retryInit} color={C.gold} textColor={C.charcoal} style={{ width: "auto" }}>
+                  RETRY →
+                </PixelBtn>
+              ) : (
+                <PixelBtn onClick={send} color={C.gold} textColor={C.charcoal} style={{ width: "auto" }}>
+                  TRY AGAIN →
+                </PixelBtn>
+              )}
+            </div>
+          </div>
+        )}
         {hasShadowSummary && (
           <div style={{ textAlign: "center", marginTop: 16, animation: "fadeIn 0.6s ease-out" }}>
             <PixelText size={8} color={C.goldMd}>The Shadow's true nature has been revealed...</PixelText>
@@ -1880,7 +1937,7 @@ function IntakeScreen({ heroName, onComplete }) {
           <div style={{ display: "flex", gap: 8 }}>
             <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
               placeholder="Speak to Dara..." disabled={typing}
-              style={{ flex: 1, padding: 10, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 13, outline: "none" }} />
+              style={{ flex: 1, padding: 10, background: "#1A1218", border: error ? "1px solid #FF444460" : "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 13, outline: "none" }} />
             <PixelBtn onClick={send} disabled={typing || !input.trim()}>→</PixelBtn>
           </div>
         </div>
