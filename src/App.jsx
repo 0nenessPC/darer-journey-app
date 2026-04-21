@@ -3061,7 +3061,7 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile }) {
   const totalXp = defeatedCount * 100;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 80px" }}>
+    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       {/* Hero status bar */}
       <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
