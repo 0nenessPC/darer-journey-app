@@ -3382,6 +3382,13 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
     }
   };
 
+  // Sort bosses: default bosses first (in original order), custom at the bottom
+  const sortedBosses = [
+    ...quest.bosses.filter(b => !b.isCustom),
+    ...quest.bosses.filter(b => b.isCustom),
+  ];
+  const customCount = quest.bosses.filter(b => b.isCustom).length;
+
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
@@ -3409,18 +3416,30 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
 
       {/* Boss path */}
       <div style={{ padding: 16 }}>
-        {quest.bosses.map((boss, i) => {
+        {sortedBosses.map((boss, i) => {
           const isNext = nextBoss?.id === boss.id;
           const isHighLevel = nextBoss && boss.difficulty - nextBoss.difficulty >= 2;
-          const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : "#1A1218";
-          const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : "#5C3A50";
+          const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
+          const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
 
           return (
             <div key={boss.id}>
+              {/* Separator before custom section */}
+              {boss.isCustom && i === sortedBosses.findIndex(b => b.isCustom) && (
+                <div style={{ margin: "16px 0 8px", textAlign: "center" }}>
+                  <PixelText size={7} color={C.teal}>— ✏️ CUSTOM EXPOSURES —</PixelText>
+                </div>
+              )}
               {/* Connector line */}
-              {i > 0 && (
+              {i > 0 && !boss.isCustom && sortedBosses[i-1]?.isCustom === false && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
                   <div style={{ width: 3, height: 20, background: boss.defeated || isNext ? C.plumMd : "#5C3A50" }} />
+                </div>
+              )}
+              {/* Connector line between custom bosses */}
+              {i > 0 && boss.isCustom && (
+                <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
+                  <div style={{ width: 3, height: 14, background: C.teal + "50" }} />
                 </div>
               )}
               <button onClick={() => handleBossSelect(boss)} style={{
@@ -3428,7 +3447,7 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                 border: `3px solid ${borderColor}`, borderRadius: 6,
                 cursor: "pointer", textAlign: "left",
                 opacity: boss.defeated ? 0.6 : 1, transition: "all 0.2s",
-                boxShadow: isNext ? `0 0 16px ${C.goldMd}20` : "none",
+                boxShadow: isNext ? `0 0 16px ${C.goldMd}20` : boss.isCustom && !boss.defeated ? `0 0 8px ${C.teal}15` : "none",
                 position: "relative",
               }}>
                 {isHighLevel && !boss.defeated && (
@@ -3441,15 +3460,25 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                     <span style={{ fontSize: 10 }}>⚠</span>
                   </div>
                 )}
+                {boss.isCustom && !boss.defeated && (
+                  <div style={{
+                    position: "absolute", top: -6, left: -6,
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: C.teal, border: `2px solid #1A1218`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <span style={{ fontSize: 10 }}>✏️</span>
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: 4,
-                    background: boss.defeated ? C.hpGreen + "30" : isNext ? C.bossRed + "30" : "#2A1F28",
-                    border: `2px solid ${boss.defeated ? C.hpGreen : isNext ? C.bossRed : "#5C3A50"}`,
+                    background: boss.defeated ? C.hpGreen + "30" : isNext ? C.bossRed + "30" : boss.isCustom ? C.teal + "20" : "#2A1F28",
+                    border: `2px solid ${boss.defeated ? C.hpGreen : isNext ? C.bossRed : boss.isCustom ? C.teal + "60" : "#5C3A50"}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <PixelText size={boss.defeated ? 16 : 12} color={boss.defeated ? C.hpGreen : isNext ? C.bossRed : C.grayLt}>
-                      {boss.defeated ? "✓" : "👾"}
+                    <PixelText size={boss.defeated ? 16 : 12} color={boss.defeated ? C.hpGreen : isNext ? C.bossRed : boss.isCustom ? C.teal : C.grayLt}>
+                      {boss.defeated ? "✓" : boss.isCustom ? "✏" : "👾"}
                     </PixelText>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -3466,7 +3495,7 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                     )}
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <PixelText size={8} color={boss.defeated ? C.hpGreen : isHighLevel ? C.amber : C.grayLt}>
+                    <PixelText size={8} color={boss.defeated ? C.hpGreen : isHighLevel ? C.amber : boss.isCustom ? C.teal : C.grayLt}>
                       LV.{boss.difficulty}
                     </PixelText>
                   </div>
