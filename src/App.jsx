@@ -4216,6 +4216,27 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
           </>
         )}
       </div>
+      {/* Bottom nav */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218", zIndex: 20,
+      }}>
+        {[
+          { icon: "🗺", label: "MAP", active: false, onClick: onRetreat },
+          { icon: "⚗", label: "ARMORY", active: false },
+          { icon: "🏆", label: "LADDER", active: false },
+          { icon: "🛡", label: "HERO", active: false },
+        ].map(t => (
+          <button key={t.label} onClick={t.onClick} style={{
+            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+            background: "transparent", display: "flex",
+            flexDirection: "column", alignItems: "center", gap: 2,
+          }}>
+            <span style={{ fontSize: 16 }}>{t.icon}</span>
+            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
+          </button>
+        ))}
+      </div>
       <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
     </div>
   );
