@@ -2487,6 +2487,8 @@ function TutorialBattle({ heroName, hero, quest, shadowText, heroValues, heroStr
   const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || "");
   const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || "");
   const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || "");
+  const [exposureScheduledTime, setExposureScheduledTime] = useState(obState.exposureScheduledTime || "");
+  const [showAlarmSuggestion, setShowAlarmSuggestion] = useState(false);
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
@@ -2939,8 +2941,73 @@ No other text.`,
               </div>
             )}
 
-            {/* Sub-step 2: ARMORY */}
+            {/* Sub-step 2: SCHEDULE DATE/TIME */}
             {riseSubStep === 2 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    {"\n"}Pick the exact time you'll{"\n"}face this battle. The more{"\n"}specific you are, the more{"\n"}likely you'll follow through.
+                  </PixelText>
+                </DialogBox>
+                <div style={{ marginTop: 14 }}>
+                  <label style={{ display: "block", marginBottom: 6 }}>
+                    <PixelText size={7} color={C.goldMd}>📅 Date & Time</PixelText>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={exposureScheduledTime}
+                    onChange={e => setExposureScheduledTime(e.target.value)}
+                    style={{
+                      display: "block", width: "100%", padding: "12px 14px",
+                      borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                      color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
+                      boxSizing: "border-box", colorScheme: "dark",
+                    }}
+                  />
+                  <PixelBtn
+                    onClick={() => { setRiseSubStep(3); setShowAlarmSuggestion(true); }}
+                    disabled={!exposureScheduledTime}
+                    color={C.gold} textColor={C.charcoal}
+                    style={{ width: "100%", marginTop: 10 }}
+                  >
+                    LOCK IT IN →
+                  </PixelBtn>
+                  <button onClick={() => setRiseSubStep(1)} style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
+                    <PixelText size={6} color={C.grayLt}>← Back</PixelText>
+                  </button>
+                </div>
+
+                {showAlarmSuggestion && exposureScheduledTime && (
+                  <div style={{ marginTop: 16, padding: 14, background: C.teal + "15", border: `2px solid ${C.teal}60`, borderRadius: 6 }}>
+                    <PixelText size={8} color={C.teal} style={{ display: "block", marginBottom: 8 }}>⏰ SET A REMINDER</PixelText>
+                    <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 10, lineHeight: 1.6 }}>
+                      You scheduled this for {new Date(exposureScheduledTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.
+                      {"\n"}{"\n"}
+                      Setting an alarm or reminder on your phone right now will make you much more likely to follow through. Tap below to open your phone's calendar app.
+                    </PixelText>
+                    <button
+                      onClick={() => {
+                        const dt = new Date(exposureScheduledTime);
+                        const title = encodeURIComponent(`DARER Training: ${chosenExposure?.name || 'Exposure'}`);
+                        const desc = encodeURIComponent(`Practice exposure: ${chosenExposure?.desc || 'Face your fear'}`);
+                        const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                        const endStr = new Date(dt.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&dates=${startStr}/${endStr}`, '_blank');
+                      }}
+                      style={{ width: "100%", padding: "10px 14px", background: C.teal, border: "none", borderRadius: 4, cursor: "pointer", marginBottom: 6 }}
+                    >
+                      <PixelText size={8} color={C.charcoal}>📱 ADD TO CALENDAR + ALARM</PixelText>
+                    </button>
+                    <button onClick={() => setShowAlarmSuggestion(false)} style={{ width: "100%", padding: "8px 14px", background: "transparent", border: `1px solid #5C3A50`, borderRadius: 4, cursor: "pointer" }}>
+                      <PixelText size={7} color={C.grayLt}>I already set a reminder</PixelText>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sub-step 3: ARMORY */}
+            {riseSubStep === 3 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -2950,7 +3017,7 @@ No other text.`,
                 </DialogBox>
                 <div style={{ marginTop: 14 }}>
                   {(hero.armory || []).filter(t => t.unlocked).map(tool => (
-                    <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(3); }} style={{
+                    <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(4); }} style={{
                       display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                       borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
                       background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
@@ -2960,7 +3027,7 @@ No other text.`,
                       <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>{tool.name}</PixelText>
                     </button>
                   ))}
-                  <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(3); }} style={{
+                  <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(4); }} style={{
                     display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                     borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : "#5C3A50"}`,
                     background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : "#1A1218",
@@ -2973,8 +3040,8 @@ No other text.`,
               </div>
             )}
 
-            {/* Sub-step 3: Storm Intensity (SUDs) */}
-            {riseSubStep === 3 && (
+            {/* Sub-step 4: Storm Intensity (SUDs) */}
+            {riseSubStep === 4 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -4672,14 +4739,16 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
   const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || "");
   const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || "");
   const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || "");
+  const [exposureScheduledTime, setExposureScheduledTime] = useState(obState.exposureScheduledTime || "");
+  const [showAlarmSuggestion, setShowAlarmSuggestion] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const chatRef = useRef(null);
 
   // Persist battle progress so resume-anywhere survives refresh/close
   useEffect(() => {
     if (!setOBState) return;
-    setOBState({ phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory });
-  }, [phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory, setOBState]);
+    setOBState({ phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime });
+  }, [phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, setOBState]);
 
   const heroContext = buildHeroContext(hero, quest, shadowText, battleHistory);
   const battleChat = useAIChat(SYS.battle, `${heroContext}\n\nBOSS: "${boss.name}" — ${boss.desc}. The hero is fighting this boss RIGHT NOW in real life. Reference their strengths, values, and past battles when relevant.`);
@@ -4915,12 +4984,94 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                   </div>
                 )}
 
-                {/* Sub-step 2: ARMORY */}
+                {/* Sub-step 2: SCHEDULE DATE/TIME */}
                 {riseSubStep === 2 && (
                   <div>
                     <DialogBox speaker="DARA">
                       <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                        You've chosen your time and{"\n"}your battlefield.{"\n"}{"\n"}
+                        {"\n"}Pick the exact time you'll{"\n"}face this battle. The more{"\n"}specific you are, the more{"\n"}likely you'll follow through.
+                      </PixelText>
+                    </DialogBox>
+                    <div style={{ marginTop: 14 }}>
+                      <label style={{ display: "block", marginBottom: 6 }}>
+                        <PixelText size={7} color={C.goldMd}>📅 Date & Time</PixelText>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={exposureScheduledTime}
+                        onChange={e => setExposureScheduledTime(e.target.value)}
+                        style={{
+                          display: "block", width: "100%", padding: "12px 14px",
+                          borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                          color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
+                          boxSizing: "border-box",
+                          colorScheme: "dark",
+                        }}
+                      />
+                      <PixelBtn
+                        onClick={() => { setRiseSubStep(3); setShowAlarmSuggestion(true); }}
+                        disabled={!exposureScheduledTime}
+                        color={C.gold} textColor={C.charcoal}
+                        style={{ width: "100%", marginTop: 10 }}
+                      >
+                        LOCK IT IN →
+                      </PixelBtn>
+                      <button onClick={() => setRiseSubStep(1)} style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
+                        <PixelText size={6} color={C.grayLt}>← Back</PixelText>
+                      </button>
+                    </div>
+
+                    {/* Phone alarm/reminder suggestion */}
+                    {showAlarmSuggestion && exposureScheduledTime && (
+                      <div style={{
+                        marginTop: 16, padding: 14,
+                        background: C.teal + "15", border: `2px solid ${C.teal}60`,
+                        borderRadius: 6,
+                      }}>
+                        <PixelText size={8} color={C.teal} style={{ display: "block", marginBottom: 8 }}>⏰ SET A REMINDER</PixelText>
+                        <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 10, lineHeight: 1.6 }}>
+                          You scheduled this for {new Date(exposureScheduledTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.
+                          {"\n"}{"\n"}
+                          Setting an alarm or reminder on your phone right now will make you much more likely to follow through. Tap the button below to open your phone's alarm app.
+                        </PixelText>
+                        <button
+                          onClick={() => {
+                            // Create a calendar event to trigger phone alarm
+                            const dt = new Date(exposureScheduledTime);
+                            const title = encodeURIComponent(`DARER: ${boss.name}`);
+                            const desc = encodeURIComponent(`Face the ${boss.name} exposure: ${boss.desc}`);
+                            const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                            const endStr = new Date(dt.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&dates=${startStr}/${endStr}`, '_blank');
+                          }}
+                          style={{
+                            width: "100%", padding: "10px 14px", background: C.teal,
+                            border: "none", borderRadius: 4, cursor: "pointer",
+                            marginBottom: 6,
+                          }}
+                        >
+                          <PixelText size={8} color={C.charcoal}>📱 ADD TO CALENDAR + ALARM</PixelText>
+                        </button>
+                        <button
+                          onClick={() => setShowAlarmSuggestion(false)}
+                          style={{
+                            width: "100%", padding: "8px 14px", background: "transparent",
+                            border: `1px solid #5C3A50`, borderRadius: 4, cursor: "pointer",
+                          }}
+                        >
+                          <PixelText size={7} color={C.grayLt}>I already set a reminder</PixelText>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sub-step 3: ARMORY */}
+                {riseSubStep === 3 && (
+                  <div>
+                    <DialogBox speaker="DARA">
+                      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                        You've locked in your time and{"\n"}battlefield.{"\n"}{"\n"}
                         Before you go — which tool{"\n"}from the Armory will you carry?{"\n"}Choose the one that steadies you.
                       </PixelText>
                     </DialogBox>
@@ -4932,7 +5083,7 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                         { key: "values", icon: "💎", label: `Anchor to "${heroValue}"` },
                         { key: "none", icon: "🗡️", label: "I'll trust the strategy alone" },
                       ].map(tool => (
-                        <button key={tool.key} onClick={() => { setExposureArmory(tool.label); setRiseSubStep(3); }} style={{
+                        <button key={tool.key} onClick={() => { setExposureArmory(tool.label); setRiseSubStep(4); }} style={{
                           display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                           borderRadius: 4, border: `2px solid ${exposureArmory === tool.label ? C.teal : "#5C3A50"}`,
                           background: exposureArmory === tool.label ? C.teal + "20" : "#1A1218",
@@ -4946,8 +5097,8 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                   </div>
                 )}
 
-                {/* Sub-step 3: SUDs before */}
-                {riseSubStep === 3 && (
+                {/* Sub-step 4: SUDs before */}
+                {riseSubStep === 4 && (
                   <div>
                     <DialogBox speaker="DARA">
                       <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -5120,7 +5271,7 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                 style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
               <PixelBtn onClick={() => handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
             </div>
-            <PixelBtn onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
+            <PixelBtn onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
               RETURN TO MAP
             </PixelBtn>
           </>
@@ -5313,6 +5464,7 @@ function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {
                       {battle.exposureArmory && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>⚗ Tool:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureArmory}</PixelText></div>}
                       {battle.exposureWhen && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>🕐 When:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureWhen}</PixelText></div>}
                       {battle.exposureWhere && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>📍 Where:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureWhere}</PixelText></div>}
+                      {battle.exposureScheduledTime && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>⏰ Scheduled:</PixelText><PixelText size={6} color={C.cream}> {new Date(battle.exposureScheduledTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</PixelText></div>}
                       {battle.battleMessages?.length > 0 && (
                         <details style={{ marginTop: 6 }}>
                           <summary style={{ cursor: "pointer", marginBottom: 4 }}>
@@ -6263,7 +6415,7 @@ export default function DARERQuest() {
   };
 
   const handleBossVictory = async (outcome, details = {}) => {
-    const { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, battleMessages, victoryMessages } = details;
+    const { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages, victoryMessages } = details;
     if (outcome === "victory") {
       setQuest(q => ({
         ...q,
@@ -6302,6 +6454,7 @@ export default function DARERQuest() {
         exposureWhen: exposureWhen || "",
         exposureWhere: exposureWhere || "",
         exposureArmory: exposureArmory || "",
+        exposureScheduledTime: exposureScheduledTime || "",
         // Full AI conversations
         battleMessages: battleMessages || [],
         victoryMessages: victoryMessages || [],
