@@ -5112,10 +5112,10 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
 }
 
 // --- HERO PROFILE ---
-function HeroProfile({ hero, quest, onBack }) {
+function HeroProfile({ hero, quest, onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   return (
-    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "16px 16px 80px" }}>
+    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "16px 16px 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", marginBottom: 16 }}>
         <PixelText size={8} color={C.grayLt}>← BACK TO MAP</PixelText>
@@ -5231,6 +5231,28 @@ function HeroProfile({ hero, quest, onBack }) {
         {quest.bosses.filter(b => b.defeated).length === 0 && (
           <div style={{ padding: 14, textAlign: "center" }}><PixelText size={8} color={C.grayLt}>No bosses defeated yet. Your journey awaits!</PixelText></div>
         )}
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+      }}>
+        {[
+          { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
+          { icon: "⚗", label: "ARMORY", active: false, onClick: () => setScreen("armory") },
+          { icon: "🏆", label: "LADDER", active: false, onClick: () => setScreen("ladder") },
+          { icon: "🛡", label: "HERO", active: true },
+        ].map(t => (
+          <button key={t.label} onClick={t.onClick} style={{
+            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+            background: "transparent", display: "flex",
+            flexDirection: "column", alignItems: "center", gap: 2,
+          }}>
+            <span style={{ fontSize: 16 }}>{t.icon}</span>
+            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -6220,7 +6242,7 @@ export default function DARERQuest() {
       {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
-      {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
+      {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
 
