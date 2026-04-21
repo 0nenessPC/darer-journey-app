@@ -3366,7 +3366,163 @@ function AddManualEntryForm({ onClose, onSubmit }) {
   );
 }
 
-function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure }) {
+// ============ SWIPEABLE BOSS CARD ============
+function SwipeableBoss({ boss, onBossSelect, onAchieve, onDelete, children }) {
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
+  const SWIPE_THRESHOLD = 60;
+  const MAX_SWIPE = 160; // Width of action buttons
+  const containerRef = useRef(null);
+
+  const closeSwipe = () => {
+    setSwipeOffset(0);
+    setIsOpen(false);
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.button && e.button !== 0) return; // Only left click / touch
+    closeAllOtherSwipes(boss.id);
+    startXRef.current = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    currentXRef.current = 0;
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    const dx = x - startXRef.current;
+    currentXRef.current = dx;
+    // Only allow left swipe (negative dx), ignore right swipe
+    if (dx < 0) {
+      setSwipeOffset(Math.max(dx, -MAX_SWIPE));
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (currentXRef.current < -SWIPE_THRESHOLD) {
+      // Snap open
+      setSwipeOffset(-MAX_SWIPE);
+      setIsOpen(true);
+    } else if (currentXRef.current > SWIPE_THRESHOLD / 2) {
+      // Right swipe past threshold → close
+      closeSwipe();
+    } else {
+      // Not enough swipe → close back
+      closeSwipe();
+    }
+  };
+
+  const handleBossClick = () => {
+    if (isOpen || isDragging) return;
+    onBossSelect(boss);
+  };
+
+  const handleAchieve = () => {
+    closeSwipe();
+    onAchieve(boss);
+  };
+
+  const handleDelete = () => {
+    closeSwipe();
+    onDelete(boss);
+  };
+
+  // Close swipe on scroll
+  useEffect(() => {
+    const handleScroll = () => closeSwipe();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close when another card is swiped open
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail !== boss.id) closeSwipe();
+    };
+    window.addEventListener('darer-swipe-close', handler);
+    return () => window.removeEventListener('darer-swipe-close', handler);
+  }, [boss.id]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 6,
+      }}
+    >
+      {/* Action buttons (behind the card) */}
+      <div style={{
+        position: "absolute", right: 0, top: 0, bottom: 0,
+        display: "flex", width: MAX_SWIPE, zIndex: 0,
+      }}>
+        <button
+          onClick={handleAchieve}
+          style={{
+            width: MAX_SWIPE / 2, background: C.hpGreen,
+            border: "none", cursor: "pointer",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 2,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>✅</span>
+          <span style={{ fontFamily: PIXEL_FONT, fontSize: 8, color: C.cream }}>ACHIEVE</span>
+        </button>
+        <button
+          onClick={handleDelete}
+          style={{
+            width: MAX_SWIPE / 2, background: C.bossRed,
+            border: "none", cursor: "pointer",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 2,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🗑️</span>
+          <span style={{ fontFamily: PIXEL_FONT, fontSize: 8, color: C.cream }}>DELETE</span>
+        </button>
+      </div>
+
+      {/* Card (slides over buttons) */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={isDragging ? handlePointerMove : undefined}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={isDragging ? handlePointerUp : undefined}
+        onClick={handleBossClick}
+        onTouchStart={handlePointerDown}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
+        style={{
+          transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
+          transition: isDragging ? "none" : "transform 0.3s ease-out",
+          position: "relative",
+          zIndex: 1,
+          background: "inherit",
+          touchAction: "pan-y", // Allow vertical scroll, prevent horizontal
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Shared registry for closing other swiped cards
+let activeSwipeId = null;
+function closeAllOtherSwipes(id) {
+  // Simple pattern: setting activeSwipeId triggers re-render if needed
+  // In practice, each card manages its own state; we just close via event
+  activeSwipeId = id;
+  window.dispatchEvent(new CustomEvent('darer-swipe-close', { detail: id }));
+}
+
+function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
@@ -3422,8 +3578,9 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
           const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
           const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
 
-          return (
-            <div key={boss.id}>
+          // Card content (used as children of SwipeableBoss)
+          const cardContent = (
+            <>
               {/* Separator before custom section */}
               {boss.isCustom && i === sortedBosses.findIndex(b => b.isCustom) && (
                 <div style={{ margin: "16px 0 8px", textAlign: "center" }}>
@@ -3442,7 +3599,8 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                   <div style={{ width: 3, height: 14, background: C.teal + "50" }} />
                 </div>
               )}
-              <button onClick={() => handleBossSelect(boss)} style={{
+              {/* Boss card */}
+              <div style={{
                 width: "100%", padding: 14, background: bgColor,
                 border: `3px solid ${borderColor}`, borderRadius: 6,
                 cursor: "pointer", textAlign: "left",
@@ -3505,8 +3663,20 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                     <PixelText size={8} color={C.goldMd}>⚔ NEXT BATTLE ⚔</PixelText>
                   </div>
                 )}
-              </button>
-            </div>
+              </div>
+            </>
+          );
+
+          return (
+            <SwipeableBoss
+              key={boss.id}
+              boss={boss}
+              onBossSelect={handleBossSelect}
+              onAchieve={onAchieveBoss}
+              onDelete={onDeleteBoss}
+            >
+              {cardContent}
+            </SwipeableBoss>
           );
         })}
 
@@ -5350,6 +5520,39 @@ export default function DARERQuest() {
   // Add exposure modal state
   const [showAddModal, setShowAddModal] = useState(false); // false | 'menu' | 'manual'
   const [addMode, setAddMode] = useState(null); // 'menu' | 'manual' | 'ask-dara'
+  const [pendingDeleteBoss, setPendingDeleteBoss] = useState(null); // boss pending delete confirmation
+
+  // Achieve a boss — mark as defeated regardless of battle state
+  const handleAchieveBoss = (boss) => {
+    setQuest(q => ({
+      ...q,
+      bosses: q.bosses.map(b =>
+        b.id === boss.id ? { ...b, defeated: true, hp: 0 } : b
+      ),
+    }));
+    // If this was the active battle, abort it
+    if (activeBoss?.id === boss.id) {
+      setActiveBoss(null);
+    }
+  };
+
+  // Delete a boss — open confirmation dialog
+  const handleDeleteBoss = (boss) => {
+    setPendingDeleteBoss(boss);
+  };
+
+  const confirmDeleteBoss = () => {
+    if (!pendingDeleteBoss) return;
+    setQuest(q => ({
+      ...q,
+      bosses: q.bosses.filter(b => b.id !== pendingDeleteBoss.id),
+    }));
+    // If this was the active battle, abort it
+    if (activeBoss?.id === pendingDeleteBoss.id) {
+      setActiveBoss(null);
+    }
+    setPendingDeleteBoss(null);
+  };
 
   // Check for active session on mount
   useEffect(() => {
@@ -5688,11 +5891,43 @@ export default function DARERQuest() {
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
-      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} />}
+      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
+
+      {/* Delete Confirmation Dialog */}
+      {pendingDeleteBoss && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(0,0,0,0.8)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 20,
+        }}>
+          <div style={{
+            width: "100%", maxWidth: 400, background: "#1A1218",
+            border: `3px solid ${C.bossRed}`, borderRadius: 8,
+            padding: 20, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+            <PixelText size={11} color={C.bossRed} style={{ display: "block", marginBottom: 8 }}>DELETE EXPOSURE?</PixelText>
+            <div style={{ padding: 12, background: "#222", borderRadius: 6, marginBottom: 16 }}>
+              <PixelText size={9} color={C.cream}>{pendingDeleteBoss.name}</PixelText>
+              <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingDeleteBoss.desc}</PixelText></div>
+            </div>
+            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16, lineHeight: 1.6 }}>
+              {pendingDeleteBoss.isCustom
+                ? "This custom exposure will be permanently removed from your journey."
+                : "This exposure will be hidden from your map. You can re-add it later."}
+            </PixelText>
+            <div style={{ display: "flex", gap: 8 }}>
+              <PixelBtn onClick={() => setPendingDeleteBoss(null)} color={C.plum} style={{ flex: 1 }}>CANCEL</PixelBtn>
+              <PixelBtn onClick={confirmDeleteBoss} color={C.bossRed} style={{ flex: 1 }}>DELETE</PixelBtn>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Exposure Modal — menu */}
       {addMode === "menu" && (
