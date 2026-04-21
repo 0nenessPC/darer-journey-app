@@ -3814,12 +3814,14 @@ function closeAllOtherSwipes(id) {
   window.dispatchEvent(new CustomEvent('darer-swipe-close', { detail: id }));
 }
 
-function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
+function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
   const [pendingBoss, setPendingBoss] = useState(null); // boss pending high-SUDs warning
   const [addPulse, setAddPulse] = useState(false); // FAB pulse animation trigger
+  const [showCompleted, setShowCompleted] = useState(false); // toggle completed view
+  const [expandedCompleted, setExpandedCompleted] = useState(null); // expanded completed boss id
 
   // Scroll to newly added boss
   useEffect(() => {
@@ -3839,12 +3841,15 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
     }
   };
 
-  // Sort bosses: default first (original order), custom sorted by difficulty at the bottom
-  const defaultBosses = quest.bosses.filter(b => !b.isCustom);
-  const customBosses = quest.bosses.filter(b => b.isCustom).sort((a, b) => a.difficulty - b.difficulty);
-  const firstCustomIdx = customBosses.length > 0 ? defaultBosses.length : -1;
-  const sortedBosses = [...defaultBosses, ...customBosses];
-  const customCount = customBosses.length;
+  // Sort bosses: active only on main map, custom sorted by difficulty at the bottom
+  const activeDefaultBosses = quest.bosses.filter(b => !b.isCustom && !b.defeated);
+  const activeCustomBosses = quest.bosses.filter(b => b.isCustom && !b.defeated).sort((a, b) => a.difficulty - b.difficulty);
+  const sortedBosses = [...activeDefaultBosses, ...activeCustomBosses];
+  const activeCount = sortedBosses.length;
+  const customCount = activeCustomBosses.length;
+
+  // Completed bosses (for the completed view)
+  const completedBosses = quest.bosses.filter(b => b.defeated);
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
@@ -3861,9 +3866,21 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         </div>
         <div style={{ textAlign: "right" }}>
           <PixelText size={10} color={C.goldMd}>{totalXp} XP</PixelText>
-          <div><PixelText size={7} color={C.grayLt}>{defeatedCount}/{quest.bosses.length} BOSSES</PixelText></div>
-          {customCount > 0 && (
-            <div style={{ marginTop: 2 }}><PixelText size={7} color={C.teal}>+{customCount} CUSTOM</PixelText></div>
+          <div><PixelText size={7} color={C.grayLt}>{activeCount}/{quest.bosses.length} BOSSES</PixelText></div>
+          {defeatedCount > 0 && (
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              style={{
+                marginTop: 2,
+                background: showCompleted ? C.hpGreen + "30" : "transparent",
+                border: `1px solid ${showCompleted ? C.hpGreen : C.teal + "80"}`,
+                borderRadius: 3,
+                padding: "2px 6px",
+                cursor: "pointer",
+              }}
+            >
+              <PixelText size={7} color={C.teal}>✅ {defeatedCount} COMPLETED</PixelText>
+            </button>
           )}
         </div>
       </div>
@@ -3898,23 +3915,36 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         </button>
       )}
 
-      {/* Boss path */}
+      {/* Boss path — active exposures only */}
       <div style={{ padding: 16 }}>
+        {sortedBosses.length === 0 && defeatedCount === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 16px" }}>
+            <PixelText size={10} color={C.grayLt}>No exposures yet.</PixelText>
+            <div style={{ marginTop: 8 }}><PixelText size={8} color={C.grayLt}>Add your first exposure to begin!</PixelText></div>
+          </div>
+        )}
+        {sortedBosses.length === 0 && defeatedCount > 0 && (
+          <div style={{ textAlign: "center", padding: "40px 16px" }}>
+            <PixelText size={10} color={C.hpGreen}>🎉 All exposures completed!</PixelText>
+            <div style={{ marginTop: 8 }}><PixelText size={8} color={C.grayLt}>Tap ✅ COMPLETED above to review your journey, or add new challenges below.</PixelText></div>
+          </div>
+        )}
         {sortedBosses.map((boss, i) => {
           const isNext = nextBoss?.id === boss.id;
           const isHighLevel = nextBoss && boss.difficulty - nextBoss.difficulty >= 2;
           const isJustAdded = justAddedBossId === boss.id;
-          const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
-          const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
+          const bgColor = isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
+          const borderColor = isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
           const bossBoxShadow = isJustAdded
             ? `0 0 20px ${C.goldMd}50, inset 0 0 20px ${C.goldMd}15`
-            : isNext ? `0 0 16px ${C.goldMd}20` : boss.isCustom && !boss.defeated ? `0 0 8px ${C.teal}15` : "none";
+            : isNext ? `0 0 16px ${C.goldMd}20` : boss.isCustom ? `0 0 8px ${C.teal}15` : "none";
 
           // Card content (used as children of SwipeableBoss)
+          const isFirstCustom = boss.isCustom && sortedBosses.slice(0, i).every(b => !b.isCustom);
           const cardContent = (
             <>
               {/* Separator before custom section */}
-              {boss.isCustom && i === sortedBosses.findIndex(b => b.isCustom) && (
+              {isFirstCustom && (
                 <div style={{ margin: "16px 0 8px", textAlign: "center" }}>
                   <PixelText size={7} color={C.teal}>— ✏️ CUSTOM EXPOSURES —</PixelText>
                 </div>
@@ -3922,17 +3952,17 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
               {/* Connector line between default bosses */}
               {i > 0 && !boss.isCustom && !sortedBosses[i-1]?.isCustom && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-                  <div style={{ width: 3, height: 20, background: boss.defeated || isNext ? C.plumMd : "#5C3A50" }} />
+                  <div style={{ width: 3, height: 20, background: isNext ? C.plumMd : "#5C3A50" }} />
                 </div>
               )}
               {/* Bridge connector: last default boss → custom section separator */}
-              {boss.isCustom && i === firstCustomIdx && i > 0 && (
+              {isFirstCustom && i > 0 && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
                   <div style={{ width: 3, height: 16, background: `linear-gradient(to bottom, ${C.plumMd}60, ${C.teal}60)` }} />
                 </div>
               )}
               {/* Connector line between custom bosses */}
-              {i > 0 && boss.isCustom && i !== firstCustomIdx && (
+              {i > 0 && boss.isCustom && !isFirstCustom && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
                   <div style={{ width: 3, height: 14, background: C.teal + "50" }} />
                 </div>
@@ -4080,6 +4110,145 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
               <PixelBtn onClick={() => { setPendingBoss(null); onSelectBoss(pendingBoss); }} color={C.amber} textColor={C.charcoal} style={{ flex: 1 }}>I'M READY →</PixelBtn>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Completed Exposures View */}
+      {showCompleted && completedBosses.length > 0 && (
+        <div style={{ padding: 16, borderTop: `3px solid ${C.hpGreen}40` }}>
+          <PixelText size={12} color={C.hpGreen} style={{ display: "block", marginBottom: 12, textAlign: "center" }}>✅ COMPLETED EXPOSURES</PixelText>
+          {completedBosses.map((boss, idx) => (
+            <div key={boss.id} style={{ marginBottom: 8 }}>
+              <button
+                onClick={() => setExpandedCompleted(expandedCompleted === boss.id ? null : boss.id)}
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  background: "#1A1218",
+                  border: `2px solid ${expandedCompleted === boss.id ? C.hpGreen : C.hpGreen + "40"}`,
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ textAlign: "left" }}>
+                  <PixelText size={9} color={C.hpGreen}>{boss.name}</PixelText>
+                  <div><PixelText size={7} color={C.grayLt}>{boss.desc}</PixelText></div>
+                </div>
+                <PixelText size={12} color={C.grayLt}>{expandedCompleted === boss.id ? "▲" : "▼"}</PixelText>
+              </button>
+
+              {/* Expanded detail */}
+              {expandedCompleted === boss.id && (() => {
+                const battle = battleHistory?.find(b => b.bossId === boss.id) || {};
+                return (
+                  <div style={{
+                    marginTop: 4,
+                    padding: 12,
+                    background: "#1A1218",
+                    border: `1px solid ${C.hpGreen}30`,
+                    borderRadius: 4,
+                  }}>
+                    {/* Outcome badge */}
+                    <div style={{ textAlign: "center", marginBottom: 8 }}>
+                      <PixelText size={10} color={battle.outcome === "victory" ? C.hpGreen : battle.outcome === "partial" ? C.amber : C.bossRed}>
+                        {battle.outcome === "victory" ? "🏆 VICTORY" : battle.outcome === "partial" ? "⚡ PARTIAL" : "💀 DEFEATED"}
+                      </PixelText>
+                    </div>
+
+                    {/* SUDS ratings */}
+                    {battle.suds && battle.suds.before !== undefined && (
+                      <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 8, padding: 8, background: "#1E1A18", borderRadius: 4 }}>
+                        <div style={{ textAlign: "center" }}>
+                          <PixelText size={10} color={C.bossRed}>{battle.suds.before}</PixelText>
+                          <div><PixelText size={6} color={C.grayLt}>BEFORE</PixelText></div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <PixelText size={10} color={C.amber}>{battle.suds.during ?? battle.suds.peak}</PixelText>
+                          <div><PixelText size={6} color={C.grayLt}>PEAK</PixelText></div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <PixelText size={10} color={C.hpGreen}>{battle.suds.after}</PixelText>
+                          <div><PixelText size={6} color={C.grayLt}>AFTER</PixelText></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Date */}
+                    {battle.date && (
+                      <div style={{ marginBottom: 6 }}>
+                        <PixelText size={7} color={C.grayLt}>Completed: {new Date(battle.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</PixelText>
+                      </div>
+                    )}
+
+                    {/* Prep answers */}
+                    {battle.prepAnswers && battle.prepAnswers.value && (
+                      <div style={{ marginBottom: 6 }}>
+                        <PixelText size={7} color={C.goldMd}>💭 Value:</PixelText>
+                        <PixelText size={7} color={C.cream}> {battle.prepAnswers.value}</PixelText>
+                      </div>
+                    )}
+                    {battle.exposureArmory && (
+                      <div style={{ marginBottom: 6 }}>
+                        <PixelText size={7} color={C.goldMd}>⚗ Tool:</PixelText>
+                        <PixelText size={7} color={C.cream}> {battle.exposureArmory}</PixelText>
+                      </div>
+                    )}
+                    {battle.exposureWhen && (
+                      <div style={{ marginBottom: 6 }}>
+                        <PixelText size={7} color={C.goldMd}>🕐 When:</PixelText>
+                        <PixelText size={7} color={C.cream}> {battle.exposureWhen}</PixelText>
+                      </div>
+                    )}
+                    {battle.exposureWhere && (
+                      <div style={{ marginBottom: 6 }}>
+                        <PixelText size={7} color={C.goldMd}>📍 Where:</PixelText>
+                        <PixelText size={7} color={C.cream}> {battle.exposureWhere}</PixelText>
+                      </div>
+                    )}
+
+                    {/* Battle AI conversation */}
+                    {battle.battleMessages && battle.battleMessages.length > 0 && (
+                      <details style={{ marginTop: 8 }}>
+                        <summary style={{ cursor: "pointer", marginBottom: 4 }}>
+                          <PixelText size={7} color={C.teal}>💬 Battle conversation ({battle.battleMessages.length} messages)</PixelText>
+                        </summary>
+                        <div style={{ maxHeight: 200, overflowY: "auto", padding: 8, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                          {battle.battleMessages.map((m, mi) => (
+                            <div key={mi} style={{ marginBottom: 4 }}>
+                              <PixelText size={7} color={m.role === "assistant" ? C.rose : C.cream}>
+                                {m.role === "assistant" ? "Dara: " : "You: "}{m.text}
+                              </PixelText>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+
+                    {/* Victory AI conversation */}
+                    {battle.victoryMessages && battle.victoryMessages.length > 0 && (
+                      <details style={{ marginTop: 8 }}>
+                        <summary style={{ cursor: "pointer", marginBottom: 4 }}>
+                          <PixelText size={7} color={C.teal}>🎉 Victory reflection ({battle.victoryMessages.length} messages)</PixelText>
+                        </summary>
+                        <div style={{ maxHeight: 200, overflowY: "auto", padding: 8, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                          {battle.victoryMessages.map((m, mi) => (
+                            <div key={mi} style={{ marginBottom: 4 }}>
+                              <PixelText size={7} color={m.role === "assistant" ? C.rose : C.cream}>
+                                {m.role === "assistant" ? "Dara: " : "You: "}{m.text}
+                              </PixelText>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          ))}
         </div>
       )}
 
@@ -6283,7 +6452,7 @@ export default function DARERQuest() {
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
-      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
+      {screen === "map" && <GameMap quest={quest} hero={hero} battleHistory={battleHistory} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
