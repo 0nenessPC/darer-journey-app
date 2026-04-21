@@ -3826,12 +3826,11 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
   };
 
   // Sort bosses: default first (original order), custom sorted by difficulty at the bottom
-  const firstCustomIdx = quest.bosses.some(b => b.isCustom) ? quest.bosses.filter(b => !b.isCustom).length : -1;
-  const sortedBosses = [
-    ...quest.bosses.filter(b => !b.isCustom),
-    ...quest.bosses.filter(b => b.isCustom).sort((a, b) => a.difficulty - b.difficulty),
-  ];
-  const customCount = quest.bosses.filter(b => b.isCustom).length;
+  const defaultBosses = quest.bosses.filter(b => !b.isCustom);
+  const customBosses = quest.bosses.filter(b => b.isCustom).sort((a, b) => a.difficulty - b.difficulty);
+  const firstCustomIdx = customBosses.length > 0 ? defaultBosses.length : -1;
+  const sortedBosses = [...defaultBosses, ...customBosses];
+  const customCount = customBosses.length;
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
@@ -3849,6 +3848,9 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         <div style={{ textAlign: "right" }}>
           <PixelText size={10} color={C.goldMd}>{totalXp} XP</PixelText>
           <div><PixelText size={7} color={C.grayLt}>{defeatedCount}/{quest.bosses.length} BOSSES</PixelText></div>
+          {customCount > 0 && (
+            <div style={{ marginTop: 2 }}><PixelText size={7} color={C.teal}>+{customCount} CUSTOM</PixelText></div>
+          )}
         </div>
       </div>
 
@@ -3863,8 +3865,12 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
         {sortedBosses.map((boss, i) => {
           const isNext = nextBoss?.id === boss.id;
           const isHighLevel = nextBoss && boss.difficulty - nextBoss.difficulty >= 2;
+          const isJustAdded = justAddedBossId === boss.id;
           const bgColor = boss.defeated ? "#1A2818" : isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
           const borderColor = boss.defeated ? C.hpGreen : isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
+          const bossBoxShadow = isJustAdded
+            ? `0 0 20px ${C.goldMd}50, inset 0 0 20px ${C.goldMd}15`
+            : isNext ? `0 0 16px ${C.goldMd}20` : boss.isCustom && !boss.defeated ? `0 0 8px ${C.teal}15` : "none";
 
           // Card content (used as children of SwipeableBoss)
           const cardContent = (
@@ -3894,14 +3900,18 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                 </div>
               )}
               {/* Boss card */}
-              <div style={{
-                width: "100%", padding: 14, background: bgColor,
-                border: `3px solid ${borderColor}`, borderRadius: 6,
-                cursor: "pointer", textAlign: "left",
-                opacity: boss.defeated ? 0.6 : 1, transition: "all 0.2s",
-                boxShadow: isNext ? `0 0 16px ${C.goldMd}20` : boss.isCustom && !boss.defeated ? `0 0 8px ${C.teal}15` : "none",
-                position: "relative",
-              }}>
+              <div
+                id={isJustAdded ? `boss-${boss.id}` : undefined}
+                className={isJustAdded ? "just-added-glow" : undefined}
+                style={{
+                  width: "100%", padding: 14, background: bgColor,
+                  border: `3px solid ${borderColor}`, borderRadius: 6,
+                  cursor: "pointer", textAlign: "left",
+                  opacity: boss.defeated ? 0.6 : 1, transition: "all 0.2s",
+                  boxShadow: bossBoxShadow,
+                  position: "relative",
+                }}
+              >
                 {isHighLevel && !boss.defeated && (
                   <div style={{
                     position: "absolute", top: -6, right: -6,
@@ -3973,6 +3983,19 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
             </SwipeableBoss>
           );
         })}
+
+        {/* Just-added pulse animation */}
+        {justAddedBossId && (
+          <style>{`
+            @keyframes justAddedPulse {
+              0%, 100% { box-shadow: 0 0 20px ${C.goldMd}50, inset 0 0 20px ${C.goldMd}15; }
+              50% { box-shadow: 0 0 32px ${C.goldMd}70, inset 0 0 32px ${C.goldMd}25; }
+            }
+            .just-added-glow {
+              animation: justAddedPulse 1.5s ease-in-out 2;
+            }
+          `}</style>
+        )}
 
         {/* Goal castle at end */}
         <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
@@ -5815,6 +5838,7 @@ export default function DARERQuest() {
   const [showAddModal, setShowAddModal] = useState(false); // false | 'menu' | 'manual'
   const [addMode, setAddMode] = useState(null); // 'menu' | 'manual' | 'ask-dara'
   const [pendingDeleteBoss, setPendingDeleteBoss] = useState(null); // boss pending delete confirmation
+  const [justAddedBossId, setJustAddedBossId] = useState(null); // triggers highlight on newly added boss
 
   // Achieve a boss — mark as defeated regardless of battle state
   const handleAchieveBoss = (boss) => {
@@ -6185,7 +6209,7 @@ export default function DARERQuest() {
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
-      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} />}
+      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
@@ -6237,8 +6261,9 @@ export default function DARERQuest() {
         <AskDaraChat
           onClose={() => setAddMode(null)}
           onSubmit={(data) => {
+            const id = `custom_${Date.now()}`;
             const newBoss = {
-              id: `custom_${Date.now()}`,
+              id,
               name: data.name,
               desc: data.desc,
               difficulty: data.difficulty,
@@ -6248,6 +6273,8 @@ export default function DARERQuest() {
               isCustom: true,
             };
             setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
+            setJustAddedBossId(id);
+            setTimeout(() => setJustAddedBossId(null), 3000);
             setAddMode(null);
           }}
           onFallback={() => setAddMode("manual")}
@@ -6259,8 +6286,9 @@ export default function DARERQuest() {
         <AddManualEntryForm
           onClose={() => setAddMode(null)}
           onSubmit={(data) => {
+            const id = `custom_${Date.now()}`;
             const newBoss = {
-              id: `custom_${Date.now()}`,
+              id,
               name: data.name,
               desc: data.desc,
               difficulty: data.difficulty,
@@ -6270,6 +6298,8 @@ export default function DARERQuest() {
               isCustom: true,
             };
             setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
+            setJustAddedBossId(id);
+            setTimeout(() => setJustAddedBossId(null), 3000);
             setAddMode(null);
           }}
         />
