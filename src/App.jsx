@@ -62,7 +62,7 @@ function useAIChat(systemPrompt, ctx = "") {
     setMessages(p => [...p, u]); hist.current.push(u); setTyping(true); setError(null); setErrorType(null);
     const api = ctx ? [{ role: "user", text: ctx }, { role: "assistant", text: "Understood." }, ...hist.current] : hist.current;
     const res = await callClaude(systemPrompt, api);
-    if (res === FALLBACK) {
+    if (res === FALLBACK || res === "..." || !res) {
       // AI call failed — don't pollute chat with fallback text
       hist.current.pop(); // remove the user message from history too
       setMessages(p => p.slice(0, -1)); // remove user message from display
