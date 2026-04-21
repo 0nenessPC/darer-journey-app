@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, saveProgress, loadProgress, NDA_VERSION, saveNdaAgreement, checkNdaAgreed } from "./utils/supabase";
+import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
 
 // ============ DESIGN TOKENS — Warm Dusk + Pixel Game ============
@@ -1860,12 +1861,13 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
 }
 
 // --- INTAKE (Dara conversation — mapping the bosses) ---
-function IntakeScreen({ heroName, onComplete }) {
-  const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake);
+function IntakeScreen({ heroName, hero, quest, onComplete }) {
+  const heroContext = buildHeroContext(hero, quest, "");
+  const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const chatRef = useRef(null);
-  const initPromptRef = useRef(`The hero's name is ${heroName}. They have just seen the lore about the Shadow's true nature and said they are ready to look into its eyes. Begin by acknowledging their courage, mention this will take about 5 to 10 minutes, then ask your first question about where the Shadow shows up in their daily life. Keep it to 2-3 sentences. This should feel like a companion helping them understand their enemy, not a clinical interview.`);
+  const initPromptRef = useRef(`The hero's name is ${heroName}. They have just seen the lore about the Shadow's true nature and said they are ready to look into its eyes. Refer to their personal context provided above — their strengths, values, traits, and goal. Tailor your questions around what matters to them. Begin by acknowledging their courage, mention this will take about 5 to 10 minutes, then ask your first question about where the Shadow shows up in their daily life. Keep it to 2-3 sentences. This should feel like a companion helping them understand their enemy, not a clinical interview.`);
   useEffect(() => {
     if (!started) { setStarted(true); init(initPromptRef.current); }
   }, [started, init, heroName]);
@@ -2472,7 +2474,7 @@ function ArmoryScreen({ heroName, onContinue, obState = {}, setOBState }) {
   );
 }
 
-function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete, obState = {}, setOBState }) {
+function TutorialBattle({ heroName, hero, quest, shadowText, heroValues, heroStrengths = [], heroCoreValues = [], onComplete, obState = {}, setOBState }) {
   const [phase, setPhase] = useState(obState.phase || "intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
   const advancePhase = (newPhase) => { setPhase(newPhase); if (setOBState) setOBState({ phase: newPhase }); };
   const [chosenExposure, setChosenExposure] = useState(obState.chosenExposure || null);
@@ -2491,7 +2493,8 @@ function TutorialBattle({ heroName, shadowText, heroValues, heroStrengths = [], 
   const valueName = heroValues?.[0]?.word || heroValues?.[0]?.text || "courage";
 
   // AI coach for the rehearsal/coaching moments
-  const coachChat = useAIChat(SYS.preBoss, `TUTORIAL BATTLE: This is the hero's very first exposure — a micro-challenge. Hero name: ${heroName}. Their core value: ${valueName}.`);
+  const heroContext = buildHeroContext(hero, quest, shadowText, []);
+  const coachChat = useAIChat(SYS.preBoss, `${heroContext}\n\nTUTORIAL BATTLE: This is the hero's very first exposure — a micro-challenge. Reference their strengths, values, and shadow profile when coaching. Be encouraging and personal.`);
   const chatRef = useRef(null);
   const [coachInput, setCoachInput] = useState("");
 
@@ -4622,7 +4625,7 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
 }
 
 // --- BOSS BATTLE ---
-function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, setOBState }) {
+function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
   const [phase, setPhase] = useState(obState.phase || "prep");
   const [prepStep, setPrepStep] = useState(obState.prepStep ?? 0);
   const [prepAnswers, setPrepAnswers] = useState(obState.prepAnswers || { value: "", allow: "", rise: "" });
@@ -4641,8 +4644,9 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
     setOBState({ phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory });
   }, [phase, prepStep, prepAnswers, suds, outcome, riseSubStep, exposureWhen, exposureWhere, exposureArmory, setOBState]);
 
-  const battleChat = useAIChat(SYS.battle, `BOSS: "${boss.name}" — ${boss.desc}. The hero is fighting this boss RIGHT NOW in real life.`);
-  const victoryChat = useAIChat(SYS.victory, "");
+  const heroContext = buildHeroContext(hero, quest, shadowText, battleHistory);
+  const battleChat = useAIChat(SYS.battle, `${heroContext}\n\nBOSS: "${boss.name}" — ${boss.desc}. The hero is fighting this boss RIGHT NOW in real life. Reference their strengths, values, and past battles when relevant.`);
+  const victoryChat = useAIChat(SYS.victory, `${heroContext}\n\nThe hero just completed a battle. Reference their actual strengths, values, and progress when celebrating.`);
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; },
     [battleChat.messages, victoryChat.messages, battleChat.typing, victoryChat.typing]);
@@ -5079,7 +5083,7 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
                 style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
               <PixelBtn onClick={() => handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
             </div>
-            <PixelBtn onClick={() => onVictory(outcome)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
+            <PixelBtn onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
               RETURN TO MAP
             </PixelBtn>
           </>
@@ -5855,6 +5859,7 @@ export default function DARERQuest() {
   const [screenHistory, setScreenHistory] = useState([]);
   const [hero, setHero] = useState({ name: "Hero", darerId: "", strengths: [], stats: { courage: 5, resilience: 5, openness: 5 }, traits: [], armory: JSON.parse(JSON.stringify(DEFAULT_ARMORY)) });
   const [quest, setQuest] = useState(DEFAULT_QUEST);
+  const [battleHistory, setBattleHistory] = useState([]);
   const [activeBoss, setActiveBoss] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -6025,6 +6030,7 @@ export default function DARERQuest() {
       }) : JSON.parse(JSON.stringify(DEFAULT_ARMORY));
       setHero({ ...loadedHero, armory: migratedArmory });
       if (progress.quest) setQuest(progress.quest);
+      if (progress.battle_history) setBattleHistory(progress.battle_history);
       setShadowText(progress.shadow_text || '');
       if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
       setScreenHistory([]); // Clear history on fresh login
@@ -6067,6 +6073,7 @@ export default function DARERQuest() {
       }) : JSON.parse(JSON.stringify(DEFAULT_ARMORY));
       setHero({ ...loadedHero, armory: migratedArmory });
       if (progress.quest) setQuest(progress.quest);
+      if (progress.battle_history) setBattleHistory(progress.battle_history);
       setShadowText(progress.shadow_text || '');
       if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
       setScreenHistory([]);
@@ -6126,10 +6133,11 @@ export default function DARERQuest() {
     setShadowText(summaryText || "");
     setScreen("shadowReveal");
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await saveProgress(user.id, { screen: "shadowReveal", hero, quest, shadow_text: summaryText || "", intake_complete: true });
+    if (user) await saveProgress(user.id, { screen: "shadowReveal", hero, quest, shadow_text: summaryText || "", intake_complete: true, intake_messages: msgs });
   };
 
-  const handleBossVictory = async (outcome) => {
+  const handleBossVictory = async (outcome, details = {}) => {
+    const { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, battleMessages, victoryMessages } = details;
     if (outcome === "victory") {
       setQuest(q => ({
         ...q,
@@ -6154,9 +6162,7 @@ export default function DARERQuest() {
     setScreen("map");
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // Load existing battle_history, append this result, save back
-      const existing = await loadProgress(user.id);
-      const prevHistory = Array.isArray(existing?.battle_history) ? existing.battle_history : [];
+      const prevHistory = Array.isArray(battleHistory) ? battleHistory : [];
       const battleRecord = {
         bossId: activeBoss?.id,
         bossName: activeBoss?.name,
@@ -6164,8 +6170,18 @@ export default function DARERQuest() {
         outcome,
         date: new Date().toISOString(),
         heroStats: hero?.stats,
+        // Pre-battle preparation
+        prepAnswers: prepAnswers || {},
+        suds: suds || {},
+        exposureWhen: exposureWhen || "",
+        exposureWhere: exposureWhere || "",
+        exposureArmory: exposureArmory || "",
+        // Full AI conversations
+        battleMessages: battleMessages || [],
+        victoryMessages: victoryMessages || [],
       };
       const newHistory = [...prevHistory, battleRecord];
+      setBattleHistory(newHistory);
       await saveProgress(user.id, { screen: "map", hero, quest, battle_history: newHistory });
     }
   };
@@ -6230,18 +6246,18 @@ export default function DARERQuest() {
       {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 0 })} setOBState={(s) => setOBState("shadowLore", s)} />}
       {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} obState={getOBState("psychoed", { step: 0 })} setOBState={(s) => setOBState("psychoed", s)} />}
       {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLorePost", { step: 2 })} setOBState={(s) => setOBState("shadowLorePost", s)} />}
-      {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
+      {screen === "intake" && <IntakeScreen heroName={hero.name} hero={hero} quest={quest} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerStrategy")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
       {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armoryIntro")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
       {screen === "armoryIntro" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armoryIntro", { step: "intro" })} setOBState={(s) => setOBState("armoryIntro", s)} />}
-      {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
+      {screen === "tutorial" && <TutorialBattle heroName={hero.name} hero={hero} quest={quest} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
-      {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
+      {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
