@@ -146,6 +146,50 @@ If the user expresses suicidal ideation or crisis, pause. Provide: 988 Suicide a
   victory: `You are Dara, companion fairy in D.A.R.E.R. Journey. The hero just completed a boss battle. Celebrate, reflect on feared-vs-actual outcome, note their SUDS drop as damage dealt to the boss, and suggest the next boss. 2-3 sentences. Warm and proud.`,
 };
 
+// ============ ARMORY DATA ============
+const DEFAULT_ARMORY = [
+  {
+    id: "breathing",
+    name: "Paced Breathing",
+    icon: "🌬️",
+    description: "Breathe in 4s → Hold 2s → Breathe out 6s → Hold 2s",
+    technique: "4-2-6-2 paced breathing",
+    unlockCondition: null, // default unlocked
+    unlocked: true,
+    practiceCount: 0,
+  },
+  {
+    id: "grounding",
+    name: "5-4-3-2-1 Grounding",
+    icon: "⚓",
+    description: "Name 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste",
+    technique: "5-4-3-2-1 senses grounding",
+    unlockCondition: { requiresToolId: "breathing", practiceCount: 2 },
+    unlocked: false,
+    practiceCount: 0,
+  },
+  {
+    id: "allowing",
+    name: "Allow the Storm",
+    icon: "🛡️",
+    description: "Make space for anxiety without fighting it — let it pass like a wave",
+    technique: "Acceptance & defusion",
+    unlockCondition: { requiresToolId: "grounding", practiceCount: 2 },
+    unlocked: false,
+    practiceCount: 0,
+  },
+  {
+    id: "values",
+    name: "Value Anchoring",
+    icon: "💎",
+    description: "Recall your deepest value to steady yourself in the moment",
+    technique: "Values-based grounding",
+    unlockCondition: { requiresToolId: "allowing", practiceCount: 2 },
+    unlocked: false,
+    practiceCount: 0,
+  },
+];
+
 // ============ SAMPLE DATA (replaced after intake) ============
 const DEFAULT_QUEST = {
   goal: "Make real friends I can be myself around",
@@ -3055,7 +3099,7 @@ No other text.`,
 }
 
 // --- GAME MAP ---
-function GameMap({ quest, hero, onSelectBoss, onViewProfile }) {
+function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
@@ -3168,14 +3212,102 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile }) {
         width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
       }}>
         {[
-          { icon: "🗺", label: "MAP", active: true },
-          { icon: "⚔", label: "BATTLE" },
-          { icon: "👥", label: "GUILD" },
+          { icon: "🗺", label: "MAP", onClick: () => {} },
+          { icon: "⚗", label: "ARMORY", onClick: onArmory },
+          { icon: "🏆", label: "LADDER", onClick: onLadder },
           { icon: "🛡", label: "HERO", onClick: onViewProfile },
         ].map(t => (
           <button key={t.label} onClick={t.onClick} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? C.plum + "30" : "transparent", display: "flex",
+            background: "transparent", display: "flex",
+            flexDirection: "column", alignItems: "center", gap: 2,
+          }}>
+            <span style={{ fontSize: 16 }}>{t.icon}</span>
+            <PixelText size={6} color={C.grayLt}>{t.label}</PixelText>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- GAME ARMORY (post-onboarding) ---
+function GameArmory({ hero, setHero, setScreen, onBack }) {
+  return (
+    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
+      <link href={FONT_LINK} rel="stylesheet" />
+      <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          <PixelText size={9} color={C.grayLt}>←</PixelText>
+        </button>
+        <PixelText size={10} color={C.goldMd}>⚗ ARMORY</PixelText>
+      </div>
+      <div style={{ padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚗️</div>
+        <PixelText size={11} color={C.cream} style={{ display: "block", marginBottom: 8 }}>YOUR ARMORY</PixelText>
+        <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 24 }}>Practice techniques to unlock new tools</PixelText>
+        <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6 }}>
+          <PixelText size={8} color={C.grayLt}>Coming soon — full armory practice interface</PixelText>
+        </div>
+      </div>
+      {/* Bottom nav (reused) */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+      }}>
+        {[
+          { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
+          { icon: "⚗", label: "ARMORY", active: true },
+          { icon: "🏆", label: "LADDER", active: false, onClick: () => setScreen("ladder") },
+          { icon: "🛡", label: "HERO", active: false, onClick: () => setScreen("profile") },
+        ].map(t => (
+          <button key={t.label} onClick={t.onClick} style={{
+            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+            background: "transparent", display: "flex",
+            flexDirection: "column", alignItems: "center", gap: 2,
+          }}>
+            <span style={{ fontSize: 16 }}>{t.icon}</span>
+            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- LADDER SCREEN (placeholder) ---
+function LadderScreen({ hero, quest, setScreen, onBack }) {
+  return (
+    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
+      <link href={FONT_LINK} rel="stylesheet" />
+      <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          <PixelText size={9} color={C.grayLt}>←</PixelText>
+        </button>
+        <PixelText size={10} color={C.goldMd}>🏆 LADDER</PixelText>
+      </div>
+      <div style={{ padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
+        <PixelText size={11} color={C.cream} style={{ display: "block", marginBottom: 8 }}>DARER SCORE</PixelText>
+        <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 24 }}>See where you rank among fellow DARERs</PixelText>
+        <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6 }}>
+          <PixelText size={8} color={C.grayLt}>Coming soon — XP ladder & leaderboards</PixelText>
+        </div>
+      </div>
+      {/* Bottom nav (reused) */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+      }}>
+        {[
+          { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
+          { icon: "⚗", label: "ARMORY", active: false, onClick: () => setScreen("armory") },
+          { icon: "🏆", label: "LADDER", active: true },
+          { icon: "🛡", label: "HERO", active: false, onClick: () => setScreen("profile") },
+        ].map(t => (
+          <button key={t.label} onClick={t.onClick} style={{
+            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+            background: "transparent", display: "flex",
             flexDirection: "column", alignItems: "center", gap: 2,
           }}>
             <span style={{ fontSize: 16 }}>{t.icon}</span>
@@ -4285,7 +4417,7 @@ No other text.`,
 export default function DARERQuest() {
   const [screen, setScreenRaw] = useState("login");
   const [screenHistory, setScreenHistory] = useState([]);
-  const [hero, setHero] = useState({ name: "Hero", darerId: "", strengths: [], stats: { courage: 5, resilience: 5, openness: 5 }, traits: [] });
+  const [hero, setHero] = useState({ name: "Hero", darerId: "", strengths: [], stats: { courage: 5, resilience: 5, openness: 5 }, traits: [], armory: JSON.parse(JSON.stringify(DEFAULT_ARMORY)) });
   const [quest, setQuest] = useState(DEFAULT_QUEST);
   const [activeBoss, setActiveBoss] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -4313,7 +4445,7 @@ export default function DARERQuest() {
   const lastSavedAt = useRef(0);
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (screen === "login" || screen === "profile") return;
+    if (screen === "login" || screen === "profile" || screen === "armory" || screen === "ladder") return;
     const now = Date.now();
     if (now - lastSavedAt.current < 2000) return; // throttle to every 2s
     lastSavedAt.current = now;
@@ -4402,8 +4534,13 @@ export default function DARERQuest() {
     
     const progress = await loadProgress(user.id);
     if (progress) {
-      // Restore saved state
-      setHero(progress.hero);
+      // Restore saved state — migrate armory if missing
+      const loadedHero = progress.hero || {};
+      const migratedArmory = loadedHero.armory ? loadedHero.armory.map((item, i) => {
+        const def = DEFAULT_ARMORY[i];
+        return def ? { ...def, ...item } : item;
+      }) : JSON.parse(JSON.stringify(DEFAULT_ARMORY));
+      setHero({ ...loadedHero, armory: migratedArmory });
       if (progress.quest) setQuest(progress.quest);
       setShadowText(progress.shadow_text || '');
       if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
@@ -4564,17 +4701,19 @@ export default function DARERQuest() {
       {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLorePost", { step: 2 })} setOBState={(s) => setOBState("shadowLorePost", s)} />}
       {screen === "intake" && <IntakeScreen heroName={hero.name} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("darerStrategy")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
-      {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armory")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
-      {screen === "armory" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armory", { step: "intro" })} setOBState={(s) => setOBState("armory", s)} />}
+      {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armoryIntro")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
+      {screen === "armoryIntro" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armoryIntro", { step: "intro" })} setOBState={(s) => setOBState("armoryIntro", s)} />}
       {screen === "tutorial" && <TutorialBattle heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
-      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} />}
+      {screen === "map" && <GameMap quest={quest} hero={hero} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} />}
+      {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
+      {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
       </div>
     </div>
   );
