@@ -3807,7 +3807,9 @@ function closeAllOtherSwipes(id) {
   window.dispatchEvent(new CustomEvent('darer-swipe-close', { detail: id }));
 }
 
-function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss }) {
+function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
+  // Track the ref for scrolling to newly added boss
+  const addedRef = useRef(null);
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
@@ -3823,10 +3825,11 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
     }
   };
 
-  // Sort bosses: default bosses first (in original order), custom at the bottom
+  // Sort bosses: default first (original order), custom sorted by difficulty at the bottom
+  const firstCustomIdx = quest.bosses.some(b => b.isCustom) ? quest.bosses.filter(b => !b.isCustom).length : -1;
   const sortedBosses = [
     ...quest.bosses.filter(b => !b.isCustom),
-    ...quest.bosses.filter(b => b.isCustom),
+    ...quest.bosses.filter(b => b.isCustom).sort((a, b) => a.difficulty - b.difficulty),
   ];
   const customCount = quest.bosses.filter(b => b.isCustom).length;
 
@@ -3872,14 +3875,20 @@ function GameMap({ quest, hero, onSelectBoss, onViewProfile, onArmory, onLadder,
                   <PixelText size={7} color={C.teal}>— ✏️ CUSTOM EXPOSURES —</PixelText>
                 </div>
               )}
-              {/* Connector line */}
-              {i > 0 && !boss.isCustom && sortedBosses[i-1]?.isCustom === false && (
+              {/* Connector line between default bosses */}
+              {i > 0 && !boss.isCustom && !sortedBosses[i-1]?.isCustom && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
                   <div style={{ width: 3, height: 20, background: boss.defeated || isNext ? C.plumMd : "#5C3A50" }} />
                 </div>
               )}
+              {/* Bridge connector: last default boss → custom section separator */}
+              {boss.isCustom && i === firstCustomIdx && i > 0 && (
+                <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
+                  <div style={{ width: 3, height: 16, background: `linear-gradient(to bottom, ${C.plumMd}60, ${C.teal}60)` }} />
+                </div>
+              )}
               {/* Connector line between custom bosses */}
-              {i > 0 && boss.isCustom && (
+              {i > 0 && boss.isCustom && i !== firstCustomIdx && (
                 <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
                   <div style={{ width: 3, height: 14, background: C.teal + "50" }} />
                 </div>
