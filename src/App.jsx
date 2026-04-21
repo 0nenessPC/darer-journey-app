@@ -3820,8 +3820,6 @@ function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile,
   const totalXp = defeatedCount * 100;
   const [pendingBoss, setPendingBoss] = useState(null); // boss pending high-SUDs warning
   const [addPulse, setAddPulse] = useState(false); // FAB pulse animation trigger
-  const [showCompleted, setShowCompleted] = useState(false); // toggle completed view
-  const [expandedCompleted, setExpandedCompleted] = useState(null); // expanded completed boss id
 
   // Scroll to newly added boss
   useEffect(() => {
@@ -3848,9 +3846,6 @@ function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile,
   const activeCount = sortedBosses.length;
   const customCount = activeCustomBosses.length;
 
-  // Completed bosses (for the completed view)
-  const completedBosses = quest.bosses.filter(b => b.defeated);
-
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
@@ -3867,21 +3862,6 @@ function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile,
         <div style={{ textAlign: "right" }}>
           <PixelText size={10} color={C.goldMd}>{totalXp} XP</PixelText>
           <div><PixelText size={7} color={C.grayLt}>{activeCount}/{quest.bosses.length} BOSSES</PixelText></div>
-          {defeatedCount > 0 && (
-            <button
-              onClick={() => setShowCompleted(!showCompleted)}
-              style={{
-                marginTop: 2,
-                background: showCompleted ? C.hpGreen + "30" : "transparent",
-                border: `1px solid ${showCompleted ? C.hpGreen : C.teal + "80"}`,
-                borderRadius: 3,
-                padding: "2px 6px",
-                cursor: "pointer",
-              }}
-            >
-              <PixelText size={7} color={C.teal}>✅ {defeatedCount} COMPLETED</PixelText>
-            </button>
-          )}
         </div>
       </div>
 
@@ -4110,145 +4090,6 @@ function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile,
               <PixelBtn onClick={() => { setPendingBoss(null); onSelectBoss(pendingBoss); }} color={C.amber} textColor={C.charcoal} style={{ flex: 1 }}>I'M READY →</PixelBtn>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Completed Exposures View */}
-      {showCompleted && completedBosses.length > 0 && (
-        <div style={{ padding: 16, borderTop: `3px solid ${C.hpGreen}40` }}>
-          <PixelText size={12} color={C.hpGreen} style={{ display: "block", marginBottom: 12, textAlign: "center" }}>✅ COMPLETED EXPOSURES</PixelText>
-          {completedBosses.map((boss, idx) => (
-            <div key={boss.id} style={{ marginBottom: 8 }}>
-              <button
-                onClick={() => setExpandedCompleted(expandedCompleted === boss.id ? null : boss.id)}
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  background: "#1A1218",
-                  border: `2px solid ${expandedCompleted === boss.id ? C.hpGreen : C.hpGreen + "40"}`,
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div style={{ textAlign: "left" }}>
-                  <PixelText size={9} color={C.hpGreen}>{boss.name}</PixelText>
-                  <div><PixelText size={7} color={C.grayLt}>{boss.desc}</PixelText></div>
-                </div>
-                <PixelText size={12} color={C.grayLt}>{expandedCompleted === boss.id ? "▲" : "▼"}</PixelText>
-              </button>
-
-              {/* Expanded detail */}
-              {expandedCompleted === boss.id && (() => {
-                const battle = battleHistory?.find(b => b.bossId === boss.id) || {};
-                return (
-                  <div style={{
-                    marginTop: 4,
-                    padding: 12,
-                    background: "#1A1218",
-                    border: `1px solid ${C.hpGreen}30`,
-                    borderRadius: 4,
-                  }}>
-                    {/* Outcome badge */}
-                    <div style={{ textAlign: "center", marginBottom: 8 }}>
-                      <PixelText size={10} color={battle.outcome === "victory" ? C.hpGreen : battle.outcome === "partial" ? C.amber : C.bossRed}>
-                        {battle.outcome === "victory" ? "🏆 VICTORY" : battle.outcome === "partial" ? "⚡ PARTIAL" : "💀 DEFEATED"}
-                      </PixelText>
-                    </div>
-
-                    {/* SUDS ratings */}
-                    {battle.suds && battle.suds.before !== undefined && (
-                      <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 8, padding: 8, background: "#1E1A18", borderRadius: 4 }}>
-                        <div style={{ textAlign: "center" }}>
-                          <PixelText size={10} color={C.bossRed}>{battle.suds.before}</PixelText>
-                          <div><PixelText size={6} color={C.grayLt}>BEFORE</PixelText></div>
-                        </div>
-                        <div style={{ textAlign: "center" }}>
-                          <PixelText size={10} color={C.amber}>{battle.suds.during ?? battle.suds.peak}</PixelText>
-                          <div><PixelText size={6} color={C.grayLt}>PEAK</PixelText></div>
-                        </div>
-                        <div style={{ textAlign: "center" }}>
-                          <PixelText size={10} color={C.hpGreen}>{battle.suds.after}</PixelText>
-                          <div><PixelText size={6} color={C.grayLt}>AFTER</PixelText></div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Date */}
-                    {battle.date && (
-                      <div style={{ marginBottom: 6 }}>
-                        <PixelText size={7} color={C.grayLt}>Completed: {new Date(battle.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</PixelText>
-                      </div>
-                    )}
-
-                    {/* Prep answers */}
-                    {battle.prepAnswers && battle.prepAnswers.value && (
-                      <div style={{ marginBottom: 6 }}>
-                        <PixelText size={7} color={C.goldMd}>💭 Value:</PixelText>
-                        <PixelText size={7} color={C.cream}> {battle.prepAnswers.value}</PixelText>
-                      </div>
-                    )}
-                    {battle.exposureArmory && (
-                      <div style={{ marginBottom: 6 }}>
-                        <PixelText size={7} color={C.goldMd}>⚗ Tool:</PixelText>
-                        <PixelText size={7} color={C.cream}> {battle.exposureArmory}</PixelText>
-                      </div>
-                    )}
-                    {battle.exposureWhen && (
-                      <div style={{ marginBottom: 6 }}>
-                        <PixelText size={7} color={C.goldMd}>🕐 When:</PixelText>
-                        <PixelText size={7} color={C.cream}> {battle.exposureWhen}</PixelText>
-                      </div>
-                    )}
-                    {battle.exposureWhere && (
-                      <div style={{ marginBottom: 6 }}>
-                        <PixelText size={7} color={C.goldMd}>📍 Where:</PixelText>
-                        <PixelText size={7} color={C.cream}> {battle.exposureWhere}</PixelText>
-                      </div>
-                    )}
-
-                    {/* Battle AI conversation */}
-                    {battle.battleMessages && battle.battleMessages.length > 0 && (
-                      <details style={{ marginTop: 8 }}>
-                        <summary style={{ cursor: "pointer", marginBottom: 4 }}>
-                          <PixelText size={7} color={C.teal}>💬 Battle conversation ({battle.battleMessages.length} messages)</PixelText>
-                        </summary>
-                        <div style={{ maxHeight: 200, overflowY: "auto", padding: 8, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
-                          {battle.battleMessages.map((m, mi) => (
-                            <div key={mi} style={{ marginBottom: 4 }}>
-                              <PixelText size={7} color={m.role === "assistant" ? C.rose : C.cream}>
-                                {m.role === "assistant" ? "Dara: " : "You: "}{m.text}
-                              </PixelText>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-
-                    {/* Victory AI conversation */}
-                    {battle.victoryMessages && battle.victoryMessages.length > 0 && (
-                      <details style={{ marginTop: 8 }}>
-                        <summary style={{ cursor: "pointer", marginBottom: 4 }}>
-                          <PixelText size={7} color={C.teal}>🎉 Victory reflection ({battle.victoryMessages.length} messages)</PixelText>
-                        </summary>
-                        <div style={{ maxHeight: 200, overflowY: "auto", padding: 8, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
-                          {battle.victoryMessages.map((m, mi) => (
-                            <div key={mi} style={{ marginBottom: 4 }}>
-                              <PixelText size={7} color={m.role === "assistant" ? C.rose : C.cream}>
-                                {m.role === "assistant" ? "Dara: " : "You: "}{m.text}
-                              </PixelText>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          ))}
         </div>
       )}
 
@@ -5312,7 +5153,7 @@ function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, set
 }
 
 // --- HERO PROFILE ---
-function HeroProfile({ hero, quest, onBack, setScreen }) {
+function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "16px 16px 100px" }}>
@@ -5419,6 +5260,95 @@ function HeroProfile({ hero, quest, onBack, setScreen }) {
           <PixelText size={9} color={C.goalGold}>🏰 {quest.goal}</PixelText>
         </div>
       </div>
+
+      {/* Completed Exposures */}
+      {(() => {
+        const completed = quest.bosses.filter(b => b.defeated);
+        const [expandedId, setExpandedId] = useState(null);
+        if (completed.length === 0) return null;
+        return (
+          <div style={{ marginBottom: 20 }}>
+            <PixelText size={9} color={C.hpGreen} style={{ display: "block", marginBottom: 10 }}>✅ COMPLETED EXPOSURES</PixelText>
+            {completed.map((boss, idx) => (
+              <div key={boss.id} style={{ marginBottom: 8 }}>
+                <button
+                  onClick={() => setExpandedId(expandedId === boss.id ? null : boss.id)}
+                  style={{
+                    width: "100%",
+                    padding: 10,
+                    background: "#1A1218",
+                    border: `2px solid ${expandedId === boss.id ? C.hpGreen : C.hpGreen + "40"}`,
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ textAlign: "left" }}>
+                    <PixelText size={8} color={C.hpGreen}>✓ {boss.name}</PixelText>
+                    <div><PixelText size={6} color={C.grayLt}>{boss.desc}</PixelText></div>
+                  </div>
+                  <PixelText size={10} color={C.grayLt}>{expandedId === boss.id ? "▲" : "▼"}</PixelText>
+                </button>
+
+                {expandedId === boss.id && (() => {
+                  const battle = battleHistory?.find(b => b.bossId === boss.id) || {};
+                  return (
+                    <div style={{ marginTop: 4, padding: 10, background: "#1A1218", border: `1px solid ${C.hpGreen}30`, borderRadius: 4 }}>
+                      <div style={{ textAlign: "center", marginBottom: 6 }}>
+                        <PixelText size={9} color={battle.outcome === "victory" ? C.hpGreen : battle.outcome === "partial" ? C.amber : C.bossRed}>
+                          {battle.outcome === "victory" ? "🏆 VICTORY" : battle.outcome === "partial" ? "⚡ PARTIAL" : "💀 DEFEATED"}
+                        </PixelText>
+                      </div>
+                      {battle.suds && battle.suds.before !== undefined && (
+                        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 6, padding: 6, background: "#1E1A18", borderRadius: 4 }}>
+                          <div style={{ textAlign: "center" }}><PixelText size={9} color={C.bossRed}>{battle.suds.before}</PixelText><div><PixelText size={6} color={C.grayLt}>BEFORE</PixelText></div></div>
+                          <div style={{ textAlign: "center" }}><PixelText size={9} color={C.amber}>{battle.suds.during ?? battle.suds.peak}</PixelText><div><PixelText size={6} color={C.grayLt}>PEAK</PixelText></div></div>
+                          <div style={{ textAlign: "center" }}><PixelText size={9} color={C.hpGreen}>{battle.suds.after}</PixelText><div><PixelText size={6} color={C.grayLt}>AFTER</PixelText></div></div>
+                        </div>
+                      )}
+                      {battle.date && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.grayLt}>Completed: {new Date(battle.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</PixelText></div>}
+                      {battle.prepAnswers?.value && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>💭 Value:</PixelText><PixelText size={6} color={C.cream}> {battle.prepAnswers.value}</PixelText></div>}
+                      {battle.exposureArmory && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>⚗ Tool:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureArmory}</PixelText></div>}
+                      {battle.exposureWhen && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>🕐 When:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureWhen}</PixelText></div>}
+                      {battle.exposureWhere && <div style={{ marginBottom: 4 }}><PixelText size={6} color={C.goldMd}>📍 Where:</PixelText><PixelText size={6} color={C.cream}> {battle.exposureWhere}</PixelText></div>}
+                      {battle.battleMessages?.length > 0 && (
+                        <details style={{ marginTop: 6 }}>
+                          <summary style={{ cursor: "pointer", marginBottom: 4 }}>
+                            <PixelText size={6} color={C.teal}>💬 Battle conversation ({battle.battleMessages.length} messages)</PixelText>
+                          </summary>
+                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                            {battle.battleMessages.map((m, mi) => (
+                              <div key={mi} style={{ marginBottom: 3 }}>
+                                <PixelText size={6} color={m.role === "assistant" ? C.rose : C.cream}>{m.role === "assistant" ? "Dara: " : "You: "}{m.text}</PixelText>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                      {battle.victoryMessages?.length > 0 && (
+                        <details style={{ marginTop: 6 }}>
+                          <summary style={{ cursor: "pointer", marginBottom: 4 }}>
+                            <PixelText size={6} color={C.teal}>🎉 Victory reflection ({battle.victoryMessages.length} messages)</PixelText>
+                          </summary>
+                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                            {battle.victoryMessages.map((m, mi) => (
+                              <div key={mi} style={{ marginBottom: 3 }}>
+                                <PixelText size={6} color={m.role === "assistant" ? C.rose : C.cream}>{m.role === "assistant" ? "Dara: " : "You: "}{m.text}</PixelText>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       <div>
         <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>BATTLE LOG</PixelText>
@@ -6454,7 +6384,7 @@ export default function DARERQuest() {
       {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} battleHistory={battleHistory} onSelectBoss={b => { setActiveBoss(b); setScreen("battle"); }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
-      {screen === "profile" && <HeroProfile hero={hero} quest={quest} onBack={() => setScreen("map")} setScreen={setScreen} />}
+      {screen === "profile" && <HeroProfile hero={hero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
 
