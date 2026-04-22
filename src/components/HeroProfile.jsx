@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
-function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {
+export default function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "16px 16px 100px" }}>

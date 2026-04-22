@@ -4,7 +4,7 @@ import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS, DEFAULT_ARMORY, DEFAULT_QUEST } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
 // --- EXPOSURE HIERARCHY SORT (AI generates personalized battles, user swipes) ---
-function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {
+export default function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {
   const [exposures, setExposures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentCard, setCurrentCard] = useState(obState.currentCard || 0);

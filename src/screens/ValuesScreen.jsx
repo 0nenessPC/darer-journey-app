@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar } from '../components/shared';
-function ValuesScreen({ heroName, onComplete }) {
+export default function ValuesScreen({ heroName, onComplete }) {
   const [step, setStep] = useState("intro");
   const [values, setValues] = useState([]);
   const [freeText, setFreeText] = useState("");
