@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
-import { PixelText, PixelBtn } from '../components/shared';
+import { PixelText } from '../components/shared';
 export default function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   return (

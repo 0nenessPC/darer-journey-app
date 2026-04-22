@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { C, FONT_LINK } from "../constants/gameData";
-import { PixelText, DialogBox } from "../components/shared";
+import { PixelText, PixelBtn, DialogBox } from "../components/shared";
 
 export default function JourneyMapPreview({ heroName, onContinue, obState = {}, setOBState }) {
   const [scrollPos, setScrollPos] = useState(obState.scrollPos || 0);

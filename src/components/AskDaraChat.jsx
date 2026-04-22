@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
-import { PixelText, PixelBtn, TypingDots } from '../components/shared';
+import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);

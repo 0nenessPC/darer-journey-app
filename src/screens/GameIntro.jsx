@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { C } from "../constants/gameData";
-import { PixelText } from "../components/shared.jsx";
+import { PixelText, PixelBtn } from "../components/shared.jsx";
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
