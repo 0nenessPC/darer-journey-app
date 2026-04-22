@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
 export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {

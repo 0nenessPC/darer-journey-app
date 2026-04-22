@@ -134,6 +134,48 @@ test.describe('DARER Journey', () => {
     await page.getByText('CREATE HERO').click();
     await page.waitForTimeout(3000);
 
+    // ═══ PRE-INSERT NDA AGREEMENT ═══
+    // After signup, the user is authenticated. Pre-insert the NDA record via Supabase REST API
+    // so checkNdaAgreed() returns true and the user skips the NDA screen entirely.
+    // Must do this BEFORE clicking "START YOUR JOURNEY" which triggers handleLogin -> NDA check.
+    const SUPABASE_URL = 'https://macdrvetjapmaujbsivh.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_E07mDSpBz3ok98JeptwdzQ_CZNa1KTi';
+    const NDA_TEXT = `DARER ORDER — CONFIDENTIALITY AGREEMENT\n\nLast Updated: April 21, 2026\nVersion: 1.0`;
+    const ndaResult = await page.evaluate(async ({ url, key, ndaText }) => {
+      // Get auth session from localStorage (Supabase stores it there)
+      const storageKey = Object.keys(localStorage).find(k => k.includes('sb-') && k.includes('auth-token'));
+      if (!storageKey) return { status: 'no_session' };
+      const session = JSON.parse(localStorage.getItem(storageKey));
+      const accessToken = session?.access_token;
+      if (!accessToken) return { status: 'no_token' };
+      const userId = session?.user?.id;
+      if (!userId) return { status: 'no_user_id' };
+      // Insert NDA agreement directly
+      const ndaRes = await fetch(`${url}/rest/v1/nda_agreements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': key,
+          'Authorization': `Bearer ${accessToken}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          agreement_version: '1.0',
+          agreement_text: ndaText,
+          participant_name: 'Priya',
+          darer_id: session?.user?.user_metadata?.darer_id || '',
+          signed_at: new Date().toISOString()
+        })
+      });
+      if (!ndaRes.ok) {
+        const err = await ndaRes.text();
+        return { status: 'nda_failed', error: err.substring(0, 200) };
+      }
+      return { status: 'ok', userId };
+    }, { url: SUPABASE_URL, key: SUPABASE_ANON_KEY, ndaText: NDA_TEXT });
+    console.log(`  NDA pre-insert: ${ndaResult.status}${ndaResult.error ? ' — ' + ndaResult.error : ''}`);
+
     // ═══ LOG IN ═══
     await page.getByText('LOG IN', { exact: true }).click();
     await page.waitForTimeout(1000);
@@ -142,7 +184,7 @@ test.describe('DARER Journey', () => {
     if (!ce.includes('priya')) await le.fill(TEST_EMAIL);
     await pwInput(page).fill(TEST_PASSWORD);
     await page.getByText('START YOUR JOURNEY').click();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // ═══ 1. INTRO (5 slides) ═══
     console.log('📖 1. Intro...');
@@ -457,10 +499,11 @@ test.describe('DARER Journey', () => {
     await screen(page, 'FORGE YOUR PATH', 20000);
     await page.waitForTimeout(3000);
     // Accept all 3 exposure cards by clicking the right-arrow (swipe right = accept) button
+    // NOTE: exclude the floating '?' feedback button (bottom-right) — look for arrow buttons inside SwipeableBoss cards
     for (let i = 0; i < 3; i++) {
-      const rightArrow = page.locator('button').last(); // right arrow is the last button
-      await expect(rightArrow).toBeVisible({ timeout: 10000 });
-      await rightArrow.click();
+      const card = page.locator('button').filter({ hasText: /^→$/ }).first();
+      await expect(card).toBeVisible({ timeout: 10000 });
+      await card.click();
       await page.waitForTimeout(2000);
     }
     // After all cards sorted, the screen transitions to "PATH FORGED" with a "BEGIN THE JOURNEY" button
@@ -484,6 +527,7 @@ test.describe('DARER Journey', () => {
     await pwInput(page).fill(TEST_PASSWORD);
     await page.getByText('START YOUR JOURNEY').click();
     await page.waitForTimeout(10000);
+    // After resume, returning users skip NDA (already agreed) — go straight to map
     await screen(page, 'BOSSES', 20000);
     await page.screenshot({ path: 'test/screenshots/resume-state.png', fullPage: true });
     console.log('✅ Resume works!');

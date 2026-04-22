@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, FONT_LINK, SYS } from '../constants/gameData';

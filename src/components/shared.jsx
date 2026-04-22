@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 
 export function PixelText({ children, size = 10, color = C.cream, style = {} }) {

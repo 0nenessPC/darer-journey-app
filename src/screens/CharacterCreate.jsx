@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 

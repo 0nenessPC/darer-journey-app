@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
 export default function HeroProfile({ hero, quest, battleHistory = [], onBack, setScreen }) {

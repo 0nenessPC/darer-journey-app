@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';

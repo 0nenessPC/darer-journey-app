@@ -14,14 +14,14 @@
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: getByText('courage').first()
+Locator: getByText('Shadow of Fear').first()
 Expected: visible
-Timeout: 30000ms
+Timeout: 20000ms
 Error: element(s) not found
 
 Call log:
-  - Expect "toBeVisible" with timeout 30000ms
-  - waiting for getByText('courage').first()
+  - Expect "toBeVisible" with timeout 20000ms
+  - waiting for getByText('Shadow of Fear').first()
 
 ```
 
@@ -29,82 +29,11 @@ Call log:
 
 ```yaml
 - generic [ref=e3]:
-  - button "← BACK" [ref=e4] [cursor=pointer]:
-    - generic [ref=e5]: ← BACK
-  - button "LOGOUT" [ref=e6] [cursor=pointer]
-  - generic [ref=e8]:
-    - generic [ref=e9]: STEP 8/11
-    - generic [ref=e10]: REVEAL
-  - generic [ref=e26]:
-    - generic [ref=e27]:
-      - generic [ref=e28]: 👁
-      - generic [ref=e29]: THE SHADOW'S TRUE NATURE
-      - generic [ref=e30]: Priya, for the first time, you see your enemy clearly.
-    - generic [ref=e31]:
-      - generic [ref=e32]:
-        - generic [ref=e33]: 📍
-        - generic [ref=e34]: THE SHADOW'S TERRITORY
-      - generic [ref=e35]: "Your Shadow dominates the territory of speaking up — in class, in groups, when meeting new people. It tells you that your words aren't worth hearing, that you'll sound boring or wrong. WHAT STORMS IT STIRS: Your body reacts before your mind can catch up — tight chest, racing thoughts, the urge to grab your phone and disappear. Your Inner Storm amplifies every imagined judgment into a threat. HOW IT KEEPS YOU TRAPPED: You use avoidance as armor — staying quiet, staying invisible, staying safe. But safety is the cage. Every time you don't speak up, the Shadow grows stronger. You want connection, but the Shadow won't let you risk it."
-    - generic [ref=e36]:
-      - generic [ref=e37]:
-        - generic [ref=e38]: 🌀
-        - generic [ref=e39]: THE INNER STORM
-      - generic [ref=e40]: ...
-    - generic [ref=e41]:
-      - generic [ref=e42]:
-        - generic [ref=e43]: 🏃
-        - generic [ref=e44]: THE ESCAPE
-      - generic [ref=e45]: ...
-    - generic [ref=e46]:
-      - generic [ref=e47]: YOUR SHADOW'S INFINITE TRAP
-      - generic [ref=e48]:
-        - generic [ref=e49]:
-          - generic [ref=e50]:
-            - generic [ref=e51]: 📍
-            - generic [ref=e53]: ▼
-          - generic [ref=e54]:
-            - text: YOU ENTER
-            - generic [ref=e55]: Your Shadow dominates the territory of speaking up — in clas...
-        - generic [ref=e56]:
-          - generic [ref=e57]:
-            - generic [ref=e58]: 🌀
-            - generic [ref=e60]: ▼
-          - generic [ref=e61]:
-            - text: THE STORM HITS
-            - generic [ref=e62]: Anxious thoughts and body sensations
-        - generic [ref=e63]:
-          - generic [ref=e64]:
-            - generic [ref=e65]: 😨
-            - generic [ref=e67]: ▼
-          - generic [ref=e68]:
-            - text: F.E.A.R.
-            - generic [ref=e69]: "The storm becomes overwhelming. Your body and mind scream: GET OUT."
-            - generic [ref=e70]: This is the moment that drives the escape.
-        - generic [ref=e71]:
-          - generic [ref=e72]:
-            - generic [ref=e73]: 🏃
-            - generic [ref=e75]: ▼
-          - generic [ref=e76]:
-            - text: YOU ESCAPE
-            - generic [ref=e77]: Avoidance and safety behaviors
-        - generic [ref=e78]:
-          - generic [ref=e79]:
-            - generic [ref=e80]: 😮‍💨
-            - generic [ref=e82]: ▼
-          - generic [ref=e83]:
-            - text: BRIEF RELIEF
-            - generic [ref=e84]: The fear fades — but only for now
-        - generic [ref=e85]:
-          - generic [ref=e87]: 👤
-          - generic [ref=e88]:
-            - text: SHADOW GROWS
-            - generic [ref=e89]: Next time it's harder. The territory expands. The storm gets stronger.
-        - generic [ref=e90]: ↻ AND THE CYCLE REPEATS
-    - generic [ref=e91]:
-      - generic [ref=e93]:
-        - generic [ref=e94]: DARA
-        - generic [ref=e95]: This is YOUR Shadow's trap — built from your specific fears, your specific thoughts, and your specific escapes. But now you can see it. And a trap you can see is a trap you can break. Remember this moment, Priya. This is where your journey truly begins.
-      - button "THE JOURNEY CONTINUES →" [ref=e96] [cursor=pointer]
+  - generic [ref=e4]: ⚠️
+  - generic [ref=e5]: SOMETHING WENT WRONG
+  - generic [ref=e6]: The journey hit an unexpected obstacle. Your data is safe — refreshing will resume from your last saved point.
+  - generic [ref=e8]: PixelBtn is not defined
+  - button "REFRESH →" [ref=e9] [cursor=pointer]
 ```
 
 # Test source
