@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 
-async function callClaude(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
+export async function callClaude(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
   const FALLBACK = "Dara gathers her thoughts...";
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { buildHeroContext } from "../utils/aiHelper.jsx";
 import { useAIChat } from "../utils/chat";
-import { C } from "../constants/gameData";
+import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";

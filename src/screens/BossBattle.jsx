@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAIChat } from '../utils/chat';
+import { useAIChat, callClaude } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
 
-export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
+export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, setActiveBoss, setScreen, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
   const [phase, setPhase] = useState(obState.phase || "prep");
   const [prepStep, setPrepStep] = useState(obState.prepStep ?? 0);
   const [prepAnswers, setPrepAnswers] = useState(obState.prepAnswers || { value: "", allow: "", rise: "" });
@@ -522,9 +522,9 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, ob
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: onRetreat },
-          { icon: "⚗", label: "ARMORY", active: false },
-          { icon: "🏆", label: "LADDER", active: false },
-          { icon: "🛡", label: "HERO", active: false },
+          { icon: "⚗", label: "ARMORY", active: false, onClick: () => { setActiveBoss(null); setScreen("armory"); } },
+          { icon: "🏆", label: "LADDER", active: false, onClick: () => { setActiveBoss(null); setScreen("ladder"); } },
+          { icon: "🛡", label: "HERO", active: false, onClick: () => { setActiveBoss(null); setScreen("profile"); } },
         ].map(t => (
           <button key={t.label} onClick={t.onClick} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
