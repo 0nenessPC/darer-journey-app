@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
-import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS, DEFAULT_ARMORY, DEFAULT_QUEST } from '../constants/gameData';
+import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
 // --- EXPOSURE HIERARCHY SORT (AI generates personalized battles, user swipes) ---
 export default function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {

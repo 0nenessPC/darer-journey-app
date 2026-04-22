@@ -1,31 +1,6 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
-import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS } from '../constants/gameData';
+﻿import React, { useState } from 'react';
+import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
-function calcStats(claimed) {
-  const base = { courage: 5, resilience: 5, openness: 5 };
-  claimed.forEach(card => {
-    if (card.type === "strength") base[card.stat] = Math.min(10, base[card.stat] + 1);
-    else base[card.stat] = Math.max(1, base[card.stat] - 1);
-  });
-  return base;
-}
-
-function calcSADS(claimed, dismissed) {
-  // SADS scoring: challenge cards claimed as "that's me" = 1 point each
-  // strength cards dismissed (NOT claimed) = 1 point each
-  // Full 28-item SADS (Watson & Friend, 1969)
-  let score = 0;
-  claimed.forEach(card => { if (card.type === "challenge") score += 1; });
-  dismissed.forEach(card => { if (card.type === "strength") score += 1; });
-  // Score is already on the 0-28 scale with all 28 items
-  const level = score <= 1 ? "low" : score <= 11 ? "average" : "high";
-  return { raw: score, normalized: score, level };
-}
-
-// --- CHARACTER CREATION (Name → Card Sort → Stat Reveal) ---
-// Currently bypassing card sort; goes name → stat reveal (all stats = 1)
-// To re-enable card sort: set SKIP_CARD_SORT = false
-const SKIP_CARD_SORT = true;
 
 export default function CharacterCreate({ onComplete, initialName, darerId, obState, setOBState }) {
   const step = obState?.step ?? "name";
@@ -34,19 +9,12 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
   const setName = (v) => setOBState({ name: typeof v === 'function' ? v(name) : v });
   const nameConfirmed = obState?.nameConfirmed ?? false;
   const setNameConfirmed = (v) => setOBState({ nameConfirmed: typeof v === 'function' ? v(nameConfirmed) : v });
-  const [deck, setDeck] = useState(() => [...TRAIT_CARDS].sort(() => Math.random() - 0.5));
-  const [currentCard, setCurrentCard] = useState(0);
-  const [claimed, setClaimed] = useState([]);
-  const [dismissed, setDismissed] = useState([]);
-  const [swipeDir, setSwipeDir] = useState(null);
   const [stats, setStats] = useState(null);
-  const [sads, setSads] = useState(null);
   const [statsRevealed, setStatsRevealed] = useState(false);
   const [showTooltip, setShowTooltip] = useState(null);
   const [coreValues, setCoreValues] = useState([]);
   const [valuesPage, setValuesPage] = useState(0);
   const [expandedValue, setExpandedValue] = useState(null);
-  const [dragX, setDragX] = useState(0);
   // Stats defaults — all set to 1 (bypassing card sort calculation)
   const [defaultStats] = useState({ courage: 1, resilience: 1, openness: 1 });
 
@@ -89,83 +57,11 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
     { id: "a34", word: "Supportiveness", desc: "Being helpful, encouraging, and available to others", icon: "🛡", dim: "openness" },
     { id: "a35", word: "Trust", desc: "Being loyal, faithful, sincere, and reliable", icon: "🤝", dim: "openness" },
   ].sort(() => Math.random() - 0.5));
-  const [dragging, setDragging] = useState(false);
-  const touchStartRef = useRef(null);
-  const touchCurrentRef = useRef(null);
 
-  const handleClaim = () => {
-    setSwipeDir("right"); setDragX(0); setDragging(false);
-    setClaimed(p => [...p, deck[currentCard]]);
-    setTimeout(() => { setSwipeDir(null); setCurrentCard(c => c + 1); }, 300);
-  };
-
-  const handleDismiss = () => {
-    setSwipeDir("left"); setDragX(0); setDragging(false);
-    setDismissed(p => [...p, deck[currentCard]]);
-    setTimeout(() => { setSwipeDir(null); setCurrentCard(c => c + 1); }, 300);
-  };
-
-  const onTouchStart = (e) => {
-    touchStartRef.current = e.touches[0].clientX;
-    touchCurrentRef.current = e.touches[0].clientX;
-    setDragging(true);
-  };
-  const onTouchMove = (e) => {
-    if (!touchStartRef.current) return;
-    touchCurrentRef.current = e.touches[0].clientX;
-    const diff = touchCurrentRef.current - touchStartRef.current;
-    setDragX(diff);
-  };
-  const onTouchEnd = () => {
-    if (!touchStartRef.current) return;
-    const diff = touchCurrentRef.current - touchStartRef.current;
-    if (diff > 60) handleClaim();
-    else if (diff < -60) handleDismiss();
-    else { setDragX(0); setDragging(false); }
-    touchStartRef.current = null;
-    touchCurrentRef.current = null;
-  };
-  const onMouseDown = (e) => {
-    touchStartRef.current = e.clientX;
-    touchCurrentRef.current = e.clientX;
-    setDragging(true);
-  };
-  const onMouseMove = (e) => {
-    if (!dragging || !touchStartRef.current) return;
-    touchCurrentRef.current = e.clientX;
-    setDragX(e.clientX - touchStartRef.current);
-  };
-  const onMouseUp = () => {
-    if (!touchStartRef.current) return;
-    const diff = touchCurrentRef.current - touchStartRef.current;
-    if (diff > 60) handleClaim();
-    else if (diff < -60) handleDismiss();
-    else { setDragX(0); setDragging(false); }
-    touchStartRef.current = null;
-    touchCurrentRef.current = null;
-  };
-
-  const dragRotation = Math.max(-15, Math.min(15, dragX * 0.1));
-  const dragOpacity = Math.max(0.3, 1 - Math.abs(dragX) / 300);
-  const showClaimHint = dragX > 30;
-  const showDismissHint = dragX < -30;
-
-  const finishSort = () => {
-    const s = calcStats(claimed);
-    const sa = calcSADS(claimed, dismissed);
-    setStats(s);
-    setSads(sa);
-    setStep("reveal");
-    setTimeout(() => setStatsRevealed(true), 400);
-  };
-
-  useEffect(() => {
-    if (currentCard >= deck.length && step === "cards") finishSort();
-  }, [currentCard, deck.length, step]);
-
-  const card = deck[currentCard];
-  const progress = deck.length > 0 ? Math.round((currentCard / deck.length) * 100) : 0;
-
+  // --- Card sort removed (SKIP_CARD_SORT = true).
+  // To re-enable: restore deck/currentCard/claimed/dismissed/swipeDir state,
+  // handlers (handleClaim, handleDismiss, onTouch*, onMouse*), and the
+  // {step === "cards" && ...} JSX block below.
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: step === "reveal" ? "flex-start" : "center", alignItems: "center", padding: step === "reveal" ? "16px 24px 0" : "0 24px", background: C.mapBg, textAlign: "center", overflowY: step === "reveal" ? "auto" : "hidden" }}>
       <link href={FONT_LINK} rel="stylesheet" />
@@ -440,164 +336,7 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
         </div>
       )}
 
-      {/* STEP 1.9: TRANSITION TO CARD SORT (hidden — skip to reveal) */}
-      {false && step === "preCards" && (
-        <div style={{ width: "100%", animation: "fadeIn 0.6s ease-out", textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.7 }}>🔍</div>
-
-          <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 16 }}>
-            WHERE FEAR GROWS
-          </PixelText>
-
-          <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-              Now let's explore the spaces{"\n"}where the Shadow meets you —{"\n"}the social moments where fear{"\n"}shows up in your life.{"\n"}{"\n"}
-              I'm going to show you a series{"\n"}of statements about social{"\n"}situations. For each one, simply{"\n"}tell me — is this you, or not?{"\n"}{"\n"}
-              There are no right or wrong{"\n"}answers. Stay true to yourself.{"\n"}The truth within will light the{"\n"}path to our destination.
-            </PixelText>
-          </DialogBox>
-
-          <PixelBtn onClick={() => setStep("cards")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-            I'M READY →
-          </PixelBtn>
-        </div>
-      )}
-
-      {/* STEP 2: CARD SORT (hidden — skipped) */}
-      {false && step === "cards" && card && (
-        <div style={{ width: "100%", animation: "fadeIn 0.3s ease-out" }}>
-          <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>
-            YOU IN SOCIAL MOMENTS
-          </PixelText>
-          <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>
-            Is this you? Swipe right for Yes, left for No.
-          </PixelText>
-
-          {/* Progress bar */}
-          <div style={{ height: 4, background: "#1A1218", borderRadius: 2, marginBottom: 20, border: "1px solid #5C3A50" }}>
-            <div style={{ height: "100%", width: `${progress}%`, background: C.goldMd, borderRadius: 2, transition: "width 0.3s" }} />
-          </div>
-
-          {/* Card */}
-          <div
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={() => { if (dragging) { setDragX(0); setDragging(false); touchStartRef.current = null; } }}
-            style={{
-              width: 260, height: 380, margin: "0 auto 16px",
-              background: card.type === "strength"
-                ? "linear-gradient(170deg, #1A1218 0%, #2A1A20 50%, #1A1218 100%)"
-                : "linear-gradient(170deg, #1A1218 0%, #1E1625 50%, #1A1218 100%)",
-              border: `3px solid ${showClaimHint ? C.goldMd : showDismissHint ? C.bossRed : card.type === "strength" ? C.goldMd + "80" : C.plumMd + "80"}`,
-              borderRadius: 12, position: "relative", overflow: "hidden",
-              transform: swipeDir === "right" ? "translateX(120%) rotate(12deg)"
-                : swipeDir === "left" ? "translateX(-120%) rotate(-12deg)"
-                : dragging ? `translateX(${dragX}px) rotate(${dragRotation}deg)`
-                : "none",
-              opacity: swipeDir ? 0 : dragging ? dragOpacity : 1,
-              transition: swipeDir ? "transform 0.3s ease-out, opacity 0.3s ease-out"
-                : dragging ? "none"
-                : "transform 0.3s ease-out, opacity 0.3s ease-out, border-color 0.2s",
-              cursor: "grab", userSelect: "none", touchAction: "pan-y",
-              boxShadow: `0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)`,
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            {/* Inner border (poker card double frame) */}
-            <div style={{
-              position: "absolute", inset: 8,
-              border: `1px solid ${card.type === "strength" ? C.goldMd + "30" : C.plumMd + "30"}`,
-              borderRadius: 8, pointerEvents: "none",
-            }} />
-
-            {/* Top-left corner pip */}
-            <div style={{ position: "absolute", top: 16, left: 16, textAlign: "center" }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>{card.icon}</div>
-              <PixelText size={6} color={card.type === "strength" ? C.goldMd : C.plumMd}>
-                {card.type === "strength" ? "STR" : "CHL"}
-              </PixelText>
-            </div>
-
-            {/* Bottom-right corner pip (inverted) */}
-            <div style={{ position: "absolute", bottom: 16, right: 16, textAlign: "center", transform: "rotate(180deg)" }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>{card.icon}</div>
-              <PixelText size={6} color={card.type === "strength" ? C.goldMd : C.plumMd}>
-                {card.type === "strength" ? "STR" : "CHL"}
-              </PixelText>
-            </div>
-
-            {/* Center content */}
-            <div style={{ fontSize: 48, marginBottom: 16 }}>{card.icon}</div>
-            <div style={{ padding: "0 28px", textAlign: "center" }}>
-              <PixelText size={9} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                "{card.text}"
-              </PixelText>
-            </div>
-            <div style={{ marginTop: 14 }}>
-              <span style={{
-                padding: "4px 12px", borderRadius: 3,
-                background: card.type === "strength" ? C.goldMd + "20" : C.plumMd + "20",
-                border: `1px solid ${card.type === "strength" ? C.goldMd + "50" : C.plumMd + "50"}`,
-              }}>
-                <PixelText size={6} color={card.type === "strength" ? C.goldMd : C.plumMd}>
-                  {card.type === "strength" ? "STRENGTH" : "CHALLENGE"}
-                </PixelText>
-              </span>
-            </div>
-
-            {/* Swipe direction overlays */}
-            {showClaimHint && (
-              <div style={{
-                position: "absolute", inset: 0, display: "flex",
-                alignItems: "center", justifyContent: "center",
-                background: C.goldMd + "18", borderRadius: 9,
-              }}>
-                <div style={{ padding: "8px 20px", background: C.goldMd + "40", borderRadius: 6, border: `2px solid ${C.goldMd}` }}>
-                  <PixelText size={10} color={C.goldMd}>THAT'S ME</PixelText>
-                </div>
-              </div>
-            )}
-            {showDismissHint && (
-              <div style={{
-                position: "absolute", inset: 0, display: "flex",
-                alignItems: "center", justifyContent: "center",
-                background: C.bossRed + "18", borderRadius: 9,
-              }}>
-                <div style={{ padding: "8px 20px", background: C.bossRed + "40", borderRadius: 6, border: `2px solid ${C.bossRed}` }}>
-                  <PixelText size={10} color={C.bossRed}>NOT ME</PixelText>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Swipe hint + progress + fallback buttons */}
-          <div style={{ textAlign: "center" }}>
-            <PixelText size={6} color={C.grayLt}>
-              ← NO | YES →
-            </PixelText>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 10 }}>
-              <button onClick={handleDismiss} style={{
-                width: 48, height: 48, borderRadius: "50%", border: "2px solid #5C3A50",
-                background: "#1A1218", cursor: "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center", fontSize: 18,
-              }}>✕</button>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <PixelText size={7} color={C.grayLt}>{currentCard + 1} / {deck.length}</PixelText>
-              </div>
-              <button onClick={handleClaim} style={{
-                width: 48, height: 48, borderRadius: "50%", border: `2px solid ${C.goldMd}`,
-                background: C.plum, cursor: "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center", fontSize: 18,
-                boxShadow: `0 0 12px ${C.goldMd}20`,
-              }}>✓</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* STEP 2: CARD SORT — disabled (SKIP_CARD_SORT = true). See comment after ACT_VALUES to re-enable. */}
 
       {/* STEP 3: STAT REVEAL */}
       {step === "reveal" && stats && (
@@ -613,7 +352,7 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
           </div>
           <PixelText size={12} color={C.cream} style={{ display: "block" }}>{name.trim() || darerId}</PixelText>
           <PixelText size={7} color={C.grayLt} style={{ display: "block", marginTop: 4, marginBottom: 20 }}>
-            {claimed.filter(c => c.type === "strength").length} strengths claimed · {claimed.filter(c => c.type === "weakness").length} challenges acknowledged
+            0 strengths claimed · 0 challenges acknowledged
           </PixelText>
 
           {/* Stats — labeled with user's core values */}
@@ -671,7 +410,7 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
               border: `2px solid ${showTooltip === "strength" ? C.goldMd : "#5C3A50"}`,
               borderRadius: 6, textAlign: "center", cursor: "pointer", transition: "all 0.2s",
             }}>
-              <PixelText size={12} color={C.goldMd}>{claimed.filter(c => c.type === "strength").length}</PixelText>
+              <PixelText size={12} color={C.goldMd}>0</PixelText>
               <div><PixelText size={6} color={C.grayLt}>STRENGTHS ⓘ</PixelText></div>
             </button>
             <button onClick={() => setShowTooltip(showTooltip === "challenge" ? null : "challenge")} style={{
@@ -679,7 +418,7 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
               border: `2px solid ${showTooltip === "challenge" ? C.plumMd : "#5C3A50"}`,
               borderRadius: 6, textAlign: "center", cursor: "pointer", transition: "all 0.2s",
             }}>
-              <PixelText size={12} color={C.plumMd}>{claimed.filter(c => c.type === "challenge").length}</PixelText>
+              <PixelText size={12} color={C.plumMd}>0</PixelText>
               <div><PixelText size={6} color={C.grayLt}>CHALLENGES ⓘ</PixelText></div>
             </button>
           </div>
@@ -719,7 +458,7 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
             </DialogBox>
           </div>
 
-          <PixelBtn onClick={() => onComplete((name.trim() || darerId), stats, claimed, sads, coreValues.map(id => ACT_VALUES.find(v => v.id === id)))} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
+          <PixelBtn onClick={() => onComplete((name.trim() || darerId), stats, [], null, coreValues.map(id => ACT_VALUES.find(v => v.id === id)))} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
             SEE THE PATH AHEAD →
           </PixelBtn>
         </div>

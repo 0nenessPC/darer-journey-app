@@ -1,5 +1,3 @@
-export const QWEN_MODELS = ['qwen3.5-flash', 'qwen3.6-plus'];
-
 /**
  * Build a compact hero context string from user data for AI prompt enrichment.
  * Only includes non-empty fields to keep it lean.
