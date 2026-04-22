@@ -80,7 +80,7 @@ function PixelText({ size = 8, color = "#E0D8CC", style = {}, children, ...rest 
   );
 }
 
-export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecline }) {
+export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecline, onSigned }) {
   const [checked, setChecked] = useState(false);
   const [name, setName] = useState("");
   const [scrolling, setScrolling] = useState(false);
@@ -104,6 +104,10 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
     const success = await onAgree(name.trim(), NDA_TEXT);
     if (success) {
       setAgreed(true);
+      // Auto-transition after showing the signed screen briefly
+      setTimeout(() => {
+        if (onSigned) onSigned();
+      }, 2000);
     }
     setSaving(false);
   };
@@ -128,16 +132,9 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
         <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 24, textAlign: "center", lineHeight: 1.8 }}>
           Welcome to the DARER Order, {heroName}.<br />Your journey begins now.
         </PixelText>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            fontFamily: PIXEL_FONT, fontSize: 10, padding: "12px 32px",
-            background: C.gold, color: C.charcoal, border: "2px solid " + C.goldMd,
-            borderRadius: 4, cursor: "pointer",
-          }}
-        >
-          BEGIN YOUR JOURNEY →
-        </button>
+        <PixelText size={7} color={C.amber} style={{ marginTop: 16, animation: "fadeIn 1s ease-in-out" }}>
+          Loading your journey...
+        </PixelText>
       </div>
     );
   }

@@ -94,6 +94,7 @@ export default function DARERQuest() {
           darerId={hero.darerId}
           onAgree={handleNdaComplete}
           onDecline={handleLogout}
+          onSigned={() => setScreen("intro")}
         />
       )}
       {isAuthenticated && screen !== "login" && screen !== "nda" && (
