@@ -74,13 +74,14 @@ export function useAppState() {
         }
       } catch (e) { /* ignore save errors on close */ }
     };
-    window.addEventListener("beforeunload", saveNow);
-    document.addEventListener("visibilitychange", () => {
+    const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") saveNow();
-    });
+    };
+    window.addEventListener("beforeunload", saveNow);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("beforeunload", saveNow);
-      document.removeEventListener("visibilitychange", () => {});
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [isAuthenticated, screen, hero, quest, shadowText, onboardingState]);
 

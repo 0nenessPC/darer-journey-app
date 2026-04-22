@@ -7,8 +7,9 @@ export default function GameArmory({ hero, setHero, setScreen, onBack }) {
   const armory = hero.armory || [];
   const [practiceMode, setPracticeMode] = useState(null); // { toolId } or null
 
-  const incrementPractice = (toolId) => {
+  const incrementPractice = (toolId, onUnlocked, onNothingUnlocked) => {
     setHero(h => {
+      let unlockedItem = null;
       const updatedArmory = (h.armory || []).map(item => {
         if (item.id !== toolId) return item;
         const newCount = (item.practiceCount || 0) + 1;
@@ -19,25 +20,24 @@ export default function GameArmory({ hero, setHero, setScreen, onBack }) {
         if (nextItem && !nextItem.unlocked && nextItem.unlockCondition) {
           const cond = nextItem.unlockCondition;
           if (cond.requiresToolId === toolId && newCount >= cond.practiceCount) {
+            unlockedItem = nextItem;
             return { ...newItem, unlocked: true, practiceCount: nextItem.practiceCount };
           }
         }
         return newItem;
       });
+      if (unlockedItem) onUnlocked?.(unlockedItem);
+      else onNothingUnlocked?.();
       return { ...h, armory: updatedArmory };
     });
   };
 
   const handleComplete = (toolId) => {
-    incrementPractice(toolId);
-    // Check what was unlocked
-    const nextIdx = (hero.armory || []).findIndex(a => a.id === toolId) + 1;
-    const nextItem = (hero.armory || [])[nextIdx];
-    if (nextItem && nextItem.unlocked) {
-      setPracticeMode({ toolId, justUnlocked: nextItem });
-    } else {
+    incrementPractice(toolId, (unlocked) => {
+      setPracticeMode({ toolId, justUnlocked: unlocked });
+    }, () => {
       setPracticeMode(null);
-    }
+    });
   };
 
   // Practice session running
