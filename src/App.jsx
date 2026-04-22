@@ -28,6 +28,7 @@ import LadderScreen from "./components/LadderScreen.jsx";
 import ShadowReveal from "./screens/ShadowReveal.jsx";
 import ArmoryScreen from "./screens/ArmoryScreen.jsx";
 import DeleteConfirm from "./components/DeleteConfirm.jsx";
+import FeedbackModal from "./components/FeedbackModal.jsx";
 import { useAppState } from "./hooks/useAppState.jsx";
 import { useBossHandlers } from "./hooks/useBossHandlers.jsx";
 import { useCompletionHandlers } from "./hooks/useCompletionHandlers.jsx";
@@ -53,6 +54,7 @@ export default function DARERQuest() {
   const [addMode, setAddMode] = useState(null);
   const [pendingDeleteBoss, setPendingDeleteBoss] = useState(null);
   const [justAddedBossId, setJustAddedBossId] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // --- Boss management handlers ---
   const { handleDeleteBoss, confirmDeleteBoss, handleAchieveBoss } = useBossHandlers({
@@ -102,6 +104,22 @@ export default function DARERQuest() {
           backdropFilter: "blur(4px)",
         }}>
           <PixelText size={7} color={C.grayLt}>LOGOUT</PixelText>
+        </button>
+      )}
+      {/* Feedback button — floating bottom-right on all authenticated screens */}
+      {isAuthenticated && screen !== "login" && screen !== "nda" && (
+        <button
+          onClick={() => setShowFeedback(true)}
+          style={{
+            position: "fixed", bottom: 16, right: 16, zIndex: 998,
+            background: C.charcoal, border: `2px solid ${C.plum}`,
+            borderRadius: "50%", width: 36, height: 36,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+          }}
+          title="Report an issue"
+        >
+          <PixelText size={8} color={C.goldMd}>?</PixelText>
         </button>
       )}
       {/* Onboarding progress bar — shown from intro through training ground */}
@@ -198,6 +216,15 @@ export default function DARERQuest() {
             setTimeout(() => setJustAddedBossId(null), 3000);
             setAddMode(null);
           }}
+        />
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedback && (
+        <FeedbackModal
+          screen={screen}
+          hero={{ name: hero.name, darerId: hero.darerId, quest }}
+          onClose={() => setShowFeedback(false)}
         />
       )}
       </div>

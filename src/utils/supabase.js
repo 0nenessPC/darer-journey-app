@@ -74,3 +74,18 @@ export async function checkNdaAgreed(userId, version = NDA_VERSION) {
   }
   return data && data.length > 0;
 }
+
+// Save user feedback to Supabase
+export async function saveFeedback(userId, data) {
+  const { error } = await supabase
+    .from('user_feedback')
+    .insert({
+      user_id: userId,
+      ...data,
+    });
+  if (error) {
+    console.error('Save feedback error:', error);
+    return false;
+  }
+  return true;
+}
