@@ -2,10 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { C, PIXEL_FONT } from "../constants/gameData";
 
 // Shared registry for closing other swiped cards
-let activeSwipeId = null;
+export const activeSwipes = new Set();
 export function closeAllOtherSwipes(id) {
-  activeSwipeId = id;
+  activeSwipes.add(id);
   window.dispatchEvent(new CustomEvent('darer-swipe-close', { detail: id }));
+}
+export function unregisterSwipe(id) {
+  activeSwipes.delete(id);
 }
 
 export default function SwipeableBoss({ boss, onBossSelect, onAchieve, onDelete, children }) {
@@ -79,6 +82,12 @@ export default function SwipeableBoss({ boss, onBossSelect, onAchieve, onDelete,
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Register on mount, unregister on unmount
+  useEffect(() => {
+    activeSwipes.add(boss.id);
+    return () => unregisterSwipe(boss.id);
+  }, [boss.id]);
 
   // Close when another card is swiped open
   useEffect(() => {

@@ -33,12 +33,15 @@ export function useAIChat(systemPrompt, ctx = "") {
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null); // 'init' or 'send'
   const hist = useRef([]);
+  const ctxRef = useRef(ctx);
+  ctxRef.current = ctx;
   const FALLBACK = "Dara gathers her thoughts...";
 
   const sendMessage = useCallback(async (text) => {
     const u = { role: "user", text };
     setMessages(p => [...p, u]); hist.current.push(u); setTyping(true); setError(null); setErrorType(null);
-    const api = ctx ? [{ role: "user", text: ctx }, { role: "assistant", text: "Understood." }, ...hist.current] : hist.current;
+    const ctxVal = ctxRef.current;
+    const api = ctxVal ? [{ role: "user", text: ctxVal }, { role: "assistant", text: "Understood." }, ...hist.current] : hist.current;
     const res = await callAI(systemPrompt, api);
     if (res === FALLBACK || res === "..." || !res) {
       // AI call failed — don't pollute chat with fallback text

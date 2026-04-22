@@ -68,7 +68,7 @@ export function OnboardingProgress({ screen }) {
     { key: "intake", label: "Intake" },
     { key: "shadowReveal", label: "Reveal" },
     { key: "darerStrategy", label: "DARER STRATEGY" },
-    { key: "armory", label: "Armory" },
+    { key: "armoryIntro", label: "Armory" },
     { key: "tutorial", label: "Training" },
   ];
   const idx = ONBOARDING.findIndex(s => s.key === screen);
