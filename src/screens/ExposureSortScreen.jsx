@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { useAIChat, callClaude } from '../utils/chat';
+import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS, DEFAULT_ARMORY, DEFAULT_QUEST } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
@@ -43,7 +43,7 @@ export default function ExposureSortScreen({ hero, shadowText, onComplete, obSta
       const valuesText = (hero.values || []).map(v => v.text).join(", ");
       const strengthsText = (hero.coreValues || []).map(v => v.word).join(", ");
       const traitsText = (hero.traits || []).filter(t => t.type === "challenge").map(t => t.text).join("; ");
-      const res = await callClaude(
+      const res = await callAI(
         `You are a clinical psychologist designing a graduated exposure hierarchy for someone with social anxiety, following systematic graduated exposure principles (Hope, Heimberg, Juster & Turk). Based on the user's profile, generate exactly 10 exposure activities.
 
 Clinical rules:
@@ -87,7 +87,7 @@ No other text.`,
       const strengthsText = (hero.coreValues || []).map(v => v.word).join(", ");
       const traitsText = (hero.traits || []).filter(t => t.type === "challenge").map(t => t.text).join("; ");
       const exclusionList = exclusions.map(e => `"${e.name}" - ${e.activity}`).join("; ");
-      const res = await callClaude(
+      const res = await callAI(
         `You are a clinical psychologist designing a graduated exposure hierarchy. Generate EXACTLY ONE exposure activity at SUDS level ${level} (out of 10). It must be concrete, specific, and completable in a single real-world attempt. Give it a creative 2-3 word RPG boss name (fantasy/game themed).
 
 CRITICAL: The new exposure must be DIFFERENT from these already-suggested activities:
@@ -246,7 +246,7 @@ No other text.`,
         <PixelBtn onClick={() => onComplete(finalBosses)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", maxWidth: 340, marginTop: 12 }}>
           BEGIN THE JOURNEY →
         </PixelBtn>
-        <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+
       </div>
     );
   }
@@ -366,7 +366,7 @@ No other text.`,
         </div>
       ) : null}
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} } @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }`}</style>
+      <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }`}</style>
     </div>
   );
 }

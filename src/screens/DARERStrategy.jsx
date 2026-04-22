@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { C, PIXEL_FONT, FONT_LINK } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared";
-
-function parseSection(label, shadowText) {
-  if (!shadowText) return "";
-  const regex = new RegExp(label + "[:\\s]*(.+?)(?=(?:WHERE IT APPEARS|WHAT IT WHISPERS|HOW IT KEEPS ITS GRIP|The Shadow has been|SHADOW'S TRUE NATURE)(?::|\\b)|$)", "is");
-  const match = shadowText.match(regex);
-  return match ? match[1].replace(/^[:\s]+/, "").replace(/[\s\n]+$/, "").trim() : "";
-}
+import { parseShadowSection } from "../utils/parseShadow.js";
 
 function ShadowSide({ children }) {
   return (
@@ -47,9 +41,9 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
   const [step, setStep] = useState(0);
   const valueName = heroValues?.[0]?.word || heroValues?.[0]?.text || "the life you want";
 
-  const territory = parseSection("WHERE IT APPEARS", shadowText);
-  const storm = parseSection("WHAT IT WHISPERS", shadowText);
-  const escape = parseSection("HOW IT KEEPS ITS GRIP", shadowText);
+  const territory = parseShadowSection("WHERE IT APPEARS", shadowText);
+  const storm = parseShadowSection("WHAT IT WHISPERS", shadowText);
+  const escape = parseShadowSection("HOW IT KEEPS ITS GRIP", shadowText);
 
   const slides = [
     // Slide 0: Intro
@@ -192,7 +186,7 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
           {step === slides.length - 1 ? "ENTER THE ARMORY →" : "NEXT"}
         </PixelBtn>
       </div>
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }`}</style>
+
     </div>
   );
 }

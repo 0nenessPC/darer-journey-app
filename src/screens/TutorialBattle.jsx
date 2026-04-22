@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAIChat, callClaude } from '../utils/chat';
+import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, FONT_LINK, STRENGTH_ICONS, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
@@ -55,7 +55,7 @@ export default function TutorialBattle({ heroName, hero, quest, shadowText, hero
       const avoidBlock = avoidTexts.length > 0
         ? `\n\nPREVIOUSLY SHOWN — DO NOT REPEAT:\n${avoidTexts.map(t => "❌ " + t).join("\n")}\n\nGenerate 3 COMPLETELY DIFFERENT exposures from the above.`
         : "";
-      const res = await callClaude(
+      const res = await callAI(
         `You are a clinical psychologist designing micro-exposures for someone with social anxiety. Generate exactly 3 very low-SUDS (1-2 out of 10) training exposures for a user's FIRST exposure experience.
 
 User profile:
@@ -758,7 +758,7 @@ No other text.`,
         )}
       </div>
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }`}</style>
+      <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }`}</style>
     </div>
   );
 }

@@ -255,7 +255,6 @@ export default function JourneyMapPreview({ heroName, onContinue, obState = {}, 
       </div>
 
       <style>{`
-        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }
         @keyframes pulse { 0%,100%{box-shadow: 0 0 20px ${C.goldMd}30} 50%{box-shadow: 0 0 30px ${C.goldMd}50} }
       `}</style>
     </div>

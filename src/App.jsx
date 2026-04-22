@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { loadProgress, NDA_VERSION } from "./utils/supabase";
 import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
-import { C, SYS, DEFAULT_ARMORY, DEFAULT_QUEST, ONBOARDING } from "./constants/gameData";
+import { C, SYS, DEFAULT_ARMORY, DEFAULT_QUEST, ONBOARDING, FONT_LINK } from "./constants/gameData";
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox, OnboardingProgress } from "./components/shared.jsx";
 import BossBattle from "./screens/BossBattle.jsx";
 import TutorialBattle from "./screens/TutorialBattle.jsx";
@@ -56,7 +56,7 @@ export default function DARERQuest() {
 
   // --- Boss management handlers ---
   const { handleDeleteBoss, confirmDeleteBoss, handleAchieveBoss } = useBossHandlers({
-    pendingDeleteBoss, setPendingDeleteBoss, activeBoss, setActiveBoss, setQuest,
+    pendingDeleteBoss, setPendingDeleteBoss, activeBoss, setActiveBoss, setQuest, quest, hero,
   });
 
   // --- Completion handlers (character, intake, boss victory, tutorial) ---

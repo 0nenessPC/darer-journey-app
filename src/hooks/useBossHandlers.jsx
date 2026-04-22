@@ -1,24 +1,37 @@
 import { useCallback } from "react";
+import { supabase, saveProgress } from "../utils/supabase";
 
 /**
  * useBossHandlers — manages boss delete/achieve actions on the map screen.
  */
-export function useBossHandlers({ pendingDeleteBoss, setPendingDeleteBoss, activeBoss, setActiveBoss, setQuest }) {
+export function useBossHandlers({ pendingDeleteBoss, setPendingDeleteBoss, activeBoss, setActiveBoss, setQuest, quest, hero }) {
   const handleDeleteBoss = useCallback((boss) => {
     setPendingDeleteBoss(boss);
   }, [setPendingDeleteBoss]);
 
-  const confirmDeleteBoss = useCallback(() => {
+  const confirmDeleteBoss = useCallback(async () => {
     if (!pendingDeleteBoss) return;
-    setQuest(q => ({ ...q, bosses: q.bosses.filter(b => b.id !== pendingDeleteBoss.id) }));
+    const newBosses = quest.bosses.filter(b => b.id !== pendingDeleteBoss.id);
+    setQuest(q => ({ ...q, bosses: newBosses }));
     if (activeBoss?.id === pendingDeleteBoss.id) setActiveBoss(null);
     setPendingDeleteBoss(null);
-  }, [pendingDeleteBoss, activeBoss, setQuest, setActiveBoss, setPendingDeleteBoss]);
+    // Persist to Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await saveProgress(user.id, { screen: "map", hero, quest: { ...quest, bosses: newBosses } });
+    }
+  }, [pendingDeleteBoss, activeBoss, setQuest, setActiveBoss, setPendingDeleteBoss, quest, hero]);
 
-  const handleAchieveBoss = useCallback((boss) => {
-    setQuest(q => ({ ...q, bosses: q.bosses.map(b => b.id === boss.id ? { ...b, defeated: true, hp: 0 } : b) }));
+  const handleAchieveBoss = useCallback(async (boss) => {
+    const newBosses = quest.bosses.map(b => b.id === boss.id ? { ...b, defeated: true, hp: 0 } : b);
+    setQuest(q => ({ ...q, bosses: newBosses }));
     if (activeBoss?.id === boss.id) setActiveBoss(null);
-  }, [activeBoss, setQuest, setActiveBoss]);
+    // Persist to Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await saveProgress(user.id, { screen: "map", hero, quest: { ...quest, bosses: newBosses } });
+    }
+  }, [activeBoss, setQuest, setActiveBoss, quest, hero]);
 
   return { handleDeleteBoss, confirmDeleteBoss, handleAchieveBoss };
 }

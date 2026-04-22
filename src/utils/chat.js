@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 
-export async function callClaude(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
+export async function callAI(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
   const FALLBACK = "Dara gathers her thoughts...";
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
@@ -39,7 +39,7 @@ export function useAIChat(systemPrompt, ctx = "") {
     const u = { role: "user", text };
     setMessages(p => [...p, u]); hist.current.push(u); setTyping(true); setError(null); setErrorType(null);
     const api = ctx ? [{ role: "user", text: ctx }, { role: "assistant", text: "Understood." }, ...hist.current] : hist.current;
-    const res = await callClaude(systemPrompt, api);
+    const res = await callAI(systemPrompt, api);
     if (res === FALLBACK || res === "..." || !res) {
       // AI call failed — don't pollute chat with fallback text
       hist.current.pop(); // remove the user message from history too
@@ -56,7 +56,7 @@ export function useAIChat(systemPrompt, ctx = "") {
 
   const init = useCallback(async (prompt) => {
     setTyping(true); hist.current = []; setError(null); setErrorType(null);
-    const res = await callClaude(systemPrompt, [{ role: "user", text: prompt }]);
+    const res = await callAI(systemPrompt, [{ role: "user", text: prompt }]);
     if (res === FALLBACK) {
       setError("Dara is still preparing... retrying.");
       setErrorType("init");

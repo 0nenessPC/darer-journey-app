@@ -1,26 +1,16 @@
 import { useState, useEffect } from "react";
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
+import { parseShadowSection } from "../utils/parseShadow.js";
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
 function ShadowReveal({ heroName, shadowText, onContinue }) {
   const [revealed, setRevealed] = useState(0);
 
-  // Parse the shadow summary from AI text — robust section extraction
-  const parseSection = (label) => {
-    if (!shadowText) return "";
-    // Match label followed by content, stopping at the next section header or closing line
-    const regex = new RegExp(label + "[:\\s]*(.+?)(?=(?:WHERE IT APPEARS|WHAT IT WHISPERS|HOW IT KEEPS ITS GRIP|The Shadow has been|SHADOW'S TRUE NATURE)(?::|\\b)|$)", "is");
-    const match = shadowText.match(regex);
-    if (!match) return "";
-    // Clean up: remove leading colons/whitespace, trailing whitespace/newlines
-    return match[1].replace(/^[:\s]+/, "").replace(/[\s\n]+$/, "").trim();
-  };
-
-  const where = parseSection("WHERE IT APPEARS");
-  const whisper = parseSection("WHAT IT WHISPERS");
-  const grip = parseSection("HOW IT KEEPS ITS GRIP");
+  const where = parseShadowSection("WHERE IT APPEARS", shadowText);
+  const whisper = parseShadowSection("WHAT IT WHISPERS", shadowText);
+  const grip = parseShadowSection("HOW IT KEEPS ITS GRIP", shadowText);
 
   useEffect(() => {
     const t1 = setTimeout(() => setRevealed(1), 600);
@@ -158,7 +148,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
         </div>
       )}
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+
     </div>
   );
 }

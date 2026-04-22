@@ -13,3 +13,14 @@ body {
 button {
   font-family: inherit;
 }
+
+/* Shared animation keyframes — used across all screen components */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fearPulse {
+  0%, 100% { box-shadow: 0 0 8px #FF444420; }
+  50%      { box-shadow: 0 0 24px #FF444450; }
+}

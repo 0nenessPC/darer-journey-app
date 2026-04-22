@@ -69,7 +69,7 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
         </div>
       )}
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+
     </div>
   );
 }

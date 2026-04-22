@@ -52,10 +52,11 @@ export function useAppState() {
           screen, hero, quest,
           shadow_text: shadowText,
           onboarding_state: onboardingState,
+          battle_history: battleHistory,
         });
       }
     })();
-  }, [screen, isAuthenticated, onboardingState, shadowText, hero, quest]);
+  }, [screen, isAuthenticated, onboardingState, shadowText, hero, quest, battleHistory]);
 
   // --- Save on tab/browser close ---
   useEffect(() => {
@@ -68,6 +69,7 @@ export function useAppState() {
             screen, hero, quest,
             shadow_text: shadowText,
             onboarding_state: onboardingState,
+            battle_history: battleHistory,
           });
         }
       } catch (e) { /* ignore save errors on close */ }

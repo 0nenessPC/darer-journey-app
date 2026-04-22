@@ -34,7 +34,7 @@ function GameIntro({ onComplete, obState, setOBState }) {
         {last ? "BEGIN THE JOURNEY" : "NEXT"}
       </PixelBtn>
       {slide > 0 && <button onClick={() => setSlide(s => s - 1)} style={{ background: "none", border: "none", marginTop: 12, cursor: "pointer" }}><PixelText size={7} color={C.grayLt}>BACK</PixelText></button>}
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+
     </div>
   );
 }

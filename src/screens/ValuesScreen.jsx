@@ -46,7 +46,7 @@ export default function ValuesScreen({ heroName, onComplete }) {
     setLoadingValues(true);
     try {
       const combined = guideAnswers.filter(a => a.trim()).join(". ");
-      const res = await callClaude(
+      const res = await callAI(
         `You are a values counselor for a social anxiety RPG game. Based on what the user shared about what matters to them, generate exactly 3 personalized value statements. Each should be an outcome-oriented value (what they want in life, not how they want to behave). Keep each to 8 words or fewer. Return ONLY a JSON array like: [{"text":"value text","icon":"emoji"}]. No other text.`,
         [{ role: "user", text: `Here is what the user shared:\n1. Social highlights: "${guideAnswers[0]}"\n2. Social qualities they admire: "${guideAnswers[1]}"\n3. What they'd do without fear: "${guideAnswers[2]}"` }]
       );
@@ -284,7 +284,7 @@ export default function ValuesScreen({ heroName, onComplete }) {
         </div>
       )}
 
-      <style>{`@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } @keyframes fearPulse { 0%,100%{box-shadow:0 0 8px #FF444420} 50%{box-shadow:0 0 24px #FF444450} }`}</style>
+
     </div>
   );
 }

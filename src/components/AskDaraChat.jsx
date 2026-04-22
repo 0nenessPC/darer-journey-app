@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, TypingDots } from '../components/shared';
-import { callClaude } from '../utils/chat';
+import { callAI } from '../utils/chat';
 export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
@@ -63,7 +63,7 @@ Always keep the exposure small, actionable, and specific.`;
       setTyping(true);
       setStep(5);
       try {
-        const res = await callClaude(
+        const res = await callAI(
           DARA_SYS + `\n\nThe user has shared enough. Now generate ONLY a JSON exposure card with: {"name": "...", "desc": "...", "difficulty": 1-10}. Do NOT add any other text.`,
           chatHistory.current,
           500,
@@ -109,7 +109,7 @@ Always keep the exposure small, actionable, and specific.`;
     // Normal conversation turn
     setTyping(true);
     setStep(prev => prev + 1);
-    const res = await callClaude(DARA_SYS, chatHistory.current, 300, 15000);
+    const res = await callAI(DARA_SYS, chatHistory.current, 300, 15000);
     if (res) {
       const aiMsg = { role: "assistant", text: res };
       chatHistory.current.push(aiMsg);

@@ -53,7 +53,7 @@ export default function GameArmory({ hero, setHero, setScreen, onBack }) {
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
         <link href={FONT_LINK} rel="stylesheet" />
         <div style={{ padding: "48px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 16, animation: "fearPulse 1.5s ease-in-out infinite" }}>{unlocked.icon}</div>
+          <div style={{ fontSize: 56, marginBottom: 16, animation: "fearPulseScale 1.5s ease-in-out infinite" }}>{unlocked.icon}</div>
           <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>NEW ARMORY ITEM UNLOCKED!</PixelText>
           <div style={{ padding: 16, background: "#1A1218", border: `3px solid ${C.goldMd}`, borderRadius: 6, marginBottom: 24 }}>
             <PixelText size={10} color={C.cream}>{unlocked.name}</PixelText>
@@ -61,7 +61,7 @@ export default function GameArmory({ hero, setHero, setScreen, onBack }) {
           </div>
           <PixelBtn onClick={() => setPracticeMode(null)} color={C.gold} textColor={C.charcoal} style={{ width: "100%" }}>CONTINUE</PixelBtn>
         </div>
-        <style>{`@keyframes fearPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }`}</style>
+        <style>{`@keyframes fearPulseScale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }`}</style>
       </div>
     );
   }
