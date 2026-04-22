@@ -184,3 +184,38 @@ export const ONBOARDING = [
   { key: "armory", label: "Armory" },
   { key: "tutorial", label: "Training" },
 ];
+
+// ============ CHARACTER TRAIT CARDS (SADS-based) ============
+export const TRAIT_CARDS = [
+  // Strengths — adapted from SADS reverse-scored items (relaxed, approach, comfort)
+  { id: "s1", text: "I can relax even in unfamiliar social settings", type: "strength", icon: "🌿", stat: "courage", sads: 1 },
+  { id: "s2", text: "It's easy for me to relax around strangers", type: "strength", icon: "☀️", stat: "openness", sads: 3 },
+  { id: "s3", text: "I have no real desire to avoid people", type: "strength", icon: "🤝", stat: "openness", sads: 4 },
+  { id: "s4", text: "I usually feel calm and comfortable at social events", type: "strength", icon: "🧘", stat: "resilience", sads: 6 },
+  { id: "s5", text: "I feel at ease talking to someone new", type: "strength", icon: "💬", stat: "openness", sads: 7 },
+  { id: "s6", text: "If there's a chance to meet new people, I take it", type: "strength", icon: "🌟", stat: "courage", sads: 9 },
+  { id: "s7", text: "I feel relaxed in groups of people", type: "strength", icon: "🎵", stat: "resilience", sads: 12 },
+  { id: "s8", text: "I'm comfortable meeting someone for the first time", type: "strength", icon: "✨", stat: "courage", sads: 15 },
+  { id: "s9", text: "I can walk into a room full of strangers", type: "strength", icon: "🚪", stat: "courage", sads: 17 },
+  { id: "s10", text: "I talk willingly when someone in charge wants to speak with me", type: "strength", icon: "🗣", stat: "openness", sads: 19 },
+  { id: "s11", text: "I'm comfortable talking to people at social events", type: "strength", icon: "🎉", stat: "openness", sads: 22 },
+  { id: "s12", text: "I sometimes introduce people to each other", type: "strength", icon: "🔗", stat: "courage", sads: 25 },
+  { id: "s13", text: "I usually show up to social plans I've made", type: "strength", icon: "📅", stat: "resilience", sads: 27 },
+  { id: "s14", text: "I find it easy to relax with other people", type: "strength", icon: "💚", stat: "resilience", sads: 28 },
+
+  // Challenges — adapted from SADS avoidance/distress items
+  { id: "c1", text: "I try to avoid situations that force me to be sociable", type: "challenge", icon: "🚷", stat: "courage", sads: 2 },
+  { id: "c2", text: "Social occasions often leave me feeling upset", type: "challenge", icon: "🌧", stat: "resilience", sads: 5 },
+  { id: "c3", text: "I avoid talking to people unless I know them well", type: "challenge", icon: "🔇", stat: "openness", sads: 8 },
+  { id: "c4", text: "I get nervous in casual hangouts with mixed groups", type: "challenge", icon: "😰", stat: "resilience", sads: 10 },
+  { id: "c5", text: "I'm usually nervous around people I don't know", type: "challenge", icon: "🧊", stat: "courage", sads: 11 },
+  { id: "c6", text: "I often want to get away from people", type: "challenge", icon: "🏃", stat: "openness", sads: 13 },
+  { id: "c7", text: "I feel uncomfortable in groups of people I don't know", type: "challenge", icon: "👥", stat: "courage", sads: 14 },
+  { id: "c8", text: "Being introduced to people makes me tense", type: "challenge", icon: "😶", stat: "openness", sads: 16 },
+  { id: "c9", text: "I avoid joining large groups of people", type: "challenge", icon: "🚫", stat: "courage", sads: 18 },
+  { id: "c10", text: "I often feel on edge in a group", type: "challenge", icon: "⚡", stat: "resilience", sads: 20 },
+  { id: "c11", text: "I tend to withdraw from people", type: "challenge", icon: "🐚", stat: "openness", sads: 21 },
+  { id: "c12", text: "I am seldom at ease in a large group of people", type: "challenge", icon: "😣", stat: "resilience", sads: 23 },
+  { id: "c13", text: "I think up excuses to avoid social events", type: "challenge", icon: "📝", stat: "courage", sads: 24 },
+  { id: "c14", text: "I try to avoid formal social occasions", type: "challenge", icon: "🎭", stat: "resilience", sads: 26 },
+];
