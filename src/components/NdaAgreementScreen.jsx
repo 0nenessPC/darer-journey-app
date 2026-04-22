@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { C } from "./DesignTokens.jsx";
+import { C } from "../constants/gameData";
 
 const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { C, PIXEL_FONT, FONT_LINK } from "../constants/gameData";
-import { PixelText, PixelBtn } from "../components/shared.jsx";
-import DialogBox from "../components/DialogBox.jsx";
+import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
 export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
   const [step, setStep] = useState(0);
