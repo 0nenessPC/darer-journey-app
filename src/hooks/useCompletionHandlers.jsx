@@ -35,11 +35,28 @@ export function useCompletionHandlers({
 
   const handleBossVictory = useCallback(async (outcome, details = {}) => {
     const { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages, victoryMessages } = details;
+    const prevHistory = Array.isArray(battleHistory) ? battleHistory : [];
+    const battleRecord = {
+      bossId: activeBoss?.id,
+      bossName: activeBoss?.name,
+      bossDesc: activeBoss?.desc,
+      outcome,
+      date: new Date().toISOString(),
+      heroStats: hero?.stats,
+      prepAnswers: prepAnswers || {},
+      suds: suds || {},
+      exposureWhen: exposureWhen || "",
+      exposureWhere: exposureWhere || "",
+      exposureArmory: exposureArmory || "",
+      exposureScheduledTime: exposureScheduledTime || "",
+      battleMessages: battleMessages || [],
+      victoryMessages: victoryMessages || [],
+    };
+    const newHistory = [...prevHistory, battleRecord];
+    setBattleHistory(newHistory);
     if (outcome === "victory") {
-      setQuest(q => ({
-        ...q,
-        bosses: q.bosses.map(b => b.id === activeBoss.id ? { ...b, defeated: true, hp: 0 } : b),
-      }));
+      const newQuest = { ...quest, bosses: quest.bosses.map(b => b.id === activeBoss.id ? { ...b, defeated: true, hp: 0 } : b) };
+      setQuest(newQuest);
       setHero(h => ({
         ...h,
         stats: {
@@ -48,37 +65,16 @@ export function useCompletionHandlers({
           openness: Math.min(10, h.stats.openness + (Math.random() > 0.5 ? 1 : 0)),
         }
       }));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await saveProgress(user.id, { screen: "map", hero, quest: newQuest, battle_history: newHistory });
     } else if (outcome === "partial") {
-      setQuest(q => ({
-        ...q,
-        bosses: q.bosses.map(b => b.id === activeBoss.id ? { ...b, hp: Math.max(0, b.hp - 50) } : b),
-      }));
+      const newQuest = { ...quest, bosses: quest.bosses.map(b => b.id === activeBoss.id ? { ...b, hp: Math.max(0, b.hp - 50) } : b) };
+      setQuest(newQuest);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await saveProgress(user.id, { screen: "map", hero, quest: newQuest, battle_history: newHistory });
     }
     setActiveBoss(null);
     setScreen("map");
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const prevHistory = Array.isArray(battleHistory) ? battleHistory : [];
-      const battleRecord = {
-        bossId: activeBoss?.id,
-        bossName: activeBoss?.name,
-        bossDesc: activeBoss?.desc,
-        outcome,
-        date: new Date().toISOString(),
-        heroStats: hero?.stats,
-        prepAnswers: prepAnswers || {},
-        suds: suds || {},
-        exposureWhen: exposureWhen || "",
-        exposureWhere: exposureWhere || "",
-        exposureArmory: exposureArmory || "",
-        exposureScheduledTime: exposureScheduledTime || "",
-        battleMessages: battleMessages || [],
-        victoryMessages: victoryMessages || [],
-      };
-      const newHistory = [...prevHistory, battleRecord];
-      setBattleHistory(newHistory);
-      await saveProgress(user.id, { screen: "map", hero, quest, battle_history: newHistory });
-    }
   }, [activeBoss, hero, quest, battleHistory, setQuest, setHero, setActiveBoss, setScreen, setBattleHistory]);
 
   const handleTutorialComplete = useCallback(async () => {
