@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { C } from "../constants/gameData";
+import { C, PIXEL_FONT } from "../constants/gameData";
+import { PixelText } from '../components/shared';
 
-const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
 const NDA_TEXT = `DARER ORDER — CONFIDENTIALITY AGREEMENT
