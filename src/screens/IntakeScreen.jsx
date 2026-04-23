@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { buildHeroContext } from "../utils/aiHelper.jsx";
 import { useAIChat } from "../utils/chat";
+import { useTTS } from "../hooks/useVoiceRecorder.jsx";
 import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
@@ -9,8 +10,10 @@ const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&displ
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
   const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
+  const { speak, cancel } = useTTS();
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
+  const [muted, setMuted] = useState(false);
   const chatRef = useRef(null);
   const initPromptRef = useRef(`The hero's name is ${heroName}. They have just seen the lore about the Shadow's true nature and said they are ready to look into its eyes. Refer to their personal context provided above — their strengths, values, traits, and goal. Tailor your questions around what matters to them. Begin by acknowledging their courage, mention this will take about 5 to 10 minutes, then ask your first question about where the Shadow shows up in their daily life. Keep it to 2-3 sentences. This should feel like a companion helping them understand their enemy, not a clinical interview.`);
   useEffect(() => {
@@ -18,6 +21,21 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   }, [started, init, heroName]);
   // Retry init when it failed
   const retryInit = () => { init(initPromptRef.current); };
+
+  // Cancel speech when new typing starts or on unmount
+  useEffect(() => { if (typing) cancel(); }, [typing, cancel]);
+
+  // Auto-speak new assistant messages (when not muted)
+  const prevCount = useRef(0);
+  useEffect(() => {
+    const count = messages.filter(m => m.role === "assistant").length;
+    if (count > prevCount.current && !muted) {
+      const last = messages[messages.length - 1];
+      if (last?.role === "assistant") speak(last.text);
+    }
+    prevCount.current = count;
+  }, [messages, muted, speak]);
+
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, typing]);
   const send = async () => { if (!input.trim() || typing) return; const t = input; const ok = await sendMessage(t); if (ok) setInput(""); };
   const assistantCount = messages.filter(m => m.role === "assistant").length;
@@ -27,10 +45,11 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   // Auto-transition when Dara generates the shadow summary
   useEffect(() => {
     if (hasShadowSummary && lastAssistant) {
+      cancel(); // stop any lingering speech
       const timer = setTimeout(() => onComplete(messages, lastAssistant.text), 2000);
       return () => clearTimeout(timer);
     }
-  }, [hasShadowSummary, lastAssistant, messages, onComplete]);
+  }, [hasShadowSummary, lastAssistant, messages, onComplete, cancel]);
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
@@ -41,6 +60,13 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
           <PixelText size={9} color={C.goldMd}>DARA</PixelText>
           <div><PixelText size={7} color={typing ? C.rose : C.grayLt}>{typing ? "thinking..." : "soul companion"}</PixelText></div>
         </div>
+        <button
+          onClick={() => { if (muted) setMuted(false); else { setMuted(true); cancel(); } }}
+          style={{ background: "transparent", border: "1px solid #5C3A50", borderRadius: 4, cursor: "pointer", padding: "4px 6px", fontSize: 14, lineHeight: 1 }}
+          title={muted ? "Unmute DARER's voice" : "Mute DARER's voice"}
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
       </div>
       <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: 16 }}>
         {messages.map((m, i) => (
