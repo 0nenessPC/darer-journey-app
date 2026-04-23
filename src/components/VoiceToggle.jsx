@@ -118,12 +118,10 @@ export function VoiceInputBar({
 }) {
   const { isListening, startListening, stopListening, transcript, supported } = voice || {};
 
-  // When transcript becomes non-empty, auto-send it
+  // When transcript becomes non-empty, auto-fill the input so the user sees it
   React.useEffect(() => {
     if (transcript && !isListening) {
-      onSend(transcript);
-      // Reset transcript after sending
-      voice?.resetTranscript?.();
+      onInputChange(transcript);
     }
   }, [transcript, isListening]);
 

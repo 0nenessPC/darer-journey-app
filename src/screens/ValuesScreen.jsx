@@ -372,9 +372,10 @@ export default function ValuesScreen({ heroName, onComplete }) {
               <VoiceInputBar
                 input={guideAnswers[guideStep]}
                 onInputChange={text => updateGuideAnswer(text)}
-                onSend={() => {
-                  // If answer has content, proceed to next step
-                  if (guideAnswers[guideStep].trim()) {
+                onSend={(text) => {
+                  // Use the passed text (transcript or typed value) so we don't race with state
+                  const answer = (text ?? guideAnswers[guideStep]).trim();
+                  if (answer) {
                     if (guideStep < GUIDE_PROMPTS.length - 1) {
                       setGuideStep(g => g + 1);
                     } else {
