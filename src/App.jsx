@@ -14,7 +14,6 @@ import ValuesScreen from "./screens/ValuesScreen.jsx";
 import AskDaraChat from "./components/AskDaraChat.jsx";
 import PsychoEdScreen from "./screens/PsychoEdScreen.jsx";
 import JourneyMapPreview from "./screens/JourneyMapPreview.jsx";
-import SwipeableBoss, { closeAllOtherSwipes } from "./components/SwipeableBoss.jsx";
 import PracticeSession from "./components/PracticeSession.jsx";
 import DARERStrategy from "./screens/DARERStrategy.jsx";
 import GameArmory from "./screens/GameArmory.jsx";

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar } from '../components/shared';
+import SwipeableBoss from './SwipeableBoss';
 export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onArmory, onLadder, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
