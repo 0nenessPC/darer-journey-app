@@ -8,7 +8,7 @@ const SpeechRecognition =
 /**
  * useTTS — speaks text via OpenAI TTS API (onyx voice).
  *
- * Calls /api/tts → receives base64 MP3 → plays via Audio.
+ * Calls /api/tts → receives binary MP3 → plays via Audio.
  * Automatically cancels in-flight speech so new calls don't overlap.
  * Falls back to browser speechSynthesis if the API is unavailable.
  *
@@ -53,26 +53,22 @@ export function useTTS() {
 
       if (!res.ok) throw new Error(`TTS API returned ${res.status}`);
 
-      const data = await res.json();
+      // API returns raw MP3 binary → blob URL
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
 
-      if (data?.audio) {
-        // Play base64 MP3
-        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-        audioRef.current = audio;
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => { audioRef.current = null; URL.revokeObjectURL(url); setIsSpeaking(false); };
+      audio.onerror = () => {
+        audioRef.current = null;
+        URL.revokeObjectURL(url);
+        setIsSpeaking(false);
+        throw new Error('Audio playback failed');
+      };
 
-        audio.onplay = () => setIsSpeaking(true);
-        audio.onended = () => { audioRef.current = null; setIsSpeaking(false); };
-        audio.onerror = () => {
-          audioRef.current = null;
-          setIsSpeaking(false);
-          throw new Error('Audio playback failed');
-        };
-
-        await audio.play();
-        return;
-      }
-
-      throw new Error('No audio data in response');
+      await audio.play();
     } catch (err) {
       // ── Fallback to browser speechSynthesis ──
       if (err.name === 'AbortError') return; // cancelled, don't fallback
@@ -171,6 +167,7 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
       }
       if (final) setTranscript(prev => prev + final);
       setInterimTranscript(interim);
+      onResultRef.current?.({ final, interim });
     };
 
     recognition.onerror = (event) => {
@@ -179,6 +176,9 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
       setError(`Voice error: ${event.error}`);
       onErrorRef.current?.(event.error);
     };
+
+    // Load voices eagerly so they're ready when speak() is called
+    window.speechSynthesis?.getVoices();
 
     recognition.onend = () => {
       setIsListening(false);

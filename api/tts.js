@@ -1,6 +1,7 @@
-// Vercel Serverless Function - OpenAI TTS API Proxy
-// Reads DARER's text responses aloud using OpenAI's text-to-speech (onyx voice).
-// Keeps the API key server-side so it's never exposed in the browser bundle.
+// Vercel Serverless Function - OpenAI TTS Proxy
+// Receives text, returns audio buffer from OpenAI TTS (onyx = gentle male voice).
+
+import OpenAI from 'openai';
 
 export const config = {
   maxDuration: 30,
@@ -13,46 +14,32 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return res.status(500).json({ error: 'OpenAI API key not configured' });
   }
 
-  const { text, voice = 'onyx', model = 'tts-1' } = req.body;
+  const { text, voice = 'onyx', speed = 0.9, model = 'tts-1' } = req.body;
 
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    return res.status(400).json({ error: 'Missing or empty text' });
+  if (!text) {
+    return res.status(400).json({ error: 'No text provided' });
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        input: text.trim(),
-        voice,          // onyx = deep, warm, gentle male
-        response_format: 'mp3',
-        speed: 0.9,     // slightly slower — calming
-      }),
+    const openai = new OpenAI({ apiKey });
+
+    const mp3 = await openai.audio.speech.create({
+      model,
+      voice,
+      input: text,
+      speed,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI TTS error:', response.status, errorText);
-      return res.status(response.status).json({
-        error: `TTS failed (${response.status})`,
-      });
-    }
+    const buffer = Buffer.from(await mp3.arrayBuffer());
 
-    // OpenAI returns raw audio bytes — convert to base64 for client playback
-    const buffer = await response.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-
-    return res.status(200).json({ audio: base64 });
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-cache');
+    return res.status(200).send(buffer);
   } catch (err) {
-    console.error('TTS proxy error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('TTS error:', err);
+    return res.status(500).json({ error: err.message || 'TTS failed' });
   }
 }

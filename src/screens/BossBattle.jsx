@@ -3,6 +3,8 @@ import { useAIChat } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
+import { useCloudVoice } from '../hooks/useCloudVoice';
+import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 
 export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, setActiveBoss, setScreen, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
   const [phase, setPhase] = useState(obState.phase || "prep");
@@ -17,7 +19,12 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   const [exposureScheduledTime, setExposureScheduledTime] = useState(obState.exposureScheduledTime || "");
   const [showAlarmSuggestion, setShowAlarmSuggestion] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [battleVoiceMode, setBattleVoiceMode] = useState(false);
+  const [victoryVoiceMode, setVictoryVoiceMode] = useState(false);
   const chatRef = useRef(null);
+
+  // Voice hook
+  const voice = useCloudVoice({ useCloud: true });
 
   // Persist battle progress so resume-anywhere survives refresh/close
   useEffect(() => {
@@ -79,13 +86,27 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
     );
   };
 
-  const handleSend = async (chat) => {
-    if (!chatInput.trim()) return;
-    const t = chatInput; setChatInput("");
+  const handleSend = async (chat, textOverride) => {
+    const t = (textOverride || chatInput).trim();
+    if (!t) return;
+    setChatInput("");
     await chat.sendMessage(t);
   };
 
   const activeChat = phase === "battle" ? battleChat : victoryChat;
+
+  // Auto-speak AI replies when voice mode is on
+  useEffect(() => {
+    if (!battleVoiceMode || !voice.supported) return;
+    const msgs = activeChat.messages;
+    if (msgs.length === 0) return;
+    const last = msgs[msgs.length - 1];
+    if (last?.role === "assistant" && !last._spoken) {
+      // Mark as spoken so we don't repeat
+      last._spoken = true;
+      voice.speak(last.text);
+    }
+  }, [activeChat.messages, battleVoiceMode, voice.supported, voice.speak]);
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
@@ -406,13 +427,32 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
       {(phase === "battle" || phase === "result") && (
         <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: 12 }}>
           {activeChat.messages.map((m, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 8 }}>
-              <div style={{
-                maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
+            <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start", gap: 6, marginBottom: 8 }}>
+              {m.role === "assistant" && voice.supported && (
+                <button
+                  onClick={() => voice.isSpeaking ? voice.cancelSpeech() : voice.speak(m.text)}
+                  style={{
+                    width: 28, height: 28, flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "transparent", border: "none",
+                    cursor: "pointer", fontSize: 14,
+                    color: voice.isSpeaking ? C.teal : C.grayLt,
+                    opacity: 0.5,
+                    transition: "opacity 0.15s",
+                  }}
+                  onMouseEnter={(e) => e.target.style.opacity = 1}
+                  onMouseLeave={(e) => e.target.style.opacity = 0.5}
+                  title={voice.isSpeaking ? "Stop" : "Listen"}
+                >
+                  {voice.isSpeaking ? "⏸" : "🔊"}
+                </button>
+              )}
+              <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
+                maxWidth: voice.supported && m.role === "assistant" ? "78%" : "82%", padding: "10px 12px", borderRadius: 4,
                 background: m.role === "user" ? C.plum : "#1A1218", border: "2px solid #5C3A50",
               }}>
                 <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
-              </div>
+              </VoiceMessageBubble>
             </div>
           ))}
           {activeChat.typing && <DialogBox speaker="DARA" typing />}
@@ -432,6 +472,28 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
                 </button>
               </div>
             )}
+
+            {/* Voice mode toggle */}
+            {voice.supported && (
+              <div style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setBattleVoiceMode(v => !v)}
+                  style={{
+                    padding: "4px 10px",
+                    background: battleVoiceMode ? C.plum + "40" : "transparent",
+                    border: `1px solid ${battleVoiceMode ? C.plumLt : C.gray + "60"}`,
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    color: battleVoiceMode ? C.plumLt : C.grayLt,
+                    fontSize: 9,
+                    fontFamily: PIXEL_FONT,
+                  }}
+                >
+                  {battleVoiceMode ? "🎤 Voice ON" : "🎤 Voice OFF"}
+                </button>
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
               {[
                 `Remember: ${prepAnswers.rise?.split(".")[0] || "breathe"}`,
@@ -448,12 +510,24 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
               ))}
             </div>
             {/* Free text input during battle */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }}
-                placeholder="Say anything to Dara..." disabled={battleChat.typing}
-                style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
-              <PixelBtn onClick={() => { if (chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }} disabled={battleChat.typing || !chatInput.trim()}>→</PixelBtn>
-            </div>
+            {battleVoiceMode && voice.supported ? (
+              <VoiceInputBar
+                input={chatInput}
+                onInputChange={setChatInput}
+                onSend={(t) => handleSend(battleChat, t)}
+                typing={battleChat.typing}
+                disabled={false}
+                voice={voice}
+                placeholder="Say anything to Dara or tap 🎤..."
+              />
+            ) : (
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }}
+                  placeholder="Say anything to Dara..." disabled={battleChat.typing}
+                  style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
+                <PixelBtn onClick={() => { if (chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }} disabled={battleChat.typing || !chatInput.trim()}>→</PixelBtn>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 6 }}>
               <PixelBtn onClick={() => setPhase("log")} color={C.gold} textColor={C.charcoal} style={{ flex: 1 }}>
                 BATTLE COMPLETE →
@@ -503,11 +577,47 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
               <div style={{ textAlign: "center" }}><PixelText size={12} color={C.hpGreen}>{suds.after}</PixelText><div><PixelText size={6} color={C.grayLt}>AFTER</PixelText></div></div>
               <div style={{ textAlign: "center" }}><PixelText size={12} color={C.goldMd}>+{outcome === "victory" ? 100 : outcome === "partial" ? 50 : 10}</PixelText><div><PixelText size={6} color={C.grayLt}>XP</PixelText></div></div>
             </div>
+
+            {/* Voice mode toggle for result phase */}
+            {voice.supported && (
+              <div style={{ marginBottom: 8, display: "flex", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setVictoryVoiceMode(v => !v)}
+                  style={{
+                    padding: "4px 10px",
+                    background: victoryVoiceMode ? C.plum + "40" : "transparent",
+                    border: `1px solid ${victoryVoiceMode ? C.plumLt : C.gray + "60"}`,
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    color: victoryVoiceMode ? C.plumLt : C.grayLt,
+                    fontSize: 9,
+                    fontFamily: PIXEL_FONT,
+                  }}
+                >
+                  {victoryVoiceMode ? "🎤 Voice ON" : "🎤 Voice OFF"}
+                </button>
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 8 }}>
-              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==="Enter" && handleSend(victoryChat)}
-                placeholder="Reflect with Dara..." disabled={victoryChat.typing}
-                style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
-              <PixelBtn onClick={() => handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
+              {victoryVoiceMode && voice.supported ? (
+                <VoiceInputBar
+                  input={chatInput}
+                  onInputChange={setChatInput}
+                  onSend={(t) => handleSend(victoryChat, t)}
+                  typing={victoryChat.typing}
+                  disabled={false}
+                  voice={voice}
+                  placeholder="Reflect with Dara or tap 🎤..."
+                />
+              ) : (
+                <>
+                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==="Enter" && handleSend(victoryChat)}
+                    placeholder="Reflect with Dara..." disabled={victoryChat.typing}
+                    style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
+                  <PixelBtn onClick={() => handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
+                </>
+              )}
             </div>
             <PixelBtn onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
               RETURN TO MAP

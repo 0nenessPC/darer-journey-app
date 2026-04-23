@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
+import { useCloudVoice } from '../hooks/useCloudVoice';
+import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
@@ -9,8 +11,12 @@ export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext
   const [step, setStep] = useState(0); // 0 = intro, 1-4 = questions, 5 = review
   const [generatedExposure, setGeneratedExposure] = useState(null);
   const [chatError, setChatError] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false); // user toggles voice on/off
   const messagesEndRef = useRef(null);
   const chatHistory = useRef([]);
+
+  // Voice hook
+  const voice = useCloudVoice({ useCloud: true });
 
   const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || "Hero"; // Extract name from hero context
 
@@ -45,16 +51,21 @@ Always keep the exposure small, actionable, and specific.`;
       setMessages([initMsg]);
       setTyping(false);
       setStep(1);
+      // Speak greeting if voice mode is on
+      if (voiceMode && voice.supported) {
+        voice.speak(initMsg.text);
+      }
     }
-  }, [step, messages.length]);
+  }, [step, messages.length, voiceMode, voice.speak, voice.supported]);
 
-  const handleSend = async () => {
-    if (!input.trim() || typing) return;
-    const userText = input.trim();
+  const handleSend = useCallback(async (textOverride) => {
+    const textToSend = textOverride || input;
+    if (!textToSend.trim() || typing) return;
+    const userText = textToSend.trim();
     setInput("");
 
-    // Add user message
-    const userMsg = { role: "user", text: userText };
+    // Add user message (track if it came from voice)
+    const userMsg = { role: "user", text: userText, fromVoice: !!textOverride };
     chatHistory.current.push(userMsg);
     setMessages(prev => [...prev, userMsg]);
 
@@ -82,6 +93,9 @@ Always keep the exposure small, actionable, and specific.`;
               const finalMsg = { role: "assistant", text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.` };
               chatHistory.current.push(finalMsg);
               setMessages(prev => [...prev, finalMsg]);
+              if (voiceMode && voice.supported) {
+                voice.speak(finalMsg.text);
+              }
               setGeneratedExposure({
                 name: exposure.name,
                 desc: exposure.desc || `Based on your conversation with Dara`,
@@ -114,9 +128,13 @@ Always keep the exposure small, actionable, and specific.`;
       const aiMsg = { role: "assistant", text: res };
       chatHistory.current.push(aiMsg);
       setMessages(prev => [...prev, aiMsg]);
+      // Speak reply if voice mode is on
+      if (voiceMode && voice.supported) {
+        voice.speak(res);
+      }
     }
     setTyping(false);
-  };
+  }, [input, typing, voiceMode, voice.speak, voice.supported]);
 
   // Show review screen if we have a generated exposure
   if (generatedExposure) {
@@ -223,9 +241,30 @@ Always keep the exposure small, actionable, and specific.`;
               marginBottom: 12,
               display: "flex",
               justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+              alignItems: "flex-start",
+              gap: 6,
             }}>
-              <div style={{
-                maxWidth: "85%", padding: "10px 14px",
+              {m.role === "assistant" && voice.supported && (
+                <button
+                  onClick={() => voice.isSpeaking ? voice.cancelSpeech() : voice.speak(m.text)}
+                  style={{
+                    width: 28, height: 28, flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "transparent", border: "none",
+                    cursor: "pointer", fontSize: 14,
+                    color: voice.isSpeaking ? C.teal : C.grayLt,
+                    opacity: 0.5,
+                    transition: "opacity 0.15s",
+                  }}
+                  onMouseEnter={(e) => e.target.style.opacity = 1}
+                  onMouseLeave={(e) => e.target.style.opacity = 0.5}
+                  title={voice.isSpeaking ? "Stop" : "Listen"}
+                >
+                  {voice.isSpeaking ? "⏸" : "🔊"}
+                </button>
+              )}
+              <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
+                maxWidth: voice.supported && m.role === "assistant" ? "80%" : "85%", padding: "10px 14px",
                 background: m.role === "user" ? C.plum + "30" : "#222",
                 border: `2px solid ${m.role === "user" ? C.plum + "60" : C.teal + "40"}`,
                 borderRadius: 8,
@@ -233,7 +272,7 @@ Always keep the exposure small, actionable, and specific.`;
                 <PixelText size={7} color={m.role === "user" ? C.plumLt : C.cream} style={{ whiteSpace: "pre-wrap" }}>
                   {m.text}
                 </PixelText>
-              </div>
+              </VoiceMessageBubble>
             </div>
           ))}
           {typing && (
@@ -250,39 +289,75 @@ Always keep the exposure small, actionable, and specific.`;
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Voice mode toggle (header row below title) */}
+        {voice.supported && (
+          <div style={{
+            padding: "6px 16px", borderBottom: `2px solid ${C.teal}40`,
+            display: "flex", alignItems: "center", justifyContent: "flex-end",
+          }}>
+            <button
+              onClick={() => setVoiceMode(v => !v)}
+              style={{
+                padding: "4px 10px",
+                background: voiceMode ? C.plum + "40" : "transparent",
+                border: `1px solid ${voiceMode ? C.plumLt : C.gray + "60"}`,
+                borderRadius: 4,
+                cursor: "pointer",
+                color: voiceMode ? C.plumLt : C.grayLt,
+                fontSize: 9,
+                fontFamily: PIXEL_FONT,
+              }}
+            >
+              {voiceMode ? "🎤 Voice ON" : "🎤 Voice OFF"}
+            </button>
+          </div>
+        )}
+
         {/* Input */}
-        <div style={{
-          padding: "12px 16px", borderTop: `2px solid ${C.teal}40`,
-          display: "flex", gap: 8,
-        }}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
-            placeholder={step >= 5 ? "Generating your exposure..." : "Type your answer..."}
-            disabled={typing || step >= 5}
-            style={{
-              flex: 1, padding: "10px 12px",
-              background: "#222", border: `2px solid ${C.teal}60`,
-              borderRadius: 6, color: C.cream, fontSize: 12,
-              fontFamily: "inherit", outline: "none",
-              opacity: typing || step >= 5 ? 0.5 : 1,
-            }}
+        {voiceMode && voice.supported ? (
+          <VoiceInputBar
+            input={input}
+            onInputChange={setInput}
+            onSend={handleSend}
+            typing={typing}
+            disabled={step >= 5}
+            voice={voice}
+            placeholder={step >= 5 ? "Generating your exposure..." : "Type your answer or tap 🎤..."}
           />
-          <button
-            onClick={handleSend}
-            disabled={typing || !input.trim() || step >= 5}
-            style={{
-              padding: "10px 16px",
-              background: input.trim() && !typing ? C.teal : C.gray,
-              border: `2px solid ${input.trim() && !typing ? C.teal : C.gray}`,
-              borderRadius: 6, cursor: input.trim() && !typing ? "pointer" : "default",
-              color: C.cream, fontSize: 14, fontFamily: PIXEL_FONT,
-            }}
-          >
-            →
-          </button>
-        </div>
+        ) : (
+          <div style={{
+            padding: "12px 16px", borderTop: `2px solid ${C.teal}40`,
+            display: "flex", gap: 8,
+          }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
+              placeholder={step >= 5 ? "Generating your exposure..." : "Type your answer..."}
+              disabled={typing || step >= 5}
+              style={{
+                flex: 1, padding: "10px 12px",
+                background: "#222", border: `2px solid ${C.teal}60`,
+                borderRadius: 6, color: C.cream, fontSize: 12,
+                fontFamily: "inherit", outline: "none",
+                opacity: typing || step >= 5 ? 0.5 : 1,
+              }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={typing || !input.trim() || step >= 5}
+              style={{
+                padding: "10px 16px",
+                background: input.trim() && !typing ? C.teal : C.gray,
+                border: `2px solid ${input.trim() && !typing ? C.teal : C.gray}`,
+                borderRadius: 6, cursor: input.trim() && !typing ? "pointer" : "default",
+                color: C.cream, fontSize: 14, fontFamily: PIXEL_FONT,
+              }}
+            >
+              →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
