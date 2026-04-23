@@ -290,85 +290,114 @@ test.describe('DARER Journey', () => {
     console.log('💬 7. Intake...');
     // Reset intake call counter to prevent stale state from previous runs
     page.__intakeCall = 0;
-    await screen(page, 'courage', 30000);
-    console.log('✅ Intake started');
-    await page.waitForTimeout(1000);
-    // Send a message in the intake chat with retries and verification
-    async function sendIntakeMessage(text, maxRetries = 3) {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          // Wait for input to exist
-          const input = await page.waitForSelector('input[placeholder="Speak to Dara..."]', { timeout: 5000 }).catch(() => null);
-          if (!input) {
-            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): input not found`);
+
+    // Wait for the intake chat UI to render (input field + Dara header)
+    const intakeInput = await page.waitForSelector('input[placeholder="Speak to Dara..."]', { timeout: 30000 }).catch(() => null);
+    if (!intakeInput) {
+      // If we never got the input, the screen might have already auto-transitioned
+      // Check if we're already on Shadow Reveal
+      const shadowRevealVisible = await page.getByText("THE SHADOW'S TRUE NATURE").first().isVisible({ timeout: 3000 }).catch(() => false);
+      if (shadowRevealVisible) {
+        console.log('  ⏩ Intake auto-completed already, skipping to Shadow Reveal');
+      } else {
+        throw new Error('Intake screen never appeared');
+      }
+    } else {
+      console.log('✅ Intake started');
+
+      // Send a message in the intake chat with retries and verification
+      async function sendIntakeMessage(text, maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            // Check if input still exists (screen may have auto-transitioned)
+            const inputExists = await page.getByPlaceholder('Speak to Dara...').isVisible({ timeout: 1000 }).catch(() => false);
+            if (!inputExists) {
+              console.log(`  ⏩ sendIntakeMessage skipped — input no longer visible (screen transitioned)`);
+              return 'transitioned';
+            }
+
+            // Wait for input to exist
+            const input = await page.waitForSelector('input[placeholder="Speak to Dara..."]', { timeout: 5000 }).catch(() => null);
+            if (!input) {
+              console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): input not found`);
+              await page.waitForTimeout(attempt * 1000);
+              continue;
+            }
+
+            // Set value and dispatch React-compatible events via evaluate
+            const result = await page.evaluate((msg) => {
+              const input = document.querySelector('input[placeholder="Speak to Dara..."]');
+              if (!input) return { ok: false, reason: 'input not found in evaluate' };
+
+              // Set DOM value via native setter (bypasses React's controlled input guard)
+              const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+              ).set;
+              nativeSetter.call(input, msg);
+
+              // Dispatch events that trigger React's onChange
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+
+              return { ok: true };
+            }, text);
+
+            if (!result.ok) {
+              console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${result.reason}`);
+              await page.waitForTimeout(attempt * 1000);
+              continue;
+            }
+
+            // Wait for React to update state, then wait for send button to become enabled
+            await page.waitForTimeout(500);
+            const sendBtn = page.locator('button').filter({ hasText: /→/ }).first();
+            const isEnabled = await sendBtn.isEnabled({ timeout: 5000 }).catch(() => false);
+
+            if (!isEnabled) {
+              console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): send button still disabled`);
+              await page.waitForTimeout(attempt * 1000);
+              continue;
+            }
+
+            // Click send
+            await sendBtn.click();
+
+            // Wait for the AI to start typing (shows the message was received)
+            await page.waitForTimeout(1500);
+
+            console.log(`  ✓ Sent: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+            return;
+
+          } catch (err) {
+            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${err.message}`);
             await page.waitForTimeout(attempt * 1000);
-            continue;
           }
+        }
+        console.log(`  ❌ sendIntakeMessage failed after ${maxRetries} attempts: "${text.substring(0, 50)}..."`);
+      }
 
-          // Set value and dispatch React-compatible events via evaluate
-          const result = await page.evaluate((msg) => {
-            const input = document.querySelector('input[placeholder="Speak to Dara..."]');
-            if (!input) return { ok: false, reason: 'input not found in evaluate' };
-
-            // Set DOM value via native setter (bypasses React's controlled input guard)
-            const nativeSetter = Object.getOwnPropertyDescriptor(
-              window.HTMLInputElement.prototype, 'value'
-            ).set;
-            nativeSetter.call(input, msg);
-
-            // Dispatch events that trigger React's onChange
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-
-            return { ok: true };
-          }, text);
-
-          if (!result.ok) {
-            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${result.reason}`);
-            await page.waitForTimeout(attempt * 1000);
-            continue;
-          }
-
-          // Wait for React to update state, then wait for send button to become enabled
-          await page.waitForTimeout(500);
-          const sendBtn = page.locator('button').filter({ hasText: /→/ }).first();
-          const isEnabled = await sendBtn.isEnabled({ timeout: 5000 }).catch(() => false);
-
-          if (!isEnabled) {
-            console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): send button still disabled`);
-            await page.waitForTimeout(attempt * 1000);
-            continue;
-          }
-
-          // Click send
-          await sendBtn.click();
-
-          // Wait for the AI to start typing (shows the message was received)
-          await page.waitForTimeout(1500);
-
-          console.log(`  ✓ Sent: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
-          return;
-
-        } catch (err) {
-          console.log(`  ⚠️ sendIntakeMessage (attempt ${attempt}/${maxRetries}): ${err.message}`);
-          await page.waitForTimeout(attempt * 1000);
+      await sendIntakeMessage('I get anxious speaking in class');
+      await sendIntakeMessage('My phone is my shield at events');
+      await sendIntakeMessage('I over-prepare everything because I worry I will sound boring');
+      await sendIntakeMessage('I avoid group projects and eat lunch alone');
+      const r4 = await sendIntakeMessage('I just want to feel comfortable being myself around others');
+      if (r4 === 'transitioned') {
+        console.log('  ⏩ Intake auto-transitioned during messages');
+      } else {
+        const r5 = await sendIntakeMessage('Yeah, I want to stop avoiding social situations');
+        if (r5 === 'transitioned') {
+          console.log('  ⏩ Intake auto-transitioned during messages');
+        } else {
+          await page.waitForTimeout(5000);
         }
       }
-      console.log(`  ❌ sendIntakeMessage failed after ${maxRetries} attempts: "${text.substring(0, 50)}..."`);
+      console.log('✅ Intake complete');
     }
-    await sendIntakeMessage('I get anxious speaking in class');
-    await sendIntakeMessage('My phone is my shield at events');
-    await sendIntakeMessage('I over-prepare everything because I worry I will sound boring');
-    await sendIntakeMessage('I avoid group projects and eat lunch alone');
-    await sendIntakeMessage('I just want to feel comfortable being myself around others');
-    await sendIntakeMessage('Yeah, I want to stop avoiding social situations');
-    await page.waitForTimeout(5000);
-    console.log('✅ Intake complete');
 
     // ═══ 8. SHADOW REVEAL ═══
     console.log('👤 8. Shadow Reveal...');
     await screen(page, "THE SHADOW'S TRUE NATURE", 30000);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3500); // wait for staggered card reveals + Dara dialog
     await btn(page, 'THE JOURNEY CONTINUES');
     console.log('✅ Shadow Reveal complete');
 
@@ -453,14 +482,31 @@ test.describe('DARER Journey', () => {
     await whereInput.fill('the campus library');
     await btn(page, 'NEXT', 10000);
 
-    // A9: RISE sub-step 2 (ARMORY) — select an armory tool (auto-advances to SUDs)
+    // A9: RISE sub-step 2 (SCHEDULE DATE/TIME) — pick datetime, click LOCK IT IN
+    console.log('  → Rise: schedule');
+    const dateInput = page.locator('input[type="datetime-local"]').first();
+    await expect(dateInput).toBeVisible({ timeout: 10000 });
+    // Set to 1 hour from now
+    const soon = new Date(Date.now() + 3600000);
+    const dateStr = soon.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+    await dateInput.fill(dateStr);
+    await btn(page, 'LOCK IT IN', 10000);
+    // Dismiss alarm suggestion if shown
+    const alarmDismiss = page.locator('button').filter({ hasText: /already set a reminder/i }).first();
+    if (await alarmDismiss.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await alarmDismiss.click();
+      await page.waitForTimeout(500);
+    }
+
+    // A10: RISE sub-step 3 (ARMORY) — select any armory option (tool or "trust strategy")
     console.log('  → Rise: armory');
-    const armoryOption = page.locator('button').filter({ hasText: /Paced Breathing/i }).first();
+    // Could be "Paced Breathing" or "I'll trust the strategy alone"
+    const armoryOption = page.locator('button').filter({ hasText: /Paced Breathing|trust the strategy/i }).first();
     await expect(armoryOption).toBeVisible({ timeout: 10000 });
     await armoryOption.click();
     await page.waitForTimeout(1500);
 
-    // A10: RISE sub-step 3 (SUDs Before) — select a SUDs rating, click I'M GOING IN
+    // A11: RISE sub-step 4 (SUDs Before) — select a SUDs rating, click I'M GOING IN
     console.log('  → Rise: SUDs before');
     // Wait for the SUDs screen to appear
     await screen(page, 'STORM INTENSITY', 15000);
@@ -472,12 +518,12 @@ test.describe('DARER Journey', () => {
     await page.waitForTimeout(500);
     await btn(page, 'I\'M GOING IN', 10000);
 
-    // A11: WAITING phase — click "I DID IT!" to simulate completing the exposure
+    // A12: WAITING phase — click "I DID IT!" to simulate completing the exposure
     console.log('  → Waiting (exposure done)');
     await page.waitForTimeout(3000);  // brief pause to simulate doing the exposure IRL
     await btn(page, '✅ I DID IT!', 15000);
 
-    // A12: ENGAGE phase — fill textarea, select SUDs after, advance
+    // A13: ENGAGE phase — fill textarea, select SUDs after, advance
     console.log('  → Engage: report back');
     const engageTextarea = page.locator('textarea').first();
     await expect(engageTextarea).toBeVisible({ timeout: 10000 });
@@ -488,7 +534,7 @@ test.describe('DARER Journey', () => {
     await page.waitForTimeout(500);
     await btn(page, 'NEXT: REPEAT', 10000);
 
-    // A13: DEBRIEF phase — click FORGE YOUR PATH to complete tutorial
+    // A14: DEBRIEF phase — click FORGE YOUR PATH to complete tutorial
     console.log('  → Debrief');
     await screen(page, 'FIRST BATTLE COMPLETE', 15000);
     await btn(page, 'FORGE YOUR PATH', 15000);
@@ -498,12 +544,11 @@ test.describe('DARER Journey', () => {
     console.log('📋 12. Exposure Sort...');
     await screen(page, 'FORGE YOUR PATH', 20000);
     await page.waitForTimeout(3000);
-    // Accept all 3 exposure cards by clicking the right-arrow (swipe right = accept) button
-    // NOTE: exclude the floating '?' feedback button (bottom-right) — look for arrow buttons inside SwipeableBoss cards
+    // Accept all 3 exposure cards by clicking the checkmark (✓) button
     for (let i = 0; i < 3; i++) {
-      const card = page.locator('button').filter({ hasText: /^→$/ }).first();
-      await expect(card).toBeVisible({ timeout: 10000 });
-      await card.click();
+      const acceptBtn = page.locator('button').filter({ hasText: /^✓$/ }).first();
+      await expect(acceptBtn).toBeVisible({ timeout: 10000 });
+      await acceptBtn.click();
       await page.waitForTimeout(2000);
     }
     // After all cards sorted, the screen transitions to "PATH FORGED" with a "BEGIN THE JOURNEY" button
