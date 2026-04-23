@@ -19,7 +19,9 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
   }, [justAddedBossId]);
 
   const handleBossSelect = (boss) => {
-    if (!nextBoss || boss.difficulty - nextBoss.difficulty >= 2) {
+    const bDiff = boss.difficulty ?? boss.level;
+    const nDiff = nextBoss?.difficulty ?? nextBoss?.level;
+    if (!nextBoss || bDiff - nDiff >= 2) {
       // Show warning dialog
       setPendingBoss(boss);
     } else {
@@ -99,7 +101,9 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         )}
         {sortedBosses.map((boss, i) => {
           const isNext = nextBoss?.id === boss.id;
-          const isHighLevel = nextBoss && boss.difficulty - nextBoss.difficulty >= 2;
+          const bDiff = boss.difficulty ?? boss.level;
+          const nDiff = nextBoss?.difficulty ?? nextBoss?.level;
+          const isHighLevel = nextBoss && bDiff - nDiff >= 2;
           const isJustAdded = justAddedBossId === boss.id;
           const bgColor = isNext ? "#2A1A28" : boss.isCustom ? "#1E1620" : "#1A1218";
           const borderColor = isNext ? C.goldMd : isHighLevel ? C.amber + "60" : boss.isCustom ? C.teal + "80" : "#5C3A50";
@@ -194,7 +198,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <PixelText size={8} color={boss.defeated ? C.hpGreen : isHighLevel ? C.amber : boss.isCustom ? C.teal : C.grayLt}>
-                      LV.{boss.difficulty}
+                      LV.{boss.level || boss.difficulty}
                     </PixelText>
                   </div>
                 </div>
@@ -266,8 +270,8 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
               <PixelText size={9} color={C.cream}>{pendingBoss.name}</PixelText>
               <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingBoss.desc}</PixelText></div>
               <div style={{ marginTop: 6 }}>
-                <PixelText size={8} color={C.amber}>LV.{pendingBoss.difficulty}</PixelText>
-                <PixelText size={6} color={C.grayLt}> · Recommended: LV.{nextBoss?.difficulty || 1}-{(nextBoss?.difficulty || 1) + 1}</PixelText>
+                <PixelText size={8} color={C.amber}>LV.{pendingBoss.level || pendingBoss.difficulty}</PixelText>
+                <PixelText size={6} color={C.grayLt}> · Recommended: LV.{(nextBoss?.level ?? nextBoss?.difficulty) || 1}-{((nextBoss?.level ?? nextBoss?.difficulty) || 1) + 1}</PixelText>
               </div>
             </div>
             <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16, lineHeight: 1.6 }}>
