@@ -1,0 +1,247 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+
+/**
+ * useCloudVoice — OpenAI Whisper STT + OpenAI TTS for Dara voice chat.
+ *
+ * Browser STT/TTS as graceful fallback when cloud APIs fail.
+ *
+ * Returns:
+ *   { isListening, isSpeaking, transcript, interimTranscript,
+ *     error, supported, startListening, stopListening, speak, cancelSpeech,
+ *     resetTranscript }
+ *
+ * Usage:
+ *   const voice = useCloudVoice({ useCloud: true, language: 'en-US' });
+ *   - useCloud=true  → records audio → /api/stt → Whisper transcription
+ *   - useCloud=false → falls back to browser SpeechRecognition
+ *   - speak()       → always uses /api/tts (cloud-quality TTS), fallback to browser
+ */
+export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [error, setError] = useState(null);
+  const [supported, setSupported] = useState(true);
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const streamRef = useRef(null);
+  const audioElRef = useRef(null);
+  const abortControllerRef = useRef(null);
+
+  // ── Cloud STT: Record audio → send to /api/stt ──────────────────
+  const startListening = useCallback(async () => {
+    setError(null);
+    setTranscript('');
+    setInterimTranscript('');
+
+    if (useCloud) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = stream;
+
+        // Prefer webm/opus, fall back to what the browser supports
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : '';
+
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        mediaRecorderRef.current = recorder;
+        audioChunksRef.current = [];
+
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          setIsListening(false);
+          // Stop mic
+          streamRef.current?.getTracks().forEach(t => t.stop());
+          streamRef.current = null;
+
+          if (audioChunksRef.current.length === 0) return;
+
+          const ext = mimeType.includes('webm') ? 'webm' : 'ogg';
+          const mime = mimeType.includes('webm') ? 'audio/webm' : 'audio/ogg';
+          const blob = new Blob(audioChunksRef.current, { type: mime });
+
+          setInterimTranscript('Transcribing...');
+
+          try {
+            const formData = new FormData();
+            formData.append('file', blob, `audio.${ext}`);
+            formData.append('language', language.split('-')[0]); // 'en-US' → 'en'
+
+            const response = await fetch('/api/stt', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              throw new Error(errData.error || `STT error ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.text) {
+              setTranscript(data.text);
+            } else {
+              setError('No speech detected.');
+            }
+          } catch (err) {
+            console.error('Cloud STT failed, falling back to browser:', err);
+            setError(`STT failed: ${err.message}. Try again or switch to browser voice.`);
+          }
+          setInterimTranscript('');
+        };
+
+        recorder.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Mic error:', err);
+        setError('Could not access microphone.');
+        setIsListening(false);
+      }
+    } else {
+      // Browser fallback handled by parent
+      setError('Cloud voice mode is off. Use browser STT instead.');
+    }
+  }, [useCloud, language]);
+
+  const stopListening = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setIsListening(false);
+  }, []);
+
+  const resetTranscript = useCallback(() => {
+    setTranscript('');
+    setInterimTranscript('');
+  }, []);
+
+  // ── Cloud TTS: Send text to /api/tts → play returned audio ──────
+  const speak = useCallback(async (text, options = {}) => {
+    if (!text) return;
+
+    // Cancel any current speech
+    cancelSpeech();
+
+    if (useCloud) {
+      try {
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            voice: options.voice || 'nova', // calm, warm female voice
+            speed: options.speed ?? 0.9,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `TTS error ${response.status}`);
+        }
+
+        const audioBlob = await response.blob();
+        const url = URL.createObjectURL(audioBlob);
+
+        const audio = new Audio(url);
+        audioElRef.current = audio;
+
+        audio.onplay = () => setIsSpeaking(true);
+        audio.onended = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(url);
+          audioElRef.current = null;
+        };
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(url);
+          audioElRef.current = null;
+          setError('Could not play audio.');
+        };
+
+        await audio.play();
+      } catch (err) {
+        if (err.name === 'AbortError') return; // cancelled
+        console.error('Cloud TTS failed, falling back to browser:', err);
+        // Fallback to browser TTS
+        browserSpeak(text, options);
+      }
+    } else {
+      browserSpeak(text, options);
+    }
+  }, [useCloud]);
+
+  // Browser TTS fallback
+  const browserSpeak = useCallback((text, options = {}) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    utterance.rate = options.speed ?? 0.9;
+    utterance.pitch = options.pitch ?? 1;
+    utterance.volume = options.volume ?? 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(
+      v => v.lang.startsWith(language.split('-')[0]) &&
+        (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha'))
+    );
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setError('Could not play audio.');
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }, [language]);
+
+  const cancelSpeech = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+  }, []);
+
+  // ── Cleanup on unmount ───────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop();
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      cancelSpeech();
+    };
+  }, [cancelSpeech]);
+
+  return {
+    isListening,
+    isSpeaking,
+    transcript,
+    interimTranscript,
+    error,
+    supported,
+    startListening,
+    stopListening,
+    resetTranscript,
+    speak,
+    cancelSpeech,
+  };
+}

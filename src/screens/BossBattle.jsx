@@ -3,7 +3,7 @@ import { useAIChat } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { useCloudVoice } from '../hooks/useCloudVoice';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 
 export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, setActiveBoss, setScreen, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
@@ -24,7 +24,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   const chatRef = useRef(null);
 
   // Voice hook
-  const voice = useVoiceRecorder();
+  const voice = useCloudVoice({ useCloud: true });
 
   // Persist battle progress so resume-anywhere survives refresh/close
   useEffect(() => {

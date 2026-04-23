@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { useCloudVoice } from '../hooks/useCloudVoice';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);
@@ -16,7 +16,7 @@ export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext
   const chatHistory = useRef([]);
 
   // Voice hook
-  const voice = useVoiceRecorder();
+  const voice = useCloudVoice({ useCloud: true });
 
   const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || "Hero"; // Extract name from hero context
 
