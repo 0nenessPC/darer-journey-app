@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { buildHeroContext } from "../utils/aiHelper.jsx";
 import { useAIChat } from "../utils/chat";
+import { useCloudVoice } from "../hooks/useCloudVoice";
+import { VoiceInputBar } from "../components/VoiceToggle";
 import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
@@ -19,7 +21,13 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   // Retry init when it failed
   const retryInit = () => { init(initPromptRef.current); };
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, typing]);
-  const send = async () => { if (!input.trim() || typing) return; const t = input; const ok = await sendMessage(t); if (ok) setInput(""); };
+  const voice = useCloudVoice({ useCloud: true });
+  const handleSend = async (text) => {
+    const message = text !== undefined ? text : input;
+    if (!message.trim() || typing) return;
+    const ok = await sendMessage(message);
+    if (ok) setInput("");
+  };
   const assistantCount = messages.filter(m => m.role === "assistant").length;
   const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
   const hasShadowSummary = lastAssistant?.text?.includes("SHADOW'S TRUE NATURE") || lastAssistant?.text?.includes("WHERE IT APPEARS");
@@ -67,7 +75,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
                   RETRY →
                 </PixelBtn>
               ) : (
-                <PixelBtn onClick={send} color={C.gold} textColor={C.charcoal} style={{ width: "auto" }}>
+                <PixelBtn onClick={() => handleSend()} color={C.gold} textColor={C.charcoal} style={{ width: "auto" }}>
                   TRY AGAIN →
                 </PixelBtn>
               )}
@@ -81,14 +89,15 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
         )}
       </div>
       {!hasShadowSummary && (
-        <div style={{ padding: 12, borderTop: "2px solid #5C3A50" }}>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
-              placeholder="Speak to Dara..." disabled={typing}
-              style={{ flex: 1, padding: 10, background: "#1A1218", border: error ? "1px solid #FF444460" : "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 13, outline: "none" }} />
-            <PixelBtn onClick={send} disabled={typing || !input.trim()}>→</PixelBtn>
-          </div>
-        </div>
+        <VoiceInputBar
+          input={input}
+          onInputChange={setInput}
+          onSend={handleSend}
+          typing={typing}
+          disabled={false}
+          voice={voice}
+          placeholder="Speak to Dara..."
+        />
       )}
     </div>
   );
