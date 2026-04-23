@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useAIChat } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
@@ -460,7 +460,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
       )}
 
       {/* === CONTROLS === */}
-      <div style={{ padding: 12, borderTop: phase !== "prep" ? "2px solid #5C3A50" : "none" }}>
+      <div style={{ padding: "12px 12px 64px", borderTop: phase !== "prep" ? "2px solid #5C3A50" : "none" }}>
         {phase === "battle" && (
           <>
             {/* AI error notification */}
@@ -612,16 +612,20 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
                 />
               ) : (
                 <>
-                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==="Enter" && handleSend(victoryChat)}
-                    placeholder="Reflect with Dara..." disabled={victoryChat.typing}
+                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==="Enter" && chatInput.trim() && handleSend(victoryChat)}
+                    placeholder="Reflect with Dara... (optional)" disabled={victoryChat.typing}
                     style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
-                  <PixelBtn onClick={() => handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
+                  <PixelBtn onClick={() => chatInput.trim() && handleSend(victoryChat)} disabled={victoryChat.typing || !chatInput.trim()}>→</PixelBtn>
                 </>
               )}
             </div>
-            <PixelBtn onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 8 }}>
-              RETURN TO MAP
-            </PixelBtn>
+            <button onClick={() => onVictory(outcome, { prepAnswers, suds, exposureWhen, exposureWhere, exposureArmory, exposureScheduledTime, battleMessages: battleChat.messages, victoryMessages: victoryChat.messages })} style={{
+              width: "100%", padding: "14px 16px", background: C.gold, border: "none", borderRadius: 6,
+              cursor: "pointer", boxShadow: "0 2px 8px rgba(200,170,80,0.3)",
+              marginBottom: 6,
+            }}>
+              <PixelText size={10} color={C.charcoal}>⚔ RETURN TO MAP</PixelText>
+            </button>
           </>
         )}
       </div>
