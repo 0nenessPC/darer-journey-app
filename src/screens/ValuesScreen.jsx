@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
-import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
+import React, { useState } from 'react';
+import { C, FONT_LINK } from '../constants/gameData';
+import { PixelText, PixelBtn, DialogBox } from '../components/shared';
 import { callAI } from '../utils/chat';
-import { useCloudVoice } from '../hooks/useCloudVoice';
-import { VoiceInputBar } from '../components/VoiceToggle';
+import VoiceInputField from '../components/VoiceInputField';
 export default function ValuesScreen({ heroName, onComplete }) {
   const [step, setStep] = useState("intro");
   const [values, setValues] = useState([]);
@@ -13,14 +12,6 @@ export default function ValuesScreen({ heroName, onComplete }) {
   const [generatedValues, setGeneratedValues] = useState([]);
   const [loadingValues, setLoadingValues] = useState(false);
   const [allCards, setAllCards] = useState(null);
-
-  // ── Voice chat state ──────────────────────────────────────────────
-  const [voiceMode, setVoiceMode] = useState(false);       // user toggles voice on/off
-  const [questionsMuted, setQuestionsMuted] = useState(false); // mute TTS for questions
-  const spokenRef = useRef(false);                         // prevents re-speaking on re-render
-
-  // Voice hook
-  const voice = useCloudVoice({ useCloud: true });
 
   // Outcome-oriented values informed by Behavioral Activation life areas
   // (Lejuez et al., BATD-R) and DBT Wise Mind Values (Linehan/Rathus & Miller, 2015)
@@ -52,35 +43,6 @@ export default function ValuesScreen({ heroName, onComplete }) {
   const updateGuideAnswer = (text) => {
     setGuideAnswers(prev => { const next = [...prev]; next[guideStep] = text; return next; });
   };
-
-  // Handle voice transcript auto-submit
-  const handleVoiceSubmit = useCallback((transcript) => {
-    if (transcript?.trim()) {
-      updateGuideAnswer(transcript.trim());
-      voice.resetTranscript?.();
-    }
-  }, [voice]);
-
-  // Auto-speak each question when guideStep changes
-  useEffect(() => {
-    if (step === 'guide' && voiceMode && voice.supported && !questionsMuted && !spokenRef.current) {
-      spokenRef.current = true;
-      voice.speak(GUIDE_PROMPTS[guideStep].question);
-    }
-  }, [guideStep, step, voiceMode, voice.supported, questionsMuted, voice.speak]);
-
-  // Reset spoken flag when guideStep changes (allows re-speak on navigation)
-  useEffect(() => {
-    spokenRef.current = false;
-  }, [guideStep]);
-
-  // Auto-speak the seal message when entering seal step
-  useEffect(() => {
-    if (step === 'seal' && voiceMode && voice.supported && !spokenRef.current) {
-      spokenRef.current = true;
-      voice.speak(`Remember these, ${heroName}. When the Shadow tries to make you forget why you started — and it will — these are what you come back to. Now I know what you're fighting for. Let's find out what you're fighting against.`);
-    }
-  }, [step, voiceMode, voice.supported, voice.speak, heroName]);
 
   // Extract a JSON array from AI response (handles markdown, prose wrapping, etc.)
   const extractJsonArray = (text) => {
@@ -284,69 +246,15 @@ export default function ValuesScreen({ heroName, onComplete }) {
             <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>
               LET'S FIND YOURS
             </PixelText>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4 }}>
-              <PixelText size={7} color={C.grayLt}>
-                {guideStep + 1} of {GUIDE_PROMPTS.length}
-              </PixelText>
-              {/* Voice mode toggle */}
-              {voice.supported && (
-                <button
-                  onClick={() => { setVoiceMode(v => !v); if (voiceMode) voice.cancelSpeech(); }}
-                  style={{
-                    padding: "2px 8px", fontSize: 10, fontFamily: PIXEL_FONT,
-                    background: voiceMode ? C.plum + "30" : "transparent",
-                    border: `1px solid ${voiceMode ? C.plumLt : C.gray}`,
-                    borderRadius: 4, color: voiceMode ? C.plumLt : C.grayLt,
-                    cursor: "pointer", lineHeight: 1.4,
-                  }}
-                  title={voiceMode ? "Voice ON — tap to turn off" : "Voice OFF — tap to speak"}
-                >
-                  {voiceMode ? "🎤 Voice ON" : "🔇 Voice OFF"}
-                </button>
-              )}
-              {/* Question mute toggle (only shown when voice mode is ON) */}
-              {voiceMode && (
-                <button
-                  onClick={() => setQuestionsMuted(m => !m)}
-                  style={{
-                    padding: "2px 6px", fontSize: 10, fontFamily: PIXEL_FONT,
-                    background: "transparent",
-                    border: `1px solid ${C.gray}`,
-                    borderRadius: 4, color: C.grayLt,
-                    cursor: "pointer", lineHeight: 1.4,
-                  }}
-                  title={questionsMuted ? "Questions muted — tap to unmute" : "Questions audible — tap to mute"}
-                >
-                  {questionsMuted ? "🔇" : "🔊"}
-                </button>
-              )}
-            </div>
+            <PixelText size={7} color={C.grayLt}>
+              {guideStep + 1} of {GUIDE_PROMPTS.length}
+            </PixelText>
           </div>
 
           <DialogBox speaker="DARA">
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <PixelText size={8} color={C.cream} style={{ flex: 1, lineHeight: 1.8 }}>
-                {GUIDE_PROMPTS[guideStep].question}
-              </PixelText>
-              {/* Replay question button (voice mode ON only) */}
-              {voiceMode && voice.supported && (
-                <button
-                  onClick={() => { spokenRef.current = false; voice.speak(GUIDE_PROMPTS[guideStep].question); }}
-                  disabled={voice.isSpeaking}
-                  style={{
-                    flexShrink: 0, width: 24, height: 24,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "#222", border: `1px solid ${C.teal}60`,
-                    borderRadius: 4, fontSize: 12, cursor: "pointer",
-                    color: voice.isSpeaking ? C.teal : C.grayLt,
-                    opacity: voice.isSpeaking ? 0.6 : 1,
-                  }}
-                  title="Re-listen to the question"
-                >
-                  {voice.isSpeaking ? "⏸" : "🔊"}
-                </button>
-              )}
-            </div>
+            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+              {GUIDE_PROMPTS[guideStep].question}
+            </PixelText>
             <div style={{ marginTop: 8 }}>
               <PixelText size={7} color={C.grayLt} style={{ display: "block", lineHeight: 1.6 }}>
                 {GUIDE_PROMPTS[guideStep].hint}
@@ -354,54 +262,13 @@ export default function ValuesScreen({ heroName, onComplete }) {
             </div>
           </DialogBox>
 
-          {/* Voice input bar when voice mode ON, textarea when OFF */}
-          {voiceMode && voice.supported ? (
-            <div style={{ marginTop: 12 }}>
-              {/* Show current answer if already filled */}
-              {guideAnswers[guideStep] && (
-                <div style={{
-                  padding: 10, marginBottom: 8,
-                  background: C.plumMd + "10", border: `1px solid ${C.plumMd}40`,
-                  borderRadius: 4,
-                }}>
-                  <PixelText size={7} color={C.plumLt} style={{ lineHeight: 1.6 }}>
-                    {guideAnswers[guideStep]}
-                  </PixelText>
-                </div>
-              )}
-              <VoiceInputBar
-                input={guideAnswers[guideStep]}
-                onInputChange={text => updateGuideAnswer(text)}
-                onSend={(text) => {
-                  // Use the passed text (transcript or typed value) so we don't race with state
-                  const answer = (text ?? guideAnswers[guideStep]).trim();
-                  if (answer) {
-                    if (guideStep < GUIDE_PROMPTS.length - 1) {
-                      setGuideStep(g => g + 1);
-                    } else {
-                      generateValuesFromAnswers();
-                    }
-                  }
-                }}
-                voice={voice}
-                placeholder="Tap 🎤 to speak or type your answer..."
-              />
-            </div>
-          ) : (
-            <textarea
-              value={guideAnswers[guideStep]}
-              onChange={e => updateGuideAnswer(e.target.value)}
-              placeholder="What comes to mind..."
-              rows={3}
-              style={{
-                width: "100%", padding: 12, marginTop: 12,
-                background: "#1A1218", border: "2px solid #5C3A50",
-                borderRadius: 4, color: C.cream, fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif",
-                outline: "none", resize: "none", boxSizing: "border-box",
-              }}
-            />
-          )}
+          {/* Unified input: textarea with 🎤 mic button on the left */}
+          <VoiceInputField
+            value={guideAnswers[guideStep]}
+            onChange={text => updateGuideAnswer(text)}
+            placeholder="What comes to mind..."
+            rows={3}
+          />
 
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             {guideStep < GUIDE_PROMPTS.length - 1 ? (
