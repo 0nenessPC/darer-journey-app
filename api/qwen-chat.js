@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: options.model || 'gpt-5.4-nano',
-        max_tokens: options.maxTokens || 1000,
+        max_completion_tokens: options.maxTokens || 1000,
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages.map((m) => ({ role: m.role, content: m.text })),
