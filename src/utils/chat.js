@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 
-export async function callAI(systemPrompt, messages, maxTokens = 1000, timeoutMs = 15000) {
+export async function callAI(systemPrompt, messages, maxTokens = 1000, timeoutMs = 45000) {
   const FALLBACK = "Dara gathers her thoughts...";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {

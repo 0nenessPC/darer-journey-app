@@ -43,33 +43,68 @@ export default function ValuesScreen({ heroName, onComplete }) {
     setGuideAnswers(prev => { const next = [...prev]; next[guideStep] = text; return next; });
   };
 
+  // Extract a JSON array from AI response (handles markdown, prose wrapping, etc.)
+  const extractJsonArray = (text) => {
+    // Strip markdown code blocks
+    const stripped = text.replace(/```(?:json)?\s*([\s\S]*?)```/g, '$1').trim();
+    // Try to find JSON array
+    const match = stripped.match(/\[[\s\S]*\]/);
+    if (match) {
+      return JSON.parse(match[0]);
+    }
+    // Try parsing the whole response as JSON
+    return JSON.parse(stripped);
+  };
+
   const generateValuesFromAnswers = async () => {
     setLoadingValues(true);
     try {
-      const combined = guideAnswers.filter(a => a.trim()).join(". ");
       const res = await callAI(
         `You are a values counselor for a social anxiety RPG game. Based on what the user shared about what matters to them, generate exactly 3 personalized value statements. Each should be an outcome-oriented value (what they want in life, not how they want to behave). Keep each to 8 words or fewer. Return ONLY a JSON array like: [{"text":"value text","icon":"emoji"}]. No other text.`,
         [{ role: "user", text: `Here is what the user shared:\n1. Social highlights: "${guideAnswers[0]}"\n2. Social qualities they admire: "${guideAnswers[1]}"\n3. What they'd do without fear: "${guideAnswers[2]}"` }]
       );
-      const jsonMatch = res.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const newCards = parsed.slice(0, 3).map((v, i) => ({
-            id: "vg" + i, text: v.text, icon: v.icon || "💫", domain: "personal", generated: true,
-          }));
-          setGeneratedValues(newCards);
-          setAllCards([...newCards, ...DEFAULT_CARDS]);
-          setValues([]);
-          setStep("cards");
-        } else { setStep("cards"); }
-      } else { setStep("cards"); }
-    } catch (e) { setStep("cards"); }
-    setLoadingValues(false);
+      console.log('[ValuesScreen] AI raw response:', res);
+      // Guard against API fallback responses ("..." or "Dara gathers her thoughts...")
+      if (!res || res === "..." || res.includes("Dara gathers")) {
+        console.warn('[ValuesScreen] AI call failed (API error), showing default cards');
+        setStep("cards");
+        return;
+      }
+      const parsed = extractJsonArray(res);
+      console.log('[ValuesScreen] Parsed values:', parsed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const newCards = parsed.slice(0, 3).map((v, i) => ({
+          id: "vg" + i, text: v.text, icon: v.icon || "💫", domain: "personal", generated: true,
+        }));
+        console.log('[ValuesScreen] newCards:', newCards);
+        setGeneratedValues(newCards);
+        setAllCards(prev => [...newCards, ...DEFAULT_CARDS]);
+        setValues([]);
+        setStep("cards");
+        return;
+      }
+      console.warn('[ValuesScreen] AI response not usable, falling back to default cards');
+      setStep("cards");
+    } catch (e) {
+      console.error('[ValuesScreen] generateValuesFromAnswers error:', e);
+      setStep("cards");
+    } finally {
+      setLoadingValues(false);
+    }
   };
 
   const toggleValue = (v) => {
     setValues(prev => prev.includes(v.id) ? prev.filter(x => x !== v.id) : prev.length < 5 ? [...prev, v.id] : prev);
+  };
+
+  const addCustomValue = () => {
+    const trimmed = freeText.trim();
+    if (!trimmed || values.length >= 5) return;
+    const newId = "vc" + Date.now();
+    const newCard = { id: newId, text: trimmed, icon: "✨", domain: "personal", generated: true };
+    setAllCards(prev => [...(prev || DEFAULT_CARDS).filter(v => !v.generated), newCard, ...(prev || DEFAULT_CARDS).filter(v => v.generated && v.id !== newId)]);
+    setValues(prev => [...prev, newId]);
+    setFreeText("");
   };
 
   const selectedCards = VALUE_CARDS.filter(v => values.includes(v.id));
@@ -153,6 +188,35 @@ export default function ValuesScreen({ heroName, onComplete }) {
                 </div>
               );
             })}
+          </div>
+
+          {/* ADD CUSTOM VALUE */}
+          <div style={{ marginTop: 16, marginBottom: 8 }}>
+            <PixelText size={7} color={C.plumMd} style={{ display: "block", textAlign: "center", marginBottom: 8 }}>
+              ✏️ WRITE YOUR OWN VALUE
+            </PixelText>
+            <textarea
+              value={freeText}
+              onChange={e => setFreeText(e.target.value)}
+              placeholder="What matters most to you in your own words..."
+              rows={2}
+              style={{
+                width: "100%", padding: 10,
+                background: "#1A1218", border: "2px solid #5C3A50",
+                borderRadius: 4, color: C.cream, fontSize: 13,
+                fontFamily: "'DM Sans', sans-serif",
+                outline: "none", resize: "none", boxSizing: "border-box",
+              }}
+            />
+            <PixelBtn
+              onClick={addCustomValue}
+              disabled={!freeText.trim() || values.length >= 5}
+              color={freeText.trim() && values.length < 5 ? C.plum : C.charcoal}
+              textColor={freeText.trim() && values.length < 5 ? C.cream : C.gray}
+              style={{ width: "100%", marginTop: 8 }}
+            >
+              ADD MY VALUE
+            </PixelBtn>
           </div>
 
           {values.length >= 2 && (
