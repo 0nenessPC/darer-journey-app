@@ -624,7 +624,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
               cursor: "pointer", boxShadow: "0 2px 8px rgba(200,170,80,0.3)",
               marginBottom: 6,
             }}>
-              <PixelText size={10} color={C.charcoal}>⚔ RETURN TO MAP</PixelText>
+              <PixelText size={10} color={C.charcoal}>🏆 MISSION COMPLETE</PixelText>
             </button>
           </>
         )}
