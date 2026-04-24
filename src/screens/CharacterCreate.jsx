@@ -13,7 +13,6 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
   const [statsRevealed, setStatsRevealed] = useState(false);
   const [showTooltip, setShowTooltip] = useState(null);
   const [coreValues, setCoreValues] = useState([]);
-  const [valuesPage, setValuesPage] = useState(0);
   const [expandedValue, setExpandedValue] = useState(null);
   // Stats defaults — all set to 1 (bypassing card sort calculation)
   const [defaultStats] = useState({ courage: 1, resilience: 1, openness: 1 });
@@ -169,57 +168,48 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
         </div>
       )}
 
-      {/* STEP 1.75: CORE VALUES — pick top 3, paginated, swipeable, tap to see description */}
+      {/* STEP 1.75: CORE VALUES — pick top 3, scrollable grid, tap to see description */}
       {step === "coreValues" && (() => {
-        const ITEMS_PER_PAGE = 6;
-        const totalPages = Math.ceil(ACT_VALUES.length / ITEMS_PER_PAGE);
-        const pageItems = ACT_VALUES.slice(valuesPage * ITEMS_PER_PAGE, (valuesPage + 1) * ITEMS_PER_PAGE);
-        const handleGridTouchStart = (e) => { e.currentTarget._touchX = e.touches[0].clientX; };
-        const handleGridTouchEnd = (e) => {
-          const diff = e.changedTouches[0].clientX - (e.currentTarget._touchX || 0);
-          if (diff < -50 && valuesPage < totalPages - 1) { setValuesPage(p => p + 1); setExpandedValue(null); }
-          else if (diff > 50 && valuesPage > 0) { setValuesPage(p => p - 1); setExpandedValue(null); }
-        };
         return (
-        <div style={{ width: "100%", animation: "fadeIn 0.4s ease-out" }}>
-          <PixelText size={11} color={C.goldMd} style={{ display: "block", textAlign: "center", marginBottom: 4 }}>
-            YOUR INNER CHARACTER
-          </PixelText>
-          <PixelText size={8} color={C.grayLt} style={{ display: "block", textAlign: "center", marginBottom: 12 }}>
-            Choose the 3 that best describe you.
-          </PixelText>
+        <div style={{ width: "100%", height: "100%", animation: "fadeIn 0.4s ease-out", overflowY: "auto", paddingBottom: 24 }}>
+          {/* Sticky title */}
+          <div style={{ position: "sticky", top: 0, background: C.mapBg, zIndex: 10, paddingBottom: 8 }}>
+            <PixelText size={11} color={C.goldMd} style={{ display: "block", textAlign: "center", marginBottom: 4 }}>
+              YOUR INNER CHARACTER
+            </PixelText>
+            <PixelText size={8} color={C.grayLt} style={{ display: "block", textAlign: "center", marginBottom: 12 }}>
+              Choose the 3 that best describe you.
+            </PixelText>
 
-          {/* Top 3 slots */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            {[0, 1, 2].map(i => {
-              const picked = coreValues[i] ? ACT_VALUES.find(v => v.id === coreValues[i]) : null;
-              return (
-                <div key={i} style={{
-                  flex: 1, padding: "12px 8px", textAlign: "center", borderRadius: 6,
-                  background: picked ? C.goldMd + "15" : "#1A1218",
-                  border: `2px solid ${picked ? C.goldMd : "#5C3A50"}`,
-                  minHeight: 60, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  cursor: picked ? "pointer" : "default",
-                }} onClick={() => picked && setCoreValues(prev => prev.filter(x => x !== picked.id))}>
-                  {picked ? (
-                    <>
-                      <span style={{ fontSize: 22 }}>{picked.icon}</span>
-                      <PixelText size={7} color={C.goldMd}>{picked.word.toUpperCase()}</PixelText>
-                    </>
-                  ) : (
-                    <PixelText size={10} color={"#5C3A50"}>?</PixelText>
-                  )}
-                </div>
-              );
-            })}
+            {/* Top 3 slots — also sticky */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              {[0, 1, 2].map(i => {
+                const picked = coreValues[i] ? ACT_VALUES.find(v => v.id === coreValues[i]) : null;
+                return (
+                  <div key={i} style={{
+                    flex: 1, padding: "12px 8px", textAlign: "center", borderRadius: 6,
+                    background: picked ? C.goldMd + "15" : "#1A1218",
+                    border: `2px solid ${picked ? C.goldMd : "#5C3A50"}`,
+                    minHeight: 60, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    cursor: picked ? "pointer" : "default",
+                  }} onClick={() => picked && setCoreValues(prev => prev.filter(x => x !== picked.id))}>
+                    {picked ? (
+                      <>
+                        <span style={{ fontSize: 22 }}>{picked.icon}</span>
+                        <PixelText size={7} color={C.goldMd}>{picked.word.toUpperCase()}</PixelText>
+                      </>
+                    ) : (
+                      <PixelText size={10} color={"#5C3A50"}>?</PixelText>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Value grid — 2 columns, swipeable */}
-          <div
-            onTouchStart={handleGridTouchStart}
-            onTouchEnd={handleGridTouchEnd}
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12, touchAction: "pan-y" }}>
-            {pageItems.map(v => {
+          {/* Value grid — 2 columns, all items visible */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+            {ACT_VALUES.map(v => {
               const active = coreValues.includes(v.id);
               const expanded = expandedValue === v.id;
               return (
@@ -255,26 +245,6 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
                 </button>
               );
             })}
-          </div>
-
-          {/* Pagination */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <button onClick={() => { setValuesPage(p => p - 1); setExpandedValue(null); }} disabled={valuesPage === 0}
-              style={{ background: "none", border: "none", cursor: valuesPage === 0 ? "default" : "pointer", opacity: valuesPage === 0 ? 0.3 : 1 }}>
-              <PixelText size={9} color={C.cream}>←</PixelText>
-            </button>
-            <div style={{ display: "flex", gap: 4 }}>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <div key={i} style={{
-                  width: i === valuesPage ? 16 : 6, height: 6, borderRadius: 3,
-                  background: i === valuesPage ? C.goldMd : "#5C3A50", transition: "all 0.3s",
-                }} />
-              ))}
-            </div>
-            <button onClick={() => { setValuesPage(p => p + 1); setExpandedValue(null); }} disabled={valuesPage >= totalPages - 1}
-              style={{ background: "none", border: "none", cursor: valuesPage >= totalPages - 1 ? "default" : "pointer", opacity: valuesPage >= totalPages - 1 ? 0.3 : 1 }}>
-              <PixelText size={9} color={C.cream}>→</PixelText>
-            </button>
           </div>
 
           {/* Continue button */}
