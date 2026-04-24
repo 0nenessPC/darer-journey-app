@@ -26,6 +26,24 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   // Voice hook
   const voice = useCloudVoice({ useCloud: true });
 
+  // Reset internal state when a new boss is selected (fixes stale state from batched React updates)
+  const lastBossIdRef = useRef(null);
+  useEffect(() => {
+    if (boss?.id && boss.id !== lastBossIdRef.current) {
+      lastBossIdRef.current = boss.id;
+      setPhase("prep");
+      setPrepStep(0);
+      setPrepAnswers({ value: "", allow: "", rise: "" });
+      setSuds({ before: 50, during: 60, after: 30 });
+      setOutcome(null);
+      setRiseSubStep(0);
+      setExposureWhen("");
+      setExposureWhere("");
+      setExposureArmory("");
+      setExposureScheduledTime("");
+    }
+  }, [boss?.id]);
+
   // Persist battle progress so resume-anywhere survives refresh/close
   useEffect(() => {
     if (!setOBState) return;
