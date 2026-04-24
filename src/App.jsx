@@ -19,6 +19,7 @@ import DARERStrategy from "./screens/DARERStrategy.jsx";
 import GameArmory from "./screens/GameArmory.jsx";
 import LoginScreen from "./screens/LoginScreen.jsx";
 import GameIntro from "./screens/GameIntro.jsx";
+import DarerLore from "./screens/DarerLore.jsx";
 import ShadowLore from "./screens/ShadowLore.jsx";
 import IntakeScreen from "./screens/IntakeScreen.jsx";
 import AddExposureModal from "./components/AddExposureModal.jsx";
@@ -125,7 +126,8 @@ export default function DARERQuest() {
       {/* Onboarding progress bar — shown from intro through training ground */}
       <OnboardingProgress screen={screen} />
       <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
-      {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
+      {screen === "intro" && <GameIntro onNext={() => setScreen("darerLore")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
+      {screen === "darerLore" && <DarerLore onComplete={() => setScreen("character")} obState={getOBState("darerLore", { slide: 0 })} setOBState={(s) => setOBState("darerLore", s)} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
       {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("values")} obState={getOBState("mapPreview", { scrollPos: 0, phase: "intro" })} setOBState={(s) => setOBState("mapPreview", s)} />}
       {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {

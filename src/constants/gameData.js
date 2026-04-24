@@ -149,6 +149,7 @@ export const DEFAULT_ARMORY = [
 // ============ ONBOARDING STEPS ============
 export const ONBOARDING = [
   { key: "intro", label: "Story" },
+  { key: "darerLore", label: "Story" },
   { key: "character", label: "Hero" },
   { key: "values", label: "Values" },
   { key: "shadowLore", label: "Shadow Lore" },
