@@ -13,7 +13,7 @@ export async function callAI(systemPrompt, messages, maxTokens = 1000, timeoutMs
         body: JSON.stringify({
           systemPrompt,
           messages: messages.map(m => ({ role: m.role, text: m.text })),
-          options: { model: "gpt-5.4-nano", maxTokens },
+          options: { model: "gpt-5.4-mini", maxTokens },
         }),
         signal: controller.signal,
       });

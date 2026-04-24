@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: options.model || 'gpt-5.4-nano',
+        model: options.model || 'gpt-5.4-mini',
         max_completion_tokens: options.maxTokens || 1000,
         messages: [
           { role: 'system', content: systemPrompt },
