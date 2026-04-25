@@ -146,7 +146,8 @@ export function useAppState() {
     } else if (progress.tutorial_complete || progress.onboarding_state?.tutorial?.tutorialComplete) {
       setScreen("exposureSort");
     } else if (progress.screen && progress.screen !== "login") {
-      setScreen(progress.screen);
+      // Redirect legacy mapPreview screen to shadowLore
+      setScreen(progress.screen === "mapPreview" ? "shadowLore" : progress.screen);
     } else {
       setScreen("intro");
     }

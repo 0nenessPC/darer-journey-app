@@ -13,7 +13,6 @@ import CharacterCreate from "./screens/CharacterCreate.jsx";
 import ValuesScreen from "./screens/ValuesScreen.jsx";
 import AskDaraChat from "./components/AskDaraChat.jsx";
 import PsychoEdScreen from "./screens/PsychoEdScreen.jsx";
-import JourneyMapPreview from "./screens/JourneyMapPreview.jsx";
 import PracticeSession from "./components/PracticeSession.jsx";
 import DARERStrategy from "./screens/DARERStrategy.jsx";
 import GameArmory from "./screens/GameArmory.jsx";
@@ -127,7 +126,6 @@ export default function DARERQuest() {
       <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
-      {screen === "mapPreview" && <JourneyMapPreview heroName={hero.name} onContinue={() => setScreen("shadowLore")} obState={getOBState("mapPreview", { scrollPos: 0, phase: "intro" })} setOBState={(s) => setOBState("mapPreview", s)} />}
       {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {
         setHero(h => ({ ...h, values: cards, valuesText: text }));
         setScreen("darerStrategy");
