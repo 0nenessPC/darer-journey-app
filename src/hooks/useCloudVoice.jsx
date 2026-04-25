@@ -141,7 +141,7 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            voice: options.voice || 'nova', // calm, warm female voice
+            voice: options.voice || 'nova', // gentle, confident female voice
             speed: options.speed ?? 0.9,
           }),
           signal: abortControllerRef.current.signal,
@@ -194,10 +194,18 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
     utterance.pitch = options.pitch ?? 1;
     utterance.volume = options.volume ?? 1;
 
+    // Pick a gentle female voice for Dara
+    const langPrefix = language.split('-')[0];
     const voices = window.speechSynthesis.getVoices();
+
+    // Priority order: known gentle-sounding female voices
+    const femaleVoiceNames = ['Google US English Female', 'Samantha', 'Microsoft Zira', 'Google UK English Female', 'Alex', 'Moira', 'Tessa'];
     const preferred = voices.find(
-      v => v.lang.startsWith(language.split('-')[0]) &&
-        (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha'))
+      v => v.lang.startsWith(langPrefix) && femaleVoiceNames.some(name => v.name.includes(name))
+    ) || voices.find(
+      v => v.lang.startsWith(langPrefix) && /female|zira|samantha|moira|tessa/i.test(v.name)
+    ) || voices.find(
+      v => v.lang.startsWith(langPrefix)
     );
     if (preferred) utterance.voice = preferred;
 

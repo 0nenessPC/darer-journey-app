@@ -1,5 +1,5 @@
 // Vercel Serverless Function - OpenAI TTS Proxy
-// Receives text, returns audio buffer from OpenAI TTS (onyx = gentle male voice).
+// Receives text, returns audio buffer from OpenAI TTS (nova = gentle, confident female voice).
 
 import OpenAI from 'openai';
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'OpenAI API key not configured' });
   }
 
-  const { text, voice = 'onyx', speed = 0.9, model = 'tts-1' } = req.body;
+  const { text, voice = 'nova', speed = 0.9, model = 'tts-1' } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'No text provided' });
