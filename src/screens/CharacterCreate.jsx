@@ -157,13 +157,18 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
           <DialogBox speaker="DARA">
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
               {name.trim() || darerId}. I've been waiting for you.{"\n"}{"\n"}
-              My name means courage — and{"\n"}that's exactly what we'll build{"\n"}together. But first, I need to{"\n"}understand who you are.{"\n"}{"\n"}
-              I'm going to show you some cards.{"\n"}Each one describes a trait. Just{"\n"}tell me — is this you, or not?{"\n"}There are no wrong answers.
+              My name means courage — and{"\n"}that's exactly what we'll build{"\n"}together. Let's begin the journey.
             </PixelText>
           </DialogBox>
 
-          <PixelBtn onClick={() => setStep("coreValues")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-            I'M READY, DARA →
+          <PixelBtn onClick={() => onComplete(
+            name.trim() || darerId,
+            defaultStats,
+            [],
+            null,
+            []
+          )} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+            BEGIN JOURNEY →
           </PixelBtn>
         </div>
       )}

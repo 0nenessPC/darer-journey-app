@@ -19,55 +19,6 @@ export default function HeroProfile({ hero, quest, battleHistory = [], onBack, s
         <div style={{ marginTop: 4 }}><PixelText size={8} color={C.goldMd}>{defeated}/{quest.bosses.length} BOSSES DEFEATED</PixelText></div>
       </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>CHARACTER STATS</PixelText>
-        {(() => {
-          const dims = ["courage", "resilience", "openness"];
-          const colors = { courage: C.bossRed, resilience: C.teal, openness: C.plumMd };
-          const fallbacks = { courage: { word: "COURAGE", icon: "⚔️" }, resilience: { word: "RESILIENCE", icon: "🛡" }, openness: { word: "OPENNESS", icon: "💜" } };
-          const cv = hero.coreValues || [];
-          const assigned = [];
-          const usedDims = new Set();
-          cv.forEach(v => { if (!usedDims.has(v.dim)) { assigned.push({ ...v, assignedDim: v.dim }); usedDims.add(v.dim); } });
-          cv.forEach(v => { if (!assigned.find(a => a.id === v.id)) { const fd = dims.find(d => !usedDims.has(d)); if (fd) { assigned.push({ ...v, assignedDim: fd }); usedDims.add(fd); } } });
-          // Fill any remaining dims with fallbacks
-          dims.forEach(d => { if (!usedDims.has(d)) { assigned.push({ ...fallbacks[d], assignedDim: d, id: d }); } });
-          assigned.sort((a, b) => dims.indexOf(a.assignedDim) - dims.indexOf(b.assignedDim));
-          return assigned.map(v => (
-            <div key={v.assignedDim} style={{ padding: "10px 12px", marginBottom: 6, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 4, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 18 }}>{v.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <PixelText size={7} color={colors[v.assignedDim]}>{v.word.toUpperCase()}</PixelText>
-                  <PixelText size={7} color={C.cream}>{hero.stats?.[v.assignedDim] || 5}/10</PixelText>
-                </div>
-                <div style={{ height: 6, background: C.mapBg, borderRadius: 2, border: "1px solid #5C3A50", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${(hero.stats?.[v.assignedDim] || 5) * 10}%`, background: colors[v.assignedDim], borderRadius: 2 }} />
-                </div>
-              </div>
-            </div>
-          ));
-        })()}
-      </div>
-
-      {/* Core Strengths */}
-      {hero.coreValues && hero.coreValues.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>CORE STRENGTHS</PixelText>
-          <div style={{ display: "flex", gap: 6 }}>
-            {hero.coreValues.map(v => (
-              <div key={v.id} style={{
-                flex: 1, padding: "10px 6px", background: "#1A1218",
-                border: `2px solid ${C.goldMd}40`, borderRadius: 6, textAlign: "center",
-              }}>
-                <div style={{ fontSize: 18, marginBottom: 4 }}>{v.icon}</div>
-                <PixelText size={6} color={C.goldMd}>{v.word.toUpperCase()}</PixelText>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Sealed Values — Why I Fight */}
       {hero.values && hero.values.length > 0 && (
         <div style={{ marginBottom: 20 }}>
@@ -81,22 +32,6 @@ export default function HeroProfile({ hero, quest, battleHistory = [], onBack, s
                 <span style={{ fontSize: 14 }}>{v.icon}</span>
                 <PixelText size={7} color={C.goalGold}>{v.text}</PixelText>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {hero.traits && hero.traits.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>CLAIMED TRAITS</PixelText>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {hero.traits.map(t => (
-              <span key={t.id} style={{
-                padding: "4px 8px", borderRadius: 3,
-                background: t.type === "strength" ? C.goldMd + "20" : C.plumMd + "20",
-                border: `1px solid ${t.type === "strength" ? C.goldMd + "50" : C.plumMd + "50"}`,
-                fontFamily: PIXEL_FONT, fontSize: 8, color: t.type === "strength" ? C.goldMd : C.plumMd,
-              }}>{t.icon} {t.text.length > 20 ? t.text.slice(0, 20) + "..." : t.text}</span>
             ))}
           </div>
         </div>
