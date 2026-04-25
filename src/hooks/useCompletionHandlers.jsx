@@ -21,9 +21,9 @@ export function useCompletionHandlers({
     const strengthNames = traits.filter(t => t.type === "strength").map(t => t.text);
     const newHeroData = { name, stats, traits, strengths: strengthNames, sads: sadsScore, coreValues: actValues || [] };
     setHero(h => ({ ...h, ...newHeroData }));
-    setScreen("values");
+    setScreen("mapPreview");
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await saveProgress(user.id, { screen: "values", hero: newHeroData });
+    if (user) await saveProgress(user.id, { screen: "mapPreview", hero: newHeroData });
   }, [setHero, setScreen]);
 
   const handleIntakeComplete = useCallback(async (msgs, summaryText) => {
