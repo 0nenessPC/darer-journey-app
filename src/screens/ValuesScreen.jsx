@@ -1,8 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { C, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, DialogBox } from '../components/shared';
 import { callAI } from '../utils/chat';
+import { useTypewriter } from '../hooks/useTypewriter';
 import VoiceInputField from '../components/VoiceInputField';
+const TTS_CHARS_PER_SEC = 12;
+
+function ValuesTypewriterText({ text }) {
+  const [showFull, setShowFull] = useState(false);
+  const { revealed, isComplete, skipToEnd } = useTypewriter(
+    text,
+    true,
+    TTS_CHARS_PER_SEC / 1000
+  );
+
+  const handleSkip = useCallback(() => {
+    skipToEnd();
+    setShowFull(true);
+  }, [skipToEnd]);
+
+  const displayText = showFull || isComplete ? text : revealed;
+  const canSkip = !isComplete && !showFull;
+
+  return (
+    <div style={{ cursor: canSkip ? "pointer" : "default" }}
+      onClick={canSkip ? handleSkip : undefined}
+      title={canSkip ? "Tap to reveal full text" : ""}
+    >
+      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+        {displayText}
+        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
+      </PixelText>
+    </div>
+  );
+}
+
 export default function ValuesScreen({ heroName, onComplete }) {
   const [step, setStep] = useState("intro");
   const [values, setValues] = useState([]);
@@ -128,11 +160,21 @@ export default function ValuesScreen({ heroName, onComplete }) {
           </div>
 
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-              {heroName}, before we step onto{"\n"}this journey — one that will be{"\n"}rocky, and at times filled with{"\n"}pain and challenges — it is{"\n"}important to ask ourselves and{"\n"}connect with something deeper.{"\n"}{"\n"}
-              Why are you here?{"\n"}What motivates you to start{"\n"}this journey?{"\n"}What is worth fighting for?{"\n"}{"\n"}
-              This isn't about goals you{"\n"}"should" have. This is about{"\n"}what truly matters to your heart.
-            </PixelText>
+            <ValuesTypewriterText text={`${heroName}, before we step onto
+this journey — one that will be
+rocky, and at times filled with
+pain and challenges — it is
+important to ask ourselves and
+connect with something deeper.
+
+Why are you here?
+What motivates you to start
+this journey?
+What is worth fighting for?
+
+This isn't about goals you
+"should" have. This is about
+what truly matters to your heart.`} />
           </DialogBox>
 
           <PixelBtn onClick={() => setStep("cards")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
@@ -252,9 +294,7 @@ export default function ValuesScreen({ heroName, onComplete }) {
           </div>
 
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              {GUIDE_PROMPTS[guideStep].question}
-            </PixelText>
+            <ValuesTypewriterText key={`q-${guideStep}`} text={GUIDE_PROMPTS[guideStep].question} />
             <div style={{ marginTop: 8 }}>
               <PixelText size={7} color={C.grayLt} style={{ display: "block", lineHeight: 1.6 }}>
                 {GUIDE_PROMPTS[guideStep].hint}
@@ -332,10 +372,15 @@ export default function ValuesScreen({ heroName, onComplete }) {
           )}
 
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              Remember these, {heroName}.{"\n"}When the Shadow tries to make{"\n"}you forget why you started —{"\n"}and it will — these are what{"\n"}you come back to.{"\n"}{"\n"}
-              Now I know what you're fighting{"\n"}for. Let's find out what you're{"\n"}fighting against.
-            </PixelText>
+            <ValuesTypewriterText text={`Remember these, ${heroName}.
+When the Shadow tries to make
+you forget why you started —
+and it will — these are what
+you come back to.
+
+Now I know what you're fighting
+for. Let's find out what you're
+fighting against.`} />
           </DialogBox>
 
           <PixelBtn onClick={() => onComplete(selectedCards, freeText.trim())} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
