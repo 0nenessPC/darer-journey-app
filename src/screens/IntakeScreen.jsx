@@ -1,19 +1,94 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { buildHeroContext } from "../utils/aiHelper.jsx";
 import { useAIChat } from "../utils/chat";
-import { useTTS } from "../hooks/useVoiceRecorder.jsx";
 import { useCloudVoice } from "../hooks/useCloudVoice";
+import { useTypewriter } from "../hooks/useTypewriter";
 import { VoiceInputBar } from "../components/VoiceToggle";
 import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 
+// Estimated speech rate: ~150 WPM → ~2.5 words/sec → ~12 chars/sec (avg word=5 chars)
+const TTS_CHARS_PER_SEC = 12;
+
+function TypewriterBubble({ text, role, onSkip }) {
+  const [showFull, setShowFull] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const utteranceRef = useRef(null);
+
+  // Typewriter: reveal text at speech pace
+  const { revealed, isComplete, skipToEnd } = useTypewriter(
+    text,
+    true,
+    TTS_CHARS_PER_SEC / 1000
+  );
+
+  // Start speech simultaneously with typewriter
+  useEffect(() => {
+    if (!text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    // Pick a gentle female voice for Dara
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(
+      v => v.lang.startsWith('en') &&
+        (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha'))
+    ) || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+
+    return () => {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    };
+  }, [text]);
+
+  const handleSkip = useCallback(() => {
+    skipToEnd();
+    if (utteranceRef.current) {
+      utteranceRef.current.rate = 2.0; // speed up speech to catch up
+    }
+    setShowFull(true);
+    if (onSkip) onSkip();
+  }, [skipToEnd, onSkip]);
+
+  const displayText = showFull || isComplete ? text : revealed;
+  const canSkip = !isComplete && !showFull;
+
+  return (
+    <div style={{
+      maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
+      background: role === "user" ? C.plum : "#1A1218",
+      border: "2px solid #5C3A50",
+      position: "relative",
+      cursor: canSkip ? "pointer" : "default",
+    }}
+    onClick={canSkip ? handleSkip : undefined}
+    title={canSkip ? "Tap to reveal full text" : ""}
+    >
+      <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>
+        {displayText}
+        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
+      </PixelText>
+    </div>
+  );
+}
+
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
   const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
-  const { speak, cancel } = useTTS();
-  const voice = useCloudVoice({ useCloud: true });
+  const voice = useCloudVoice({ useCloud: false });
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -26,18 +101,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const retryInit = () => { init(initPromptRef.current); };
 
   // Cancel speech when new typing starts
-  useEffect(() => { if (typing) cancel(); }, [typing, cancel]);
-
-  // Auto-speak new assistant messages (when not muted)
-  const prevCount = useRef(0);
-  useEffect(() => {
-    const count = messages.filter(m => m.role === "assistant").length;
-    if (count > prevCount.current && !muted) {
-      const last = messages[messages.length - 1];
-      if (last?.role === "assistant") speak(last.text);
-    }
-    prevCount.current = count;
-  }, [messages, muted, speak]);
+  useEffect(() => { if (typing) window.speechSynthesis?.cancel(); }, [typing]);
 
   const handleSend = async (text) => {
     const message = text !== undefined ? text : input;
@@ -53,11 +117,11 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   // Auto-transition when Dara generates the shadow summary
   useEffect(() => {
     if (hasShadowSummary && lastAssistant) {
-      cancel(); // stop any lingering speech
+      window.speechSynthesis?.cancel();
       const timer = setTimeout(() => onComplete(messages, lastAssistant.text), 2000);
       return () => clearTimeout(timer);
     }
-  }, [hasShadowSummary, lastAssistant, messages, onComplete, cancel]);
+  }, [hasShadowSummary, lastAssistant, messages, onComplete]);
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
@@ -69,7 +133,10 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
           <div><PixelText size={7} color={typing ? C.rose : C.grayLt}>{typing ? "thinking..." : "soul companion"}</PixelText></div>
         </div>
         <button
-          onClick={() => { if (muted) setMuted(false); else { setMuted(true); cancel(); } }}
+          onClick={() => {
+            if (muted) setMuted(false);
+            else { setMuted(true); window.speechSynthesis?.cancel(); }
+          }}
           style={{ background: "transparent", border: "1px solid #5C3A50", borderRadius: 4, cursor: "pointer", padding: "4px 6px", fontSize: 14, lineHeight: 1 }}
           title={muted ? "Unmute DARER's voice" : "Mute DARER's voice"}
         >
@@ -79,13 +146,17 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
       <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: 16 }}>
         {messages.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
-            <div style={{
-              maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
-              background: m.role === "user" ? C.plum : "#1A1218",
-              border: "2px solid #5C3A50",
-            }}>
-              <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
-            </div>
+            {m.role === "user" ? (
+              <div style={{
+                maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
+                background: C.plum,
+                border: "2px solid #5C3A50",
+              }}>
+                <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
+              </div>
+            ) : (
+              <TypewriterBubble text={muted ? m.text : m.text} role={m.role} />
+            )}
           </div>
         ))}
         {typing && <DialogBox speaker="DARA" typing />}
