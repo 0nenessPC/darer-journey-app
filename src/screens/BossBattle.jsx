@@ -4,7 +4,63 @@ import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
 import { useCloudVoice } from '../hooks/useCloudVoice';
+import { useTypewriter } from '../hooks/useTypewriter';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
+
+const TTS_CHARS_PER_SEC = 12;
+
+function BattleTypewriterBubble({ text, muted }) {
+  const [showFull, setShowFull] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { revealed, isComplete, skipToEnd } = useTypewriter(
+    text,
+    true,
+    TTS_CHARS_PER_SEC / 1000
+  );
+
+  // Start speech simultaneously with typewriter
+  useEffect(() => {
+    if (muted || !text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
+      || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
+  }, [text, muted]);
+
+  const handleSkip = useCallback(() => {
+    skipToEnd();
+    window.speechSynthesis.cancel();
+    setShowFull(true);
+    setIsSpeaking(false);
+  }, [skipToEnd]);
+
+  const displayText = showFull || isComplete ? text : revealed;
+  const canSkip = !isComplete && !showFull;
+
+  return (
+    <div style={{
+      maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
+      background: "#1A1218", border: "2px solid #5C3A50",
+      cursor: canSkip ? "pointer" : "default",
+    }}
+    onClick={canSkip ? handleSkip : undefined}
+    title={canSkip ? "Tap to reveal full text" : ""}
+    >
+      <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>
+        {displayText}
+        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
+      </PixelText>
+    </div>
+  );
+}
 
 export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, setActiveBoss, setScreen, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
   const [phase, setPhase] = useState(obState.phase || "prep");
@@ -24,7 +80,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   const chatRef = useRef(null);
 
   // Voice hook
-  const voice = useCloudVoice({ useCloud: true });
+  const voice = useCloudVoice({ useCloud: false });
 
   // Reset internal state when a new boss is selected (fixes stale state from batched React updates)
   const lastBossIdRef = useRef(null);
@@ -114,17 +170,32 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   const activeChat = phase === "battle" ? battleChat : victoryChat;
 
   // Auto-speak AI replies when voice mode is on
+  const spokenIndices = useRef({ battle: -1, victory: -1 });
   useEffect(() => {
-    if (!battleVoiceMode || !voice.supported) return;
+    const phaseKey = phase === "result" ? "victory" : "battle";
+    if (!battleVoiceMode) return;
     const msgs = activeChat.messages;
     if (msgs.length === 0) return;
-    const last = msgs[msgs.length - 1];
-    if (last?.role === "assistant" && !last._spoken) {
-      // Mark as spoken so we don't repeat
-      last._spoken = true;
-      voice.speak(last.text);
+    const lastIdx = msgs.length - 1;
+    const last = msgs[lastIdx];
+    if (last?.role === "assistant" && lastIdx > spokenIndices.current[phaseKey]) {
+      spokenIndices.current[phaseKey] = lastIdx;
+      window.speechSynthesis?.cancel();
+      const utterance = new SpeechSynthesisUtterance(last.text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
+        || voices.find(v => v.lang.startsWith('en'));
+      if (preferred) utterance.voice = preferred;
+      window.speechSynthesis.speak(utterance);
     }
-  }, [activeChat.messages, battleVoiceMode, voice.supported, voice.speak]);
+  }, [activeChat.messages, battleVoiceMode, phase]);
+
+  // Cancel speech on unmount or phase change
+  useEffect(() => {
+    return () => { window.speechSynthesis?.cancel(); };
+  }, [phase]);
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
@@ -446,31 +517,16 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
         <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: 12 }}>
           {activeChat.messages.map((m, i) => (
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start", gap: 6, marginBottom: 8 }}>
-              {m.role === "assistant" && voice.supported && (
-                <button
-                  onClick={() => voice.isSpeaking ? voice.cancelSpeech() : voice.speak(m.text)}
-                  style={{
-                    width: 28, height: 28, flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "transparent", border: "none",
-                    cursor: "pointer", fontSize: 14,
-                    color: voice.isSpeaking ? C.teal : C.grayLt,
-                    opacity: 0.5,
-                    transition: "opacity 0.15s",
-                  }}
-                  onMouseEnter={(e) => e.target.style.opacity = 1}
-                  onMouseLeave={(e) => e.target.style.opacity = 0.5}
-                  title={voice.isSpeaking ? "Stop" : "Listen"}
-                >
-                  {voice.isSpeaking ? "⏸" : "🔊"}
-                </button>
+              {m.role === "assistant" ? (
+                <BattleTypewriterBubble text={m.text} muted={!battleVoiceMode} />
+              ) : (
+                <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
+                  maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
+                  background: C.plum, border: "2px solid #5C3A50",
+                }}>
+                  <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
+                </VoiceMessageBubble>
               )}
-              <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
-                maxWidth: voice.supported && m.role === "assistant" ? "78%" : "82%", padding: "10px 12px", borderRadius: 4,
-                background: m.role === "user" ? C.plum : "#1A1218", border: "2px solid #5C3A50",
-              }}>
-                <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
-              </VoiceMessageBubble>
             </div>
           ))}
           {activeChat.typing && <DialogBox speaker="DARA" typing />}

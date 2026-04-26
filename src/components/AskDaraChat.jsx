@@ -2,8 +2,64 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
-import { useCloudVoice } from '../hooks/useCloudVoice';
+import { useTypewriter } from '../hooks/useTypewriter';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
+const TTS_CHARS_PER_SEC = 12;
+
+function AskDaraTypewriterBubble({ text, muted }) {
+  const [showFull, setShowFull] = React.useState(false);
+  const [isSpeaking, setIsSpeaking] = React.useState(false);
+  const { revealed, isComplete, skipToEnd } = useTypewriter(
+    text,
+    true,
+    TTS_CHARS_PER_SEC / 1000
+  );
+
+  // Start speech simultaneously with typewriter
+  React.useEffect(() => {
+    if (muted || !text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
+      || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
+  }, [text, muted]);
+
+  const handleSkip = React.useCallback(() => {
+    skipToEnd();
+    window.speechSynthesis.cancel();
+    setShowFull(true);
+    setIsSpeaking(false);
+  }, [skipToEnd]);
+
+  const displayText = showFull || isComplete ? text : revealed;
+  const canSkip = !isComplete && !showFull;
+
+  return (
+    <div style={{
+      maxWidth: "80%", padding: "10px 14px", borderRadius: 8,
+      background: muted ? "#222" : "#222",
+      border: `2px solid ${C.teal}40`,
+      cursor: canSkip ? "pointer" : "default",
+    }}
+    onClick={canSkip ? handleSkip : undefined}
+    title={canSkip ? "Tap to reveal full text" : ""}
+    >
+      <PixelText size={7} color={C.cream} style={{ whiteSpace: "pre-wrap" }}>
+        {displayText}
+        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
+      </PixelText>
+    </div>
+  );
+}
+
 export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
@@ -16,7 +72,7 @@ export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext
   const chatHistory = useRef([]);
 
   // Voice hook
-  const voice = useCloudVoice({ useCloud: true });
+  const voice = useCloudVoice({ useCloud: false });
 
   const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || "Hero"; // Extract name from hero context
 
@@ -52,8 +108,11 @@ Always keep the exposure small, actionable, and specific.`;
       setTyping(false);
       setStep(1);
       // Speak greeting if voice mode is on
-      if (voiceMode && voice.supported) {
-        voice.speak(initMsg.text);
+      if (voiceMode) {
+        window.speechSynthesis?.cancel();
+        const u = new SpeechSynthesisUtterance(initMsg.text);
+        u.lang = 'en-US'; u.rate = 0.9;
+        window.speechSynthesis.speak(u);
       }
     }
   }, [step, messages.length, voiceMode, voice.speak, voice.supported]);
@@ -93,8 +152,11 @@ Always keep the exposure small, actionable, and specific.`;
               const finalMsg = { role: "assistant", text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.` };
               chatHistory.current.push(finalMsg);
               setMessages(prev => [...prev, finalMsg]);
-              if (voiceMode && voice.supported) {
-                voice.speak(finalMsg.text);
+              if (voiceMode) {
+                window.speechSynthesis?.cancel();
+                const u = new SpeechSynthesisUtterance(finalMsg.text);
+                u.lang = 'en-US'; u.rate = 0.9;
+                window.speechSynthesis.speak(u);
               }
               setGeneratedExposure({
                 name: exposure.name,
@@ -129,8 +191,11 @@ Always keep the exposure small, actionable, and specific.`;
       chatHistory.current.push(aiMsg);
       setMessages(prev => [...prev, aiMsg]);
       // Speak reply if voice mode is on
-      if (voiceMode && voice.supported) {
-        voice.speak(res);
+      if (voiceMode) {
+        window.speechSynthesis?.cancel();
+        const u = new SpeechSynthesisUtterance(res);
+        u.lang = 'en-US'; u.rate = 0.9;
+        window.speechSynthesis.speak(u);
       }
     }
     setTyping(false);
@@ -244,35 +309,20 @@ Always keep the exposure small, actionable, and specific.`;
               alignItems: "flex-start",
               gap: 6,
             }}>
-              {m.role === "assistant" && voice.supported && (
-                <button
-                  onClick={() => voice.isSpeaking ? voice.cancelSpeech() : voice.speak(m.text)}
-                  style={{
-                    width: 28, height: 28, flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "transparent", border: "none",
-                    cursor: "pointer", fontSize: 14,
-                    color: voice.isSpeaking ? C.teal : C.grayLt,
-                    opacity: 0.5,
-                    transition: "opacity 0.15s",
-                  }}
-                  onMouseEnter={(e) => e.target.style.opacity = 1}
-                  onMouseLeave={(e) => e.target.style.opacity = 0.5}
-                  title={voice.isSpeaking ? "Stop" : "Listen"}
-                >
-                  {voice.isSpeaking ? "⏸" : "🔊"}
-                </button>
+              {m.role === "assistant" ? (
+                <AskDaraTypewriterBubble text={m.text} muted={!voiceMode} />
+              ) : (
+                <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
+                  maxWidth: "85%", padding: "10px 14px",
+                  background: C.plum + "30",
+                  border: `2px solid ${C.plum}60`,
+                  borderRadius: 8,
+                }}>
+                  <PixelText size={7} color={C.plumLt} style={{ whiteSpace: "pre-wrap" }}>
+                    {m.text}
+                  </PixelText>
+                </VoiceMessageBubble>
               )}
-              <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
-                maxWidth: voice.supported && m.role === "assistant" ? "80%" : "85%", padding: "10px 14px",
-                background: m.role === "user" ? C.plum + "30" : "#222",
-                border: `2px solid ${m.role === "user" ? C.plum + "60" : C.teal + "40"}`,
-                borderRadius: 8,
-              }}>
-                <PixelText size={7} color={m.role === "user" ? C.plumLt : C.cream} style={{ whiteSpace: "pre-wrap" }}>
-                  {m.text}
-                </PixelText>
-              </VoiceMessageBubble>
             </div>
           ))}
           {typing && (
@@ -296,7 +346,7 @@ Always keep the exposure small, actionable, and specific.`;
             display: "flex", alignItems: "center", justifyContent: "flex-end",
           }}>
             <button
-              onClick={() => setVoiceMode(v => !v)}
+              onClick={() => { if (voiceMode) window.speechSynthesis?.cancel(); setVoiceMode(v => !v); }}
               style={{
                 padding: "4px 10px",
                 background: voiceMode ? C.plum + "40" : "transparent",
