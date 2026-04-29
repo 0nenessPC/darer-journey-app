@@ -67,7 +67,7 @@ function TypewriterBubble({ text, role, onSkip, speak, cancelSpeech }) {
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
   const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
-  const voice = useCloudVoice({ useCloud: true });
+  const voice = useCloudVoice({ useCloud: false });
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
