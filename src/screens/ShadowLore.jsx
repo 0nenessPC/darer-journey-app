@@ -13,21 +13,17 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
     }}>
       <link href={FONT_LINK} rel="stylesheet" />
 
-      {/* STEP 0 — Narrative bridge */}
+      {/* STEP 0 — Dara pivots from meeting to facing the Shadow */}
       {step === 0 && (
         <div style={{ animation: "fadeIn 0.6s ease-out" }}>
-          <div style={{ fontSize: 48, marginBottom: 20 }}>⚔</div>
-          <PixelText size={10} color={C.cream} style={{ display: "block", lineHeight: 1.8, marginBottom: 20 }}>
-            We've met the hero.{"\n"}
-            We know what they're fighting for.{"\n"}{"\n"}
-            Now it's time to face what{"\n"}stands between them and{"\n"}the life they deserve.
-          </PixelText>
-          <PixelText size={28} color={C.bossRed} style={{ display: "block", marginBottom: 24, letterSpacing: 6 }}>
-            F.E.A.R.
-          </PixelText>
-          <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>
-            Looking into its eyes is how{"\n"}we map the road ahead.
-          </PixelText>
+          <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.7 }}>🧚</div>
+          <DialogBox speaker="DARA">
+            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
+              {heroName}, now that we've{"\n"}found each other... there's{"\n"}something you need to face{"\n"}before we can walk this{"\n"}road together.{"\n"}{"\n"}
+              F.E.A.R.{"\n"}Not the feeling — the enemy{"\n"}itself.{"\n"}{"\n"}
+              Looking into its eyes is{"\n"}how we map where to go.
+            </PixelText>
+          </DialogBox>
           <PixelBtn onClick={() => setStep(1)}>
             CONTINUE
           </PixelBtn>
