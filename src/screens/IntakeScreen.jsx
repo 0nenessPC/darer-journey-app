@@ -12,10 +12,9 @@ const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&displ
 // Estimated speech rate: ~150 WPM → ~2.5 words/sec → ~12 chars/sec (avg word=5 chars)
 const TTS_CHARS_PER_SEC = 12;
 
-function TypewriterBubble({ text, role, onSkip }) {
+function TypewriterBubble({ text, role, onSkip, speak, cancelSpeech }) {
   const [showFull, setShowFull] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const utteranceRef = useRef(null);
 
   // Typewriter: reveal text at speech pace
   const { revealed, isComplete, skipToEnd } = useTypewriter(
@@ -24,44 +23,24 @@ function TypewriterBubble({ text, role, onSkip }) {
     TTS_CHARS_PER_SEC / 1000
   );
 
-  // Start speech simultaneously with typewriter
+  // Speak via cloud TTS simultaneously with typewriter
   useEffect(() => {
-    if (!text || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    // Pick a gentle female voice for Dara
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(
-      v => v.lang.startsWith('en') &&
-        (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha'))
-    ) || voices.find(v => v.lang.startsWith('en'));
-    if (preferred) utterance.voice = preferred;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-
-    return () => {
-      window.speechSynthesis.cancel();
+    if (!text || !speak || !isComplete) return;
+    speak(text, { voice: 'nova', speed: 0.9 }).then(() => {
       setIsSpeaking(false);
-    };
-  }, [text]);
+    }).catch(() => {
+      setIsSpeaking(false);
+    });
+    setIsSpeaking(true);
+    return () => { cancelSpeech?.(); setIsSpeaking(false); };
+  }, [text, isComplete]);
 
   const handleSkip = useCallback(() => {
     skipToEnd();
-    if (utteranceRef.current) {
-      utteranceRef.current.rate = 2.0; // speed up speech to catch up
-    }
+    cancelSpeech?.();
     setShowFull(true);
     if (onSkip) onSkip();
-  }, [skipToEnd, onSkip]);
+  }, [skipToEnd, onSkip, cancelSpeech]);
 
   const displayText = showFull || isComplete ? text : revealed;
   const canSkip = !isComplete && !showFull;
@@ -88,7 +67,7 @@ function TypewriterBubble({ text, role, onSkip }) {
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
   const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
-  const voice = useCloudVoice({ useCloud: false });
+  const voice = useCloudVoice({ useCloud: true });
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -101,7 +80,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const retryInit = () => { init(initPromptRef.current); };
 
   // Cancel speech when new typing starts
-  useEffect(() => { if (typing) window.speechSynthesis?.cancel(); }, [typing]);
+  useEffect(() => { if (typing) voice.cancelSpeech(); }, [typing]);
 
   const handleSend = async (text) => {
     const message = text !== undefined ? text : input;
@@ -117,7 +96,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   // Auto-transition when Dara generates the shadow summary
   useEffect(() => {
     if (hasShadowSummary && lastAssistant) {
-      window.speechSynthesis?.cancel();
+      voice.cancelSpeech();
       const timer = setTimeout(() => onComplete(messages, lastAssistant.text), 2000);
       return () => clearTimeout(timer);
     }
@@ -135,7 +114,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
         <button
           onClick={() => {
             if (muted) setMuted(false);
-            else { setMuted(true); window.speechSynthesis?.cancel(); }
+            else { setMuted(true); voice.cancelSpeech(); }
           }}
           style={{ background: "transparent", border: "1px solid #5C3A50", borderRadius: 4, cursor: "pointer", padding: "4px 6px", fontSize: 14, lineHeight: 1 }}
           title={muted ? "Unmute DARER's voice" : "Mute DARER's voice"}
@@ -155,7 +134,12 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
                 <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
               </div>
             ) : (
-              <TypewriterBubble text={muted ? m.text : m.text} role={m.role} />
+              <TypewriterBubble
+                text={muted ? m.text : m.text}
+                role={m.role}
+                speak={muted ? null : voice.speak}
+                cancelSpeech={voice.cancelSpeech}
+              />
             )}
           </div>
         ))}
