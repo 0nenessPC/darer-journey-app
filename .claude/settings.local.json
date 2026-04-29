@@ -4,7 +4,17 @@
       "Bash(git config *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "WebSearch",
+      "Bash(cmd *)",
+      "Bash(pwsh *)",
+      "Bash(powershell.exe *)",
+      "Bash(npx playwright *)",
+      "Read(//c/Users/YCSH8/AppData/Local/ms-playwright/chromium-1217/**)",
+      "Read(//c/Users/YCSH8/AppData/Local/ms-playwright/chromium_headless_shell-1217/**)",
+      "Bash(npm ls *)"
     ]
   }
 }

@@ -1,5 +1,7 @@
 // @ts-check
 import { defineConfig } from '@playwright/test';
+import { config } from 'dotenv';
+config();
 
 export default defineConfig({
   testDir: './test',
@@ -17,4 +19,19 @@ export default defineConfig({
     viewport: { width: 420, height: 860 },  // Mobile viewport
     headless: true,
   },
+  projects: [
+    {
+      name: 'e2e',
+      testMatch: /darer-full-onboarding\.spec\.js/,
+    },
+    {
+      name: 'ai',
+      testMatch: /ai-.*\.spec\.js/,
+      use: {
+        viewport: { width: 420, height: 860 },
+        headless: true,
+      },
+      timeout: 120_000,  // AI analysis adds latency
+    },
+  ],
 });
