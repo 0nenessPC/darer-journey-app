@@ -8,19 +8,23 @@ export default function TutorialBattle({ heroName, hero, quest, shadowText, hero
   const advancePhase = (newPhase) => { setPhase(newPhase); if (setOBState) setOBState({ phase: newPhase }); };
   const [chosenExposure, setChosenExposure] = useState(obState.chosenExposure || null);
   const [sudsBefore, setSudsBefore] = useState(obState.sudsBefore ?? null);
-  const [sudsAfter, setSudsAfter] = useState(null);
+  const [sudsAfter, setSudsAfter] = useState(obState.sudsAfter ?? null);
   const [rehearsalStep, setRehearsalStep] = useState(0);
   const [allowInput, setAllowInput] = useState("");
-  const [engageInput, setEngageInput] = useState("");
+  const [engageSubStep, setEngageSubStep] = useState(0);
+  const [engageOutcome, setEngageOutcome] = useState("");
+  const [engageFreeText, setEngageFreeText] = useState("");
+  const [fearedHappened, setFearedHappened] = useState("");
+  const [fearedSeverity, setFearedSeverity] = useState("");
+  const [madeItThrough, setMadeItThrough] = useState("");
+  const [repeatOptions, setRepeatOptions] = useState([]);
   const [riseSubStep, setRiseSubStep] = useState(obState.riseSubStep ?? 0);
+  const [decideWhy, setDecideWhy] = useState(obState.decideWhy || "");
   const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || "");
   const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || "");
   const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || "");
   const [exposureScheduledTime, setExposureScheduledTime] = useState(obState.exposureScheduledTime || "");
   const [showAlarmSuggestion, setShowAlarmSuggestion] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const [timerActive, setTimerActive] = useState(false);
-  const timerRef = useRef(null);
   const valueName = heroValues?.[0]?.word || heroValues?.[0]?.text || "courage";
 
   // AI coach for the rehearsal/coaching moments
@@ -36,8 +40,8 @@ export default function TutorialBattle({ heroName, hero, quest, shadowText, hero
   useEffect(() => {
     if (initRef.current) { initRef.current = false; return; }
     if (!setOBState) return;
-    setOBState({ chosenExposure, sudsBefore, riseSubStep, exposureWhen, exposureWhere, exposureArmory });
-  }, [chosenExposure, sudsBefore, riseSubStep, exposureWhen, exposureWhere, exposureArmory, setOBState]);
+    setOBState({ chosenExposure, sudsBefore, sudsAfter, riseSubStep, decideWhy, exposureWhen, exposureWhere, exposureArmory, engageSubStep });
+  }, [chosenExposure, sudsBefore, sudsAfter, riseSubStep, decideWhy, exposureWhen, exposureWhere, exposureArmory, engageSubStep, setOBState]);
 
   // AI-generated micro-exposures tailored to the user's profile
   const [tutorialExposures, setTutorialExposures] = useState([]);
@@ -141,15 +145,58 @@ No other text.`,
 
   useEffect(() => { generateTutorialExposures(); }, []);
 
-  // Timer for waiting phase
+  // Pre-generate repeat options when user reaches the REPEAT step
   useEffect(() => {
-    if (timerActive) {
-      timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
-      return () => clearInterval(timerRef.current);
+    if (engageSubStep === 6 && repeatOptions.length === 0) {
+      generateRepeatOptions();
     }
-  }, [timerActive]);
+  }, [engageSubStep]);
 
-  const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  // Generate repeat exposure variations based on outcome
+  const generateRepeatOptions = async () => {
+    try {
+      const isComplete = engageOutcome === "full";
+      const currentText = chosenExposure?.text || "a micro-exposure";
+      const res = await callAI(
+        `You are a clinical psychologist designing ERP (Exposure Response Prevention) follow-up exercises. The user just completed their first micro-exposure.
+
+Current exposure: "${currentText}"
+User's outcome: ${isComplete ? "They completed it fully." : engageOutcome === "partial" ? "They went partway but didn't finish." : "They tried but couldn't push through."}
+User's "why": "${decideWhy}"
+
+Generate exactly 3 follow-up exposure variations in the same nature as the original but adjusted:
+- If they COMPLETED it: make them slightly harder (longer duration, more people, more visible, etc.)
+- If they DID NOT complete it: make them slightly easier or break into smaller steps
+- One of the three should be an "outside the box" creative variation that is still therapeutic — something unexpected but clinically sound
+
+Return ONLY a JSON array like: [{"text":"exposure description","icon":"emoji","tag":"normal|step-up|creative"}]
+No other text.`,
+        [{ role: "user", text: `Generate 3 follow-up exposures based on their outcome.` }]
+      );
+      const jsonMatch = res?.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          setRepeatOptions(parsed.slice(0, 3).map((o, i) => ({
+            ...o,
+            icon: o.icon || "⚡",
+            tag: o.tag || (i === 2 ? "creative" : "normal"),
+          })));
+          return;
+        }
+      }
+      throw new Error("Parse failed");
+    } catch (e) {
+      console.error("Repeat option generation failed:", e);
+      // Fallback options
+      const currentText = chosenExposure?.text || "a micro-exposure";
+      setRepeatOptions([
+        { text: `Do "${currentText}" again, but one more time today`, icon: "🔁", tag: "normal" },
+        { text: `Do "${currentText}" with one more person than last time`, icon: "👥", tag: "step-up" },
+        { text: `Do "${currentText}" while maintaining eye contact and smiling — be the most confident version of yourself`, icon: "✨", tag: "creative" },
+      ]);
+    }
+  };
 
   const PhaseLabel = ({ letter, title, active, color }) => (
     <div style={{
@@ -175,7 +222,7 @@ No other text.`,
 
   // D.A.R.E.R. mini progress bar
   const phases = ["D", "A", "R", "E", "R"];
-  const phaseIndex = phase === "decide" ? 0 : phase === "allow" || phase === "rehearse" ? 1 : phase === "rise" ? 2 : phase === "waiting" || phase === "engage" ? 3 : phase === "debrief" ? 4 : -1;
+  const phaseIndex = phase === "decide" ? 0 : phase === "allow" || phase === "rehearse" ? 1 : phase === "rise" ? 2 : phase === "engage" ? 3 : -1;
 
   const ProgressBar = () => (
     <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
@@ -301,26 +348,50 @@ No other text.`,
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
                 Your battle: "{chosenExposure.text}"{"\n"}{"\n"}
-                Before any battle, a DARER asks:{"\n"}Why am I choosing this?{"\n"}{"\n"}
-                Your answer is your anchor. When{"\n"}the Shadow strikes, your "why"{"\n"}keeps you on the path.{"\n"}{"\n"}
-                Your core value is {valueName}.{"\n"}That's your "why."
+                Why are you choosing to{"\n"}face this fear? Pick your "why" —{"\n"}it's your anchor when the{"\n"}Shadow strikes.
               </PixelText>
             </DialogBox>
 
-            <div style={{ background: C.goldMd + "10", border: `1.5px solid ${C.goldMd}30`, borderRadius: 6, padding: 12, marginTop: 12, textAlign: "center" }}>
-              <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>YOUR DECISION</PixelText>
-              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.6 }}>
-                "I choose to {chosenExposure.text.toLowerCase()}{"\n"}because {valueName.toLowerCase()} matters to me."
-              </PixelText>
+            {/* Value pick buttons */}
+            <div style={{ marginTop: 14 }}>
+              {(heroValues || []).slice(0, 5).map(v => (
+                <button key={v.id} onClick={() => setDecideWhy(v.text)} style={{
+                  display: "flex", alignItems: "center", gap: 8, width: "100%", marginBottom: 6, padding: "10px 14px",
+                  borderRadius: 4, border: `2px solid ${decideWhy === v.text ? C.goalGold : "#5C3A50"}`,
+                  background: decideWhy === v.text ? C.goalGold + "15" : "#1A1218",
+                  cursor: "pointer", textAlign: "left",
+                }}>
+                  <span style={{ fontSize: 18 }}>{v.icon || "💫"}</span>
+                  <PixelText size={7} color={decideWhy === v.text ? C.goalGold : C.grayLt}>{v.text}</PixelText>
+                </button>
+              ))}
             </div>
 
-            <PixelBtn onClick={() => advancePhase("allow")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+            {/* Custom why input */}
+            <input
+              value={decideWhy}
+              onChange={e => setDecideWhy(e.target.value)}
+              placeholder="Or type your own reason..."
+              style={{
+                width: "100%", padding: 10, marginTop: 10,
+                background: "#1A1218", border: "2px solid #5C3A50",
+                borderRadius: 4, color: C.cream, fontSize: 12,
+                fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
+              }}
+            />
+
+            <PixelBtn
+              onClick={() => advancePhase("allow")}
+              disabled={!decideWhy.trim()}
+              color={C.gold} textColor={C.charcoal}
+              style={{ width: "100%", marginTop: 16 }}
+            >
               I DECIDE → NEXT: ALLOW
             </PixelBtn>
           </div>
         )}
 
-        {/* === A — ALLOW (with mental rehearsal) === */}
+        {/* === A — ALLOW === */}
         {phase === "allow" && (
           <div style={{ animation: "fadeIn 0.4s ease-out" }}>
             <ProgressBar />
@@ -328,76 +399,29 @@ No other text.`,
 
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                Now, before we do this for real,{"\n"}let's rehearse it in your mind.{"\n"}{"\n"}
+                What does the Storm whisper?{"\n"}{"\n"}
                 Close your eyes for a moment.{"\n"}Imagine yourself about to{"\n"}{chosenExposure.text.toLowerCase()}.{"\n"}{"\n"}
-                What does the Storm whisper?{"\n"}What do you feel in your body?
+                What thoughts, emotions, and{"\n"}body sensations come up? Name{"\n"}them — don't fight them.
               </PixelText>
             </DialogBox>
 
-            <div style={{ marginTop: 12 }}>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 6 }}>What comes up when you imagine it?</PixelText>
-              <textarea value={allowInput} onChange={e => setAllowInput(e.target.value)}
-                placeholder='e.g. "My mind says they will think I am weird. My stomach tightens..."'
-                style={{
-                  width: "100%", minHeight: 80, padding: 10, background: "#1A1218",
-                  border: "2px solid #5C3A50", borderRadius: 4, color: C.cream,
-                  fontSize: 12, fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                  lineHeight: 1.6, boxSizing: "border-box",
-                }}
-              />
-            </div>
+            <textarea
+              value={allowInput}
+              onChange={e => setAllowInput(e.target.value)}
+              placeholder="e.g. They'll think I'm weird. My heart's racing. My stomach is tight..."
+              rows={3}
+              style={{
+                width: "100%", minHeight: 80, padding: 10, marginTop: 14,
+                background: "#1A1218", border: "2px solid #5C3A50",
+                borderRadius: 4, color: C.cream, fontSize: 12,
+                fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+                lineHeight: 1.6, boxSizing: "border-box",
+              }}
+            />
 
-            <PixelBtn onClick={() => {
-              advancePhase("rehearse");
-              coachChat.init(`The hero ${heroName} is doing their FIRST ever exposure — a tutorial battle. The exposure is: "${chosenExposure.text}". They just imagined doing it and reported: "${allowInput}". Coach them through ALLOWING: validate what they're feeling is normal, that the Storm is doing its job, and that these feelings are passengers not drivers. Then guide a brief grounding exercise (3 deep breaths, feet on the floor). Keep it warm, brief, 2-3 sentences. Use game language.`);
-            }} disabled={!allowInput.trim()} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-              THE STORM IS HERE →
+            <PixelBtn onClick={() => advancePhase("rise")} disabled={!allowInput.trim()} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+              I'M ALLOWING IT → NEXT: RISE
             </PixelBtn>
-          </div>
-        )}
-
-        {/* === REHEARSE — Dara coaches through the Storm === */}
-        {phase === "rehearse" && (
-          <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-            <ProgressBar />
-            <PhaseLabel letter="A" title="ALLOW — DARA COACHING" active color={C.hpGreen} />
-
-            <div ref={chatRef} style={{ maxHeight: 280, overflowY: "auto", marginBottom: 12 }}>
-              {coachChat.messages.filter(m => m.role === "assistant").map((m, i) => (
-                <DialogBox key={i} speaker="DARA">
-                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
-                </DialogBox>
-              ))}
-              {coachChat.typing && <DialogBox speaker="DARA" typing />}
-            </div>
-
-            {/* Quick-response options or free text */}
-            {!coachChat.typing && coachChat.messages.length > 0 && (
-              <div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                  {["I notice the Storm but I can sit with it", "It feels intense but I want to try", "What if it gets worse?"].map(opt => (
-                    <button key={opt} onClick={() => coachChat.sendMessage(opt)} style={{
-                      padding: "8px 10px", background: "#1A1218", border: "1.5px solid #5C3A50",
-                      borderRadius: 4, cursor: "pointer",
-                    }}>
-                      <PixelText size={6} color={C.cream}>{opt}</PixelText>
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <input value={coachInput} onChange={e => setCoachInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter" && coachInput.trim()) { coachChat.sendMessage(coachInput); setCoachInput(""); } }}
-                    placeholder="Talk to Dara..."
-                    style={{ flex: 1, padding: 8, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 3, color: C.cream, fontSize: 11, fontFamily: PIXEL_FONT, outline: "none" }}
-                  />
-                  <PixelBtn onClick={() => { if (coachInput.trim()) { coachChat.sendMessage(coachInput); setCoachInput(""); } }}>→</PixelBtn>
-                </div>
-
-                <PixelBtn onClick={() => advancePhase("rise")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 14 }}>
-                  I'M ALLOWING IT → NEXT: RISE
-                </PixelBtn>
-              </div>
-            )}
           </div>
         )}
 
@@ -407,16 +431,19 @@ No other text.`,
             <ProgressBar />
             <PhaseLabel letter="R" title="RISE" active color={C.teal} />
 
-            {/* Sub-step 0: WHEN */}
+            {/* Sub-step 0: WHEN + WHERE combined */}
             {riseSubStep === 0 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
                     The rehearsal is done. You've{"\n"}felt the Storm and you're still{"\n"}standing.{"\n"}{"\n"}
-                    Before you step into the arena,{"\n"}tell me — when will you face{"\n"}this battle? Choose a time{"\n"}that feels real and within reach.
+                    Before you step into the arena —{"\n"}tell me when and where you'll{"\n"}face this battle.
                   </PixelText>
                 </DialogBox>
+
+                {/* WHEN */}
                 <div style={{ marginTop: 14 }}>
+                  <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>📅 WHEN</PixelText>
                   {[
                     "Today — as soon as I'm ready",
                     "Later today — within a few hours",
@@ -424,9 +451,9 @@ No other text.`,
                     "Within the next 3 days",
                     "This week — I'll pick a day",
                   ].map(opt => (
-                    <button key={opt} onClick={() => { setExposureWhen(opt); setRiseSubStep(1); }} style={{
+                    <button key={opt} onClick={() => setExposureWhen(opt)} style={{
                       display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: "2px solid #5C3A50",
+                      borderRadius: 4, border: `2px solid ${exposureWhen === opt ? C.teal : "#5C3A50"}`,
                       background: exposureWhen === opt ? C.teal + "20" : "#1A1218",
                       cursor: "pointer", textAlign: "left",
                     }}>
@@ -434,123 +461,138 @@ No other text.`,
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
 
-            {/* Sub-step 1: WHERE */}
-            {riseSubStep === 1 && (
-              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-                <DialogBox speaker="DARA">
-                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                    Good. You know when.{"\n"}{"\n"}
-                    Now — where will you step into{"\n"}the territory? Name the place.{"\n"}Be specific. This is your map.
-                  </PixelText>
-                </DialogBox>
-                <input
-                  type="text"
-                  placeholder="e.g. the coffee shop on Main St..."
-                  value={exposureWhere}
-                  onChange={e => setExposureWhere(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && exposureWhere.trim()) setRiseSubStep(2); }}
-                  style={{
-                    display: "block", width: "100%", marginTop: 14, padding: "12px 14px",
-                    borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
-                    color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
+                {/* WHERE */}
+                <div style={{ marginTop: 16 }}>
+                  <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>📍 WHERE</PixelText>
+                  <button
+                    onClick={() => window.open("https://maps.google.com", "_blank")}
+                    style={{
+                      width: "100%", padding: "8px 12px", marginBottom: 8,
+                      background: "transparent", border: `1px dashed #5C3A50`,
+                      borderRadius: 4, cursor: "pointer",
+                    }}
+                  >
+                    <PixelText size={6} color={C.plumMd}>🗺️ Open Google Maps to find your location →</PixelText>
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="e.g. the coffee shop on Main St..."
+                    value={exposureWhere}
+                    onChange={e => setExposureWhere(e.target.value)}
+                    style={{
+                      display: "block", width: "100%", padding: "10px 14px",
+                      borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                      color: C.cream, fontFamily: "inherit", fontSize: 13, outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
                 <PixelBtn
-                  onClick={() => setRiseSubStep(2)}
-                  disabled={!exposureWhere.trim()}
+                  onClick={() => setRiseSubStep(1)}
+                  disabled={!exposureWhen}
                   color={C.gold} textColor={C.charcoal}
-                  style={{ width: "100%", marginTop: 10 }}
+                  style={{ width: "100%", marginTop: 16 }}
                 >
-                  NEXT →
+                  LOCK IT IN →
                 </PixelBtn>
               </div>
             )}
 
-            {/* Sub-step 2: SCHEDULE DATE/TIME */}
-            {riseSubStep === 2 && (
+            {/* Sub-step 1: CALENDAR REMINDER */}
+            {riseSubStep === 1 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>⏰</div>
+                <PixelText size={10} color={C.teal} style={{ display: "block", marginBottom: 16 }}>
+                  SET A REMINDER
+                </PixelText>
+
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                    {"\n"}Pick the exact time you'll{"\n"}face this battle. The more{"\n"}specific you are, the more{"\n"}likely you'll follow through.
+                    You're stepping into the arena{"\n"}{exposureWhen || "soon"}{exposureWhere ? ` at ${exposureWhere}` : ""}.{"\n"}{"\n"}
+                    Setting a reminder on your phone{"\n"}right now will make you much{"\n"}more likely to follow through.{"\n"}{"\n"}
+                    Tap the button to add this battle{"\n"}to your calendar — or skip if{"\n"}you've already set one.
                   </PixelText>
                 </DialogBox>
-                <div style={{ marginTop: 14 }}>
-                  <label style={{ display: "block", marginBottom: 6 }}>
-                    <PixelText size={7} color={C.goldMd}>📅 Date & Time</PixelText>
-                  </label>
+
+                {/* If they picked a specific datetime, use it; otherwise default to "soon" */}
+                <button
+                  onClick={() => {
+                    const dt = exposureScheduledTime ? new Date(exposureScheduledTime) : new Date(Date.now() + 60 * 60 * 1000);
+                    const title = encodeURIComponent(`DARER Training: ${chosenExposure?.name || 'Exposure'}`);
+                    const desc = encodeURIComponent(`Face this exposure: ${chosenExposure?.text || chosenExposure?.desc || ''}. Location: ${exposureWhere || 'TBD'}. Your anchor: ${decideWhy || 'courage'}.`);
+                    const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                    const endStr = new Date(dt.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&dates=${startStr}/${endStr}`, '_blank');
+                  }}
+                  style={{
+                    width: "100%", padding: "12px 14px", marginTop: 16,
+                    background: C.teal, border: "none", borderRadius: 4, cursor: "pointer", marginBottom: 8,
+                  }}
+                >
+                  <PixelText size={8} color={C.charcoal}>📱 ADD TO CALENDAR</PixelText>
+                </button>
+                <button
+                  onClick={() => {
+                    if (exposureScheduledTime) {
+                      // If they set a specific time, open calendar again before skipping
+                    }
+                    setRiseSubStep(2);
+                  }}
+                  style={{
+                    width: "100%", padding: "10px 14px",
+                    background: "transparent", border: `1px solid #5C3A50`,
+                    borderRadius: 4, cursor: "pointer",
+                  }}
+                >
+                  <PixelText size={7} color={C.grayLt}>I already set a reminder</PixelText>
+                </button>
+
+                {/* Optional: let them pick a specific time for the calendar entry */}
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("rise-datetime-picker");
+                      if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+                    }}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", display: "block", width: "100%",
+                    }}
+                  >
+                    <PixelText size={6} color={C.plumMd}>📅 Pick a specific time for the reminder →</PixelText>
+                  </button>
                   <input
+                    id="rise-datetime-picker"
                     type="datetime-local"
                     value={exposureScheduledTime}
                     onChange={e => setExposureScheduledTime(e.target.value)}
                     style={{
-                      display: "block", width: "100%", padding: "12px 14px",
+                      display: "none", width: "100%", padding: "10px 14px", marginTop: 8,
                       borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
-                      color: C.cream, fontFamily: "inherit", fontSize: 14, outline: "none",
+                      color: C.cream, fontFamily: "inherit", fontSize: 13, outline: "none",
                       boxSizing: "border-box", colorScheme: "dark",
                     }}
                   />
-                  <PixelBtn
-                    onClick={() => { setRiseSubStep(3); setShowAlarmSuggestion(true); }}
-                    disabled={!exposureScheduledTime}
-                    color={C.gold} textColor={C.charcoal}
-                    style={{ width: "100%", marginTop: 10 }}
-                  >
-                    LOCK IT IN →
-                  </PixelBtn>
-                  <button onClick={() => setRiseSubStep(1)} style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
-                    <PixelText size={6} color={C.grayLt}>← Back</PixelText>
-                  </button>
                 </div>
-
-                {showAlarmSuggestion && exposureScheduledTime && (
-                  <div style={{ marginTop: 16, padding: 14, background: C.teal + "15", border: `2px solid ${C.teal}60`, borderRadius: 6 }}>
-                    <PixelText size={8} color={C.teal} style={{ display: "block", marginBottom: 8 }}>⏰ SET A REMINDER</PixelText>
-                    <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 10, lineHeight: 1.6 }}>
-                      You scheduled this for {new Date(exposureScheduledTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.
-                      {"\n"}{"\n"}
-                      Setting an alarm or reminder on your phone right now will make you much more likely to follow through. Tap below to open your phone's calendar app.
-                    </PixelText>
-                    <button
-                      onClick={() => {
-                        const dt = new Date(exposureScheduledTime);
-                        const title = encodeURIComponent(`DARER Training: ${chosenExposure?.name || 'Exposure'}`);
-                        const desc = encodeURIComponent(`Practice exposure: ${chosenExposure?.desc || 'Face your fear'}`);
-                        const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                        const endStr = new Date(dt.getTime() + 30*60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&dates=${startStr}/${endStr}`, '_blank');
-                      }}
-                      style={{ width: "100%", padding: "10px 14px", background: C.teal, border: "none", borderRadius: 4, cursor: "pointer", marginBottom: 6 }}
-                    >
-                      <PixelText size={8} color={C.charcoal}>📱 ADD TO CALENDAR + ALARM</PixelText>
-                    </button>
-                    <button onClick={() => setShowAlarmSuggestion(false)} style={{ width: "100%", padding: "8px 14px", background: "transparent", border: `1px solid #5C3A50`, borderRadius: 4, cursor: "pointer" }}>
-                      <PixelText size={7} color={C.grayLt}>I already set a reminder</PixelText>
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Sub-step 3: ARMORY */}
-            {riseSubStep === 3 && (
+            {/* Sub-step 2: ARMORY */}
+            {riseSubStep === 2 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                    You've chosen your time and{"\n"}your battlefield.{"\n"}{"\n"}
+                    You've locked in your time and{"\n"}battlefield.{"\n"}{"\n"}
                     Before you go — which tool{"\n"}from the Armory will you carry?{"\n"}Choose the one that steadies you.
                   </PixelText>
                 </DialogBox>
                 <div style={{ marginTop: 14 }}>
-                  {/* Training phase: only show Paced Breathing (the only tool learned so far) */}
                   {(() => {
                     const breathingTool = (hero.armory || []).find(t => t.id === "breathing");
                     const toolsToShow = breathingTool ? [breathingTool] : [];
                     return toolsToShow.map(tool => (
-                      <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(4); }} style={{
+                      <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setRiseSubStep(3); }} style={{
                         display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                         borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
                         background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
@@ -561,7 +603,7 @@ No other text.`,
                       </button>
                     ));
                   })()}
-                  <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(4); }} style={{
+                  <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setRiseSubStep(3); }} style={{
                     display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
                     borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : "#5C3A50"}`,
                     background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : "#1A1218",
@@ -574,8 +616,8 @@ No other text.`,
               </div>
             )}
 
-            {/* Sub-step 4: Storm Intensity (SUDs) */}
-            {riseSubStep === 4 && (
+            {/* Sub-step 3: Storm Intensity (SUDs) */}
+            {riseSubStep === 3 && (
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -601,159 +643,325 @@ No other text.`,
                     })}
                   </div>
                 </div>
-                <PixelBtn onClick={() => { advancePhase("waiting"); setTimerActive(true); }} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-                  I'M GOING IN → RISE!
+                <PixelBtn onClick={() => advancePhase("engage")} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  LET'S GO →
                 </PixelBtn>
               </div>
             )}
           </div>
         )}
 
-        {/* === WAITING (user is doing the exposure IRL) === */}
-        {phase === "waiting" && (
-          <div style={{ textAlign: "center", animation: "fadeIn 0.4s ease-out" }}>
-            <ProgressBar />
-
-            <div style={{
-              width: 100, height: 100, margin: "20px auto", borderRadius: "50%",
-              background: C.goldMd + "10", border: `3px solid ${C.goldMd}40`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: `0 0 24px ${C.goldMd}15`,
-              animation: "pulse 2s ease-in-out infinite",
-            }}>
-              <PixelText size={16} color={C.goldMd}>{formatTime(timer)}</PixelText>
-            </div>
-
-            <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>
-              YOU'RE IN THE ARENA
-            </PixelText>
-            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>
-              Go {chosenExposure.text.toLowerCase()}.{"\n"}Dara is right here.
-            </PixelText>
-
-            <DialogBox speaker="DARA">
-              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                You are doing it right now.{"\n"}The Storm is not in charge.{"\n"}You are.{"\n"}{"\n"}
-                Take your time. Come back when{"\n"}you're done.
-              </PixelText>
-            </DialogBox>
-
-            <PixelBtn onClick={() => { setTimerActive(false); advancePhase("engage"); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-              ✅ I DID IT!
-            </PixelBtn>
-            <button onClick={() => { setTimerActive(false); advancePhase("engage"); }} style={{ background: "none", border: "none", marginTop: 10, cursor: "pointer" }}>
-              <PixelText size={7} color={C.grayLt}>I tried but couldn't finish</PixelText>
-            </button>
-
-            <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }`}</style>
-          </div>
-        )}
-
-        {/* === E — ENGAGE (report back + SUDs after) === */}
+        {/* === E — ENGAGE (outcome → SUDs → reflection → debrief) === */}
         {phase === "engage" && (
           <div style={{ animation: "fadeIn 0.4s ease-out" }}>
             <ProgressBar />
-            <PhaseLabel letter="E" title="ENGAGE — REPORT" active color={C.bossRed} />
+            <PhaseLabel letter="E" title="ENGAGE" active color={C.bossRed} />
 
-            <DialogBox speaker="DARA">
-              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                You stepped into the arena.{"\n"}That took real courage.{"\n"}{"\n"}
-                What actually happened?{"\n"}How intense is the Storm now?
-              </PixelText>
-            </DialogBox>
+            {/* Sub-step 0: Let's Go + Dara encouragement */}
+            {engageSubStep === 0 && (
+              <div style={{ textAlign: "center", animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+                <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 16 }}>
+                  TIME TO FACE THE SHADOW
+                </PixelText>
 
-            <div style={{ marginTop: 12 }}>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 6 }}>What happened?</PixelText>
-              <textarea value={engageInput} onChange={e => setEngageInput(e.target.value)}
-                placeholder='e.g. "They smiled back! It was way less scary than I thought..."'
-                style={{
-                  width: "100%", minHeight: 60, padding: 10, background: "#1A1218",
-                  border: "2px solid #5C3A50", borderRadius: 4, color: C.cream,
-                  fontSize: 12, fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                  lineHeight: 1.6, boxSizing: "border-box",
-                }}
-              />
-            </div>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
+                    {heroName}, this is your moment.{"\n"}{"\n"}
+                    You've prepared for this — you{"\n"}know why you're doing it, you've{"\n"}felt the Storm and let it be{"\n"}there, and you've chosen your{"\n"}tools.{"\n"}{"\n"}
+                    The Shadow will whisper. The{"\n"}Storm will rise. But you are{"\n"}stronger than both.{"\n"}{"\n"}
+                    When you're ready — step forward.
+                  </PixelText>
+                </DialogBox>
 
-            <div style={{ marginTop: 12 }}>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                  const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
-                  return (
-                    <button key={n} onClick={() => setSudsAfter(n)} style={{
-                      width: 40, height: 40, borderRadius: 4, cursor: "pointer",
-                      background: sudsAfter === n ? color + "30" : "#1A1218",
-                      border: `2px solid ${sudsAfter === n ? color : "#5C3A50"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
+                <PixelBtn onClick={() => setEngageSubStep(1)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  LET'S GO →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 1: Outcome selection */}
+            {engageSubStep === 1 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    You stepped into the arena.{"\n"}Whatever happened — you showed{"\n"}up. That matters.{"\n"}{"\n"}
+                    How did it go?
+                  </PixelText>
+                </DialogBox>
+
+                <div style={{ marginTop: 14 }}>
+                  {[
+                    { id: "full", label: "✅ I did it — I stayed all the way through", desc: "I completed the full exposure" },
+                    { id: "partial", label: "🔥 I went partway — faced some of it", desc: "I didn't finish, but I stayed longer than I usually would" },
+                    { id: "tried", label: "💪 I tried but couldn't push through this time", desc: "The Storm was too strong, but I'm not giving up" },
+                  ].map(opt => (
+                    <button key={opt.id} onClick={() => setEngageOutcome(opt.id)} style={{
+                      display: "block", width: "100%", marginBottom: 8, padding: "14px 12px",
+                      borderRadius: 4, border: `2px solid ${engageOutcome === opt.id ? C.goldMd : "#5C3A50"}`,
+                      background: engageOutcome === opt.id ? C.goldMd + "12" : "#1A1218",
+                      cursor: "pointer", textAlign: "left",
                     }}>
-                      <PixelText size={9} color={sudsAfter === n ? color : C.grayLt}>{n}</PixelText>
+                      <PixelText size={7} color={engageOutcome === opt.id ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
+                        {opt.label}
+                      </PixelText>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <PixelBtn onClick={() => setEngageSubStep(2)} disabled={!engageOutcome} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  CONTINUE →
+                </PixelBtn>
               </div>
-            </div>
+            )}
 
-            <PixelBtn onClick={() => advancePhase("debrief")} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-              NEXT: REPEAT (DEBRIEF) →
-            </PixelBtn>
-          </div>
-        )}
+            {/* Sub-step 2: SUDs after */}
+            {engageSubStep === 2 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    How intense is the Storm{"\n"}right now? Rate it honestly.
+                  </PixelText>
+                </DialogBox>
 
-        {/* === R — REPEAT (Debrief) === */}
-        {phase === "debrief" && (
-          <div style={{ animation: "fadeIn 0.6s ease-out" }}>
-            <ProgressBar />
-
-            <div style={{ textAlign: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
-              <PixelText size={12} color={C.goldMd} style={{ display: "block" }}>FIRST BATTLE COMPLETE!</PixelText>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginTop: 4 }}>+50 XP EARNED</PixelText>
-            </div>
-
-            {/* SUDs comparison */}
-            <div style={{ background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, padding: 14, marginBottom: 12 }}>
-              <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
-              <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
-                <div>
-                  <PixelText size={7} color={C.grayLt}>BEFORE</PixelText>
-                  <div style={{ fontSize: 28, margin: "4px 0" }}>
-                    <PixelText size={20} color={C.bossRed}>{sudsBefore}</PixelText>
+                <div style={{ marginTop: 12 }}>
+                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {[1,2,3,4,5,6,7,8,9,10].map(n => {
+                      const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
+                      return (
+                        <button key={n} onClick={() => setSudsAfter(n)} style={{
+                          width: 40, height: 40, borderRadius: 4, cursor: "pointer",
+                          background: sudsAfter === n ? color + "30" : "#1A1218",
+                          border: `2px solid ${sudsAfter === n ? color : "#5C3A50"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <PixelText size={9} color={sudsAfter === n ? color : C.grayLt}>{n}</PixelText>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <PixelText size={6} color={C.bossRed}>FEARED</PixelText>
                 </div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <PixelText size={16} color={C.goldMd}>→</PixelText>
-                </div>
-                <div>
-                  <PixelText size={7} color={C.grayLt}>AFTER</PixelText>
-                  <div style={{ fontSize: 28, margin: "4px 0" }}>
-                    <PixelText size={20} color={C.hpGreen}>{sudsAfter}</PixelText>
-                  </div>
-                  <PixelText size={6} color={C.hpGreen}>ACTUAL</PixelText>
-                </div>
+
+                <PixelBtn onClick={() => setEngageSubStep(3)} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  CONTINUE →
+                </PixelBtn>
               </div>
-              {sudsBefore > sudsAfter && (
-                <div style={{ marginTop: 10, textAlign: "center" }}>
-                  <PixelText size={7} color={C.hpGreen}>
-                    The Storm dropped {sudsBefore - sudsAfter} point{sudsBefore - sudsAfter !== 1 ? "s" : ""}. That's damage dealt to the Shadow.
+            )}
+
+            {/* Sub-step 3: Reflection questions */}
+            {engageSubStep === 3 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <PixelText size={10} color={C.goldMd} style={{ display: "block", textAlign: "center", marginBottom: 16 }}>
+                  REFLECT ON THE BATTLE
+                </PixelText>
+
+                {/* Q1: Did feared consequences happen? */}
+                <div style={{ marginBottom: 16 }}>
+                  <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
+                    1. Did the consequences you feared actually happen?
+                  </PixelText>
+                  {["No, they didn't happen at all", "Some did, but not like I expected", "Yes, they did happen"].map(opt => (
+                    <button key={opt} onClick={() => setFearedHappened(opt)} style={{
+                      display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
+                      borderRadius: 4, border: `2px solid ${fearedHappened === opt ? C.teal : "#5C3A50"}`,
+                      background: fearedHappened === opt ? C.teal + "20" : "#1A1218",
+                      cursor: "pointer", textAlign: "left",
+                    }}>
+                      <PixelText size={7} color={fearedHappened === opt ? C.teal : C.grayLt}>{opt}</PixelText>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Q2: If it did happen, how severe was it actually? */}
+                {fearedHappened && (
+                  <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
+                    <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
+                      2. If it did happen — how bad was it really?
+                    </PixelText>
+                    {["It was much less severe than I feared", "It was about what I expected", "It was as bad as I feared"].map(opt => (
+                      <button key={opt} onClick={() => setFearedSeverity(opt)} style={{
+                        display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
+                        borderRadius: 4, border: `2px solid ${fearedSeverity === opt ? C.teal : "#5C3A50"}`,
+                        background: fearedSeverity === opt ? C.teal + "20" : "#1A1218",
+                        cursor: "pointer", textAlign: "left",
+                      }}>
+                        <PixelText size={7} color={fearedSeverity === opt ? C.teal : C.grayLt}>{opt}</PixelText>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Q3: Even if difficult, did you make it through? */}
+                {fearedSeverity && (
+                  <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
+                    <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
+                      3. Even though it was difficult — did you get through it?
+                    </PixelText>
+                    {["Yes — I made it through, even if it was hard", "I'm still working on it, but I know I can", "Not this time, but I learned something"].map(opt => (
+                      <button key={opt} onClick={() => setMadeItThrough(opt)} style={{
+                        display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
+                        borderRadius: 4, border: `2px solid ${madeItThrough === opt ? C.teal : "#5C3A50"}`,
+                        background: madeItThrough === opt ? C.teal + "20" : "#1A1218",
+                        cursor: "pointer", textAlign: "left",
+                      }}>
+                        <PixelText size={7} color={madeItThrough === opt ? C.teal : C.grayLt}>{opt}</PixelText>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <PixelBtn onClick={() => setEngageSubStep(4)} disabled={!fearedHappened || !fearedSeverity || !madeItThrough} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  CONTINUE →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 4: Free text — what did you learn */}
+            {engageSubStep === 4 && (
+              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    Before we look at what the{"\n"}numbers tell us — in your own{"\n"}words, what did you learn{"\n"}from this battle?
+                  </PixelText>
+                </DialogBox>
+
+                <textarea
+                  value={engageFreeText}
+                  onChange={e => setEngageFreeText(e.target.value)}
+                  placeholder="What surprised you? What will you carry forward?..."
+                  rows={3}
+                  style={{
+                    width: "100%", minHeight: 80, padding: 10, marginTop: 14,
+                    background: "#1A1218", border: "2px solid #5C3A50",
+                    borderRadius: 4, color: C.cream, fontSize: 12,
+                    fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+                    lineHeight: 1.6, boxSizing: "border-box",
+                  }}
+                />
+
+                <PixelBtn onClick={() => setEngageSubStep(5)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  SEE WHAT THE SHADOW DID →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 5: SUDs comparison + debrief (moved from old debrief phase) */}
+            {engageSubStep === 5 && (
+              <div style={{ animation: "fadeIn 0.6s ease-out" }}>
+                <div style={{ textAlign: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
+                  <PixelText size={12} color={C.goldMd} style={{ display: "block" }}>FIRST BATTLE COMPLETE!</PixelText>
+                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginTop: 4 }}>+50 XP EARNED</PixelText>
+                </div>
+
+                {/* SUDs comparison */}
+                <div style={{ background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, padding: 14, marginBottom: 12 }}>
+                  <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
+                  <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
+                    <div>
+                      <PixelText size={7} color={C.grayLt}>BEFORE</PixelText>
+                      <div style={{ fontSize: 28, margin: "4px 0" }}>
+                        <PixelText size={20} color={C.bossRed}>{sudsBefore}</PixelText>
+                      </div>
+                      <PixelText size={6} color={C.bossRed}>FEARED</PixelText>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <PixelText size={16} color={C.goldMd}>→</PixelText>
+                    </div>
+                    <div>
+                      <PixelText size={7} color={C.grayLt}>AFTER</PixelText>
+                      <div style={{ fontSize: 28, margin: "4px 0" }}>
+                        <PixelText size={20} color={C.hpGreen}>{sudsAfter}</PixelText>
+                      </div>
+                      <PixelText size={6} color={C.hpGreen}>ACTUAL</PixelText>
+                    </div>
+                  </div>
+                  {sudsBefore > sudsAfter && (
+                    <div style={{ marginTop: 10, textAlign: "center" }}>
+                      <PixelText size={7} color={C.hpGreen}>
+                        The Storm dropped {sudsBefore - sudsAfter} point{sudsBefore - sudsAfter !== 1 ? "s" : ""}. That's damage dealt to the Shadow.
+                      </PixelText>
+                    </div>
+                  )}
+                </div>
+
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
+                    {heroName}, you just completed your{"\n"}first battle. Do you see what{"\n"}happened?{"\n"}{"\n"}
+                    The Shadow told you it would be{"\n"}unbearable. {sudsBefore > sudsAfter ? "But the actual experience was less intense than the fear predicted." : "And you survived it."}{"\n"}{"\n"}
+                    {engageFreeText ? `"${engageFreeText}" — that's wisdom earned through action, not just thought.{"\n"}{"\n"}` : ""}
+                    This is the D.A.R.E.R. cycle:{"\n"}Decide. Allow. Rise. Engage.{"\n"}Repeat. Every battle weakens{"\n"}the Shadow.{"\n"}{"\n"}
+                    But there's one more step before{"\n"}we close — and it's the most{"\n"}important one.
+                  </PixelText>
+                </DialogBox>
+
+                <PixelBtn onClick={() => setEngageSubStep(6)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+                  THE POWER OF REPEAT →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 6: REPEAT — psychoeducation + preview of follow-up options */}
+            {engageSubStep === 6 && (
+              <div style={{ animation: "fadeIn 0.6s ease-out" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🔁</div>
+                <PixelText size={11} color={C.hpGreen} style={{ display: "block", marginBottom: 6 }}>
+                  THE POWER OF REPEAT
+                </PixelText>
+
+                {/* Psychoeducation block */}
+                <div style={{
+                  background: C.hpGreen + "10", border: `2px solid ${C.hpGreen}30`,
+                  borderRadius: 6, padding: 16, marginBottom: 16, textAlign: "left",
+                }}>
+                  <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 8, letterSpacing: 2 }}>WHY REPEAT?</PixelText>
+                  <PixelText size={7} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    One exposure teaches your brain something. Repeat exposure rewires it.{"\n"}{"\n"}
+                    Every time you repeat the same exposure, your nervous system learns a little deeper that the threat isn't real. The Shadow's whispers get quieter. The Storm gets smaller.{"\n"}{"\n"}
+                    This is the heart of ERP therapy — not just facing fear once, but practicing it until it becomes normal. That's how you reclaim your life from the Shadow.
                   </PixelText>
                 </div>
-              )}
-            </div>
 
-            <DialogBox speaker="DARA">
-              <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-                {heroName}, you just completed your{"\n"}first battle. Do you see what{"\n"}happened?{"\n"}{"\n"}
-                The Shadow told you it would be{"\n"}unbearable. {sudsBefore > sudsAfter ? "But the actual experience was less intense than the fear predicted." : "And you survived it."}{"\n"}{"\n"}
-                This is the D.A.R.E.R. cycle:{"\n"}Decide. Allow. Rise. Engage.{"\n"}Repeat. Every battle weakens{"\n"}the Shadow.{"\n"}{"\n"}
-                Now you're ready to forge your{"\n"}full path — choose which battles{"\n"}to fight on the road toward{"\n"}{valueName.toLowerCase()}.
-              </PixelText>
-            </DialogBox>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                    On your real journey, after every{"\n"}battle you'll get personalized{"\n"}suggestions for how to repeat —{"\n"}slightly harder if you crushed it,{"\n"}a bit gentler if the Storm was{"\n"}too strong today.{"\n"}{"\n"}
+                    Here's a taste of what that{"\n"}might look like for you:
+                  </PixelText>
+                </DialogBox>
 
-            <PixelBtn onClick={() => { if (setOBState) setOBState({ tutorialComplete: true }); onComplete(); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-              FORGE YOUR PATH →
-            </PixelBtn>
+                {repeatOptions.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "24px 0" }}>
+                    <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>🔨 DARA IS FINDING OPTIONS...</PixelText>
+                  </div>
+                ) : (
+                  <div style={{ opacity: 0.7, pointerEvents: "none" }}>
+                    {repeatOptions.map((opt, i) => (
+                      <div key={i} style={{
+                        display: "block", width: "100%", marginBottom: 8, padding: "12px 14px",
+                        borderRadius: 4, border: "2px solid #5C3A50",
+                        background: "#1A1218", textAlign: "left",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                          <span style={{ fontSize: 20 }}>{opt.icon}</span>
+                          <PixelText size={7} color={C.cream}>{opt.text}</PixelText>
+                        </div>
+                        {opt.tag === "creative" && (
+                          <PixelText size={6} color={C.goldMd}>✨ OUTSIDE THE BOX</PixelText>
+                        )}
+                        {opt.tag === "step-up" && (
+                          <PixelText size={6} color={C.bossRed}>⚡ STEP UP</PixelText>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <PixelBtn onClick={() => { if (setOBState) setOBState({ tutorialComplete: true }); onComplete(); }} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
+                  GOT IT — ON TO THE PATH →
+                </PixelBtn>
+              </div>
+            )}
           </div>
         )}
       </div>

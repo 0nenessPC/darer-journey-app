@@ -9,7 +9,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
   const [breathTimer, setBreathTimer] = useState(0);
   const [totalElapsed, setTotalElapsed] = useState(0);
   const timerRef = useRef(null);
-  const practiceDuration = 300; // 5 minutes
+  const practiceDuration = 180; // 3 minutes
   const breatheDurations = { inhale: 4, hold: 2, exhale: 6, rest: 2 };
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
                 When the Storm hits, your{"\n"}breath becomes shallow. Your{"\n"}body reads this as danger.{"\n"}{"\n"}
                 Paced breathing reverses it.{"\n"}Slow, deep breaths tell your{"\n"}nervous system: "I am safe.{"\n"}I am choosing this."{"\n"}{"\n"}
                 The rhythm is 4-2-6-2. Breathe{"\n"}in for 4, hold for 2, out{"\n"}for 6, rest for 2. The long{"\n"}exhale activates calm.{"\n"}{"\n"}
-                We'll practice for 5 minutes.{"\n"}You don't need to do it{"\n"}perfectly. Just follow the{"\n"}rhythm.
+                We'll practice for 3 minutes.{"\n"}You don't need to do it{"\n"}perfectly. Just follow the{"\n"}rhythm.
               </PixelText>
             </DialogBox>
             <PixelBtn onClick={() => setArmoryStep("ready")} color={C.teal} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
