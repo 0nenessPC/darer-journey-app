@@ -1,11 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText } from './shared';
-import { useCloudVoice } from '../hooks/useCloudVoice';
+
+// Browser SpeechRecognition (webkit prefix for Chrome/Safari)
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 /**
  * VoiceInputField — a textarea with a 🎤 mic button on the left.
- * User taps mic → records → Whisper transcribes → text appears in box.
+ * Uses browser-native SpeechRecognition for instant real-time transcription.
+ * User taps mic → speaks → text streams into box in real-time.
  * User can then edit or type manually before submitting.
  */
 export default function VoiceInputField({
@@ -15,42 +18,79 @@ export default function VoiceInputField({
   rows = 3,
   disabled = false,
 }) {
+  const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState(null);
-  const expectingTranscript = useRef(false);
-  const voice = useCloudVoice({ useCloud: true });
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef('');
 
-  const handleMicToggle = async () => {
-    if (voice.isListening) {
-      // Stop recording — transcription will fire via onstop → sets transcript
-      expectingTranscript.current = true;
-      voice.stopListening();
+  const supported = !!SpeechRecognition;
+
+  const handleMicToggle = useCallback(() => {
+    if (isListening) {
+      // Stop recognition — final result already applied
+      recognitionRef.current?.stop();
+      setIsListening(false);
     } else {
+      if (!supported) {
+        setError('Voice input not supported in this browser. Try Chrome or Safari.');
+        return;
+      }
       setError(null);
-      expectingTranscript.current = true;
-      await voice.startListening();
-    }
-  };
+      finalTranscriptRef.current = '';
 
-  // When transcript arrives after we stopped recording, fill the text box
-  React.useEffect(() => {
-    if (voice.transcript && !voice.isListening && expectingTranscript.current) {
-      onChange(voice.transcript);
-      voice.resetTranscript?.();
-      expectingTranscript.current = false;
-    }
-  }, [voice.transcript, voice.isListening]);
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.maxAlternatives = 1;
 
-  // Watch for errors
-  React.useEffect(() => {
-    if (voice.error) {
-      setError(voice.error);
-      expectingTranscript.current = false;
-    }
-  }, [voice.error]);
+      recognition.onresult = (event) => {
+        let interim = '';
+        let final = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const text = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += text;
+          } else {
+            interim += text;
+          }
+        }
+        // Update textarea with accumulated text
+        const current = finalTranscriptRef.current || value;
+        onChange(current + final + interim);
+      };
 
-  const isRecording = voice.isListening;
-  const isTranscribing = expectingTranscript.current && !voice.isListening && !voice.transcript;
-  const statusText = isRecording ? '🔴 Recording...' : isTranscribing ? '⏳ Transcribing...' : '';
+      recognition.onend = () => {
+        // Commit final transcript, stop listening state
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        setIsListening(false);
+        if (event.error === 'no-speech') {
+          setError('No speech detected. Try speaking louder.');
+        } else if (event.error === 'not-allowed') {
+          setError('Microphone access denied. Please allow mic permissions.');
+        } else {
+          setError(`Voice error: ${event.error}`);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+    }
+  }, [isListening, supported, value, onChange]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  const isTranscribing = false; // Browser STT is real-time, no transcribing delay
+  const statusText = isListening ? '🔴 Listening...' : '';
 
   return (
     <div style={{ marginTop: 12 }}>
@@ -58,7 +98,7 @@ export default function VoiceInputField({
         {/* Mic button */}
         <button
           onClick={handleMicToggle}
-          disabled={disabled || isTranscribing}
+          disabled={disabled || isTranscribing || !supported}
           style={{
             width: 40,
             height: 40,
@@ -66,36 +106,36 @@ export default function VoiceInputField({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: isRecording ? C.plum : '#222',
-            border: `2px solid ${isRecording ? C.plumLt : C.teal + '60'}`,
+            background: isListening ? C.plum : '#222',
+            border: `2px solid ${isListening ? C.plumLt : C.teal + '60'}`,
             borderRadius: 6,
-            cursor: disabled || isTranscribing ? 'default' : 'pointer',
+            cursor: disabled || isTranscribing || !supported ? 'default' : 'pointer',
             fontSize: 16,
             color: C.cream,
             transition: 'all 0.15s ease',
-            boxShadow: isRecording ? `0 0 8px ${C.plum}80` : 'none',
-            animation: isRecording ? 'pulse-recording-bar 1.2s ease-in-out infinite' : 'none',
+            boxShadow: isListening ? `0 0 8px ${C.plum}80` : 'none',
+            animation: isListening ? 'pulse-recording-bar 1.2s ease-in-out infinite' : 'none',
             fontFamily: PIXEL_FONT,
-            opacity: disabled || isTranscribing ? 0.5 : 1,
+            opacity: disabled || isTranscribing || !supported ? 0.5 : 1,
             marginTop: 0,
           }}
-          title={isRecording ? 'Tap to stop recording' : 'Tap to start voice input'}
+          title={!supported ? 'Voice input not supported in this browser' : isListening ? 'Tap to stop' : 'Tap to start voice input'}
         >
-          {isRecording ? '⏹' : '🎤'}
+          {isListening ? '⏹' : '🎤'}
         </button>
 
         {/* Text area */}
         <textarea
           value={value}
           onChange={e => onChange(e.target.value)}
-          placeholder={isRecording ? 'Listening...' : isTranscribing ? 'Transcribing...' : placeholder}
-          disabled={disabled || isRecording || isTranscribing}
+          placeholder={isListening ? 'Listening...' : placeholder}
+          disabled={disabled || isListening || isTranscribing}
           rows={rows}
           style={{
             flex: 1,
             padding: 12,
             background: '#1A1218',
-            border: `2px solid ${isRecording ? C.plum : '#5C3A50'}`,
+            border: `2px solid ${isListening ? C.plum : '#5C3A50'}`,
             borderRadius: 4,
             color: C.cream,
             fontSize: 13,
@@ -103,7 +143,7 @@ export default function VoiceInputField({
             outline: 'none',
             resize: 'none',
             boxSizing: 'border-box',
-            opacity: disabled || isRecording || isTranscribing ? 0.6 : 1,
+            opacity: disabled || isListening || isTranscribing ? 0.6 : 1,
           }}
         />
       </div>

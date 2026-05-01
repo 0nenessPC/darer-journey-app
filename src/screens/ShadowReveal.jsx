@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 import { parseShadowSection } from "../utils/parseShadow.js";
@@ -7,11 +7,46 @@ const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&displ
 
 function ShadowReveal({ heroName, shadowText, onContinue }) {
   const [revealed, setRevealed] = useState(0);
+  const speechStartedRef = useRef(false);
 
   const where = parseShadowSection("WHERE IT APPEARS", shadowText);
   const whisper = parseShadowSection("WHAT IT WHISPERS", shadowText);
   const grip = parseShadowSection("HOW IT KEEPS ITS GRIP", shadowText);
 
+  // Chain-read all three sections sequentially, then stop
+  // speechStartedRef prevents double-firing in React Strict Mode (dev)
+  useEffect(() => {
+    if (speechStartedRef.current) return;
+    speechStartedRef.current = true;
+
+    let cancelled = false;
+
+    const speakChain = (texts, idx = 0) => {
+      if (idx >= texts.length || cancelled) return;
+      const text = texts[idx];
+      if (!text) { speakChain(texts, idx + 1); return; }
+
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => /female|zira|samantha|moira/i.test(v.name))
+        || voices.find(v => v.lang.startsWith('en'));
+      if (preferred) utt.voice = preferred;
+
+      utt.onend = () => speakChain(texts, idx + 1);
+      utt.onerror = () => speakChain(texts, idx + 1);
+      window.speechSynthesis.speak(utt);
+    };
+
+    speakChain([where, whisper, grip]);
+
+    return () => {
+      cancelled = true;
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  // Reveal cards on staggered timers (visual only, independent of speech)
   useEffect(() => {
     const t1 = setTimeout(() => setRevealed(1), 600);
     const t2 = setTimeout(() => setRevealed(2), 1800);

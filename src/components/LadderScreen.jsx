@@ -95,7 +95,7 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
-          { icon: "⚗", label: "ARMORY", active: false, onClick: () => setScreen("armory") },
+          { icon: "📚", label: "BANK", active: false, onClick: () => setScreen("bank") },
           { icon: "🏆", label: "LADDER", active: true },
           { icon: "🛡", label: "HERO", active: false, onClick: () => setScreen("profile") },
         ].map(t => (

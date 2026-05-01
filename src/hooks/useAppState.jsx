@@ -20,6 +20,7 @@ export function useAppState() {
   const [quest, setQuest] = useState({ bosses: [], goal: "" });
   const [battleHistory, setBattleHistory] = useState([]);
   const [activeBoss, setActiveBoss] = useState(null);
+  const [focusedBoss, setFocusedBoss] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [onboardingState, setOnboardingState] = useState({});
@@ -41,7 +42,7 @@ export function useAppState() {
   const lastSavedAt = useRef(0);
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (["login", "profile", "armory", "ladder"].includes(screen)) return;
+    if (["login", "profile", "armory", "ladder", "bank"].includes(screen)) return;
     const now = Date.now();
     if (now - lastSavedAt.current < 2000) return;
     lastSavedAt.current = now;
@@ -133,7 +134,11 @@ export function useAppState() {
         })
       : JSON.parse(JSON.stringify(DEFAULT_ARMORY));
     setHero({ ...loadedHero, armory: migratedArmory });
-    if (progress.quest) setQuest(progress.quest);
+    if (progress.quest) {
+      setQuest(progress.quest);
+      const firstUndefeated = progress.quest.bosses?.find(b => !b.defeated);
+      if (firstUndefeated) setFocusedBoss(firstUndefeated);
+    }
     if (progress.battle_history) setBattleHistory(progress.battle_history);
     setShadowText(progress.shadow_text || "");
     if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
@@ -214,6 +219,7 @@ export function useAppState() {
     quest, setQuest,
     battleHistory, setBattleHistory,
     activeBoss, setActiveBoss,
+    focusedBoss, setFocusedBoss,
     isAuthenticated, setIsAuthenticated,
     authReady, setAuthReady,
     onboardingState, setOnboardingState,

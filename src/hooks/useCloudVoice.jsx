@@ -1,5 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
+// Browser SpeechRecognition (webkit prefix for Chrome/Safari)
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 /**
  * useCloudVoice — OpenAI Whisper STT + OpenAI TTS for Dara voice chat.
  *
@@ -22,13 +25,14 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState(null);
-  const [supported, setSupported] = useState(true);
+  const [supported, setSupported] = useState(!!SpeechRecognition);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
   const audioElRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   // ── Cloud STT: Record audio → send to /api/stt ──────────────────
   const startListening = useCallback(async () => {
@@ -106,17 +110,69 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
         setIsListening(false);
       }
     } else {
-      // Browser fallback handled by parent
-      setError('Cloud voice mode is off. Use browser STT instead.');
+      // Browser SpeechRecognition fallback
+      if (!SpeechRecognition) {
+        setError('Voice input not supported in this browser. Try Chrome or Safari.');
+        setIsListening(false);
+        return;
+      }
+      setError(null);
+      setTranscript('');
+      setInterimTranscript('');
+
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = language;
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event) => {
+          let interim = '';
+          let final = '';
+          for (let i = 0; i < event.results.length; i++) {
+            const text = event.results[i][0].transcript;
+            if (event.results[i].isFinal) final += text;
+            else interim += text;
+          }
+          setTranscript(final);
+          setInterimTranscript(interim);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognition.onerror = (event) => {
+          setIsListening(false);
+          if (event.error === 'no-speech') setError('No speech detected. Try speaking louder.');
+          else if (event.error === 'not-allowed') setError('Microphone access denied. Please allow mic permissions.');
+          else setError(`Voice error: ${event.error}`);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Browser STT error:', err);
+        setError('Could not start voice recognition.');
+        setIsListening(false);
+      }
     }
   }, [useCloud, language]);
 
   const stopListening = useCallback(() => {
+    // Cloud STT: stop MediaRecorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
+    // Browser STT: stop SpeechRecognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
     setIsListening(false);
   }, []);
 
@@ -235,6 +291,7 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
     return () => {
       mediaRecorderRef.current?.stop();
       streamRef.current?.getTracks().forEach(t => t.stop());
+      if (recognitionRef.current) recognitionRef.current.stop();
       cancelSpeech();
     };
   }, [cancelSpeech]);

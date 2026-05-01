@@ -1,37 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { C, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, DialogBox } from '../components/shared';
 import { callAI } from '../utils/chat';
-import { useTypewriter } from '../hooks/useTypewriter';
 import VoiceInputField from '../components/VoiceInputField';
-const TTS_CHARS_PER_SEC = 12;
+import { useCloudVoice } from '../hooks/useCloudVoice';
 
 function ValuesTypewriterText({ text }) {
-  const [showFull, setShowFull] = useState(false);
-  const { revealed, isComplete, skipToEnd } = useTypewriter(
-    text,
-    true,
-    TTS_CHARS_PER_SEC / 1000
-  );
-
-  const handleSkip = useCallback(() => {
-    skipToEnd();
-    setShowFull(true);
-  }, [skipToEnd]);
-
-  const displayText = showFull || isComplete ? text : revealed;
-  const canSkip = !isComplete && !showFull;
-
   return (
-    <div style={{ cursor: canSkip ? "pointer" : "default" }}
-      onClick={canSkip ? handleSkip : undefined}
-      title={canSkip ? "Tap to reveal full text" : ""}
-    >
-      <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-        {displayText}
-        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
-      </PixelText>
-    </div>
+    <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+      {text}
+    </PixelText>
   );
 }
 
@@ -44,6 +22,24 @@ export default function ValuesScreen({ heroName, onComplete }) {
   const [generatedValues, setGeneratedValues] = useState([]);
   const [loadingValues, setLoadingValues] = useState(false);
   const [allCards, setAllCards] = useState(null);
+  const guideVoice = useCloudVoice({ useCloud: false });
+  const guideSpokenRef = useRef({});
+
+  // Speak Dara's question + hint on each guide step
+  useEffect(() => {
+    if (step !== "guide") return;
+    const key = `${guideStep}`;
+    if (guideSpokenRef.current[key]) return;
+    guideSpokenRef.current[key] = true;
+    const p = GUIDE_PROMPTS[guideStep];
+    const fullText = `${p.question} ${p.hint}`;
+    guideVoice.speak(fullText, { voice: 'nova', speed: 0.9 });
+  }, [step, guideStep]);
+
+  // Cancel guide speech when leaving the guide screen
+  useEffect(() => {
+    if (step !== "guide") guideVoice.cancelSpeech();
+  }, [step]);
 
   // Outcome-oriented values informed by Behavioral Activation life areas
   // (Lejuez et al., BATD-R) and DBT Wise Mind Values (Linehan/Rathus & Miller, 2015)
@@ -160,21 +156,17 @@ export default function ValuesScreen({ heroName, onComplete }) {
           </div>
 
           <DialogBox speaker="DARA">
-            <ValuesTypewriterText text={`${heroName}, before we step onto
-this journey — one that will be
-rocky, and at times filled with
-pain and challenges — it is
-important to ask ourselves and
-connect with something deeper.
+            <ValuesTypewriterText text={`${heroName}, you've just seen your Shadow's trap for what it is — the territory it claims, the storm it stirs, the escapes it feeds on. It has been hiding in the dark, counting on you never looking at it this clearly.
+
+Now that you can see it — the question is: what will you do about it?
+
+Before we step onto this journey — one that will be rocky, and at times filled with pain and challenges — it is important to ask ourselves and connect with something deeper.
 
 Why are you here?
-What motivates you to start
-this journey?
+What motivates you to start this journey?
 What is worth fighting for?
 
-This isn't about goals you
-"should" have. This is about
-what truly matters to your heart.`} />
+This isn't about goals you "should" have. This is about what truly matters to your heart.`} />
           </DialogBox>
 
           <PixelBtn onClick={() => setStep("cards")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
@@ -372,19 +364,20 @@ what truly matters to your heart.`} />
           )}
 
           <DialogBox speaker="DARA">
-            <ValuesTypewriterText text={`Remember these, ${heroName}.
+            <ValuesTypewriterText text={`You chose these with your heart, ${heroName}. That's what makes them unshakable.
+
 When the Shadow tries to make
 you forget why you started —
 and it will — these are what
 you come back to.
 
-Now I know what you're fighting
-for. Let's find out what you're
-fighting against.`} />
+You are already stronger than
+you think. These values prove it.
+They will guide you in the darkness.`} />
           </DialogBox>
 
           <PixelBtn onClick={() => onComplete(selectedCards, freeText.trim())} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>
-            FACE THE SHADOW →
+            SHOW ME HOW →
           </PixelBtn>
         </div>
       )}

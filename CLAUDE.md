@@ -176,6 +176,80 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 - **Pushed lore update** — `src/screens/ShadowLore.jsx` step 0 now spoken by Dara.
 - **Pushed voice switch** — `src/screens/IntakeScreen.jsx` uses browser STT/TTS for instant response.
 
+### Session: 2026-04-29 (late night) — D.A.R.E.R. Restructure + Armory Fix + AI Test Infra Pushed
+
+- **`src/screens/BossBattle.jsx`** — restructured D.A.R.E.R. steps to match TutorialBattle's sub-step flow:
+  - **RISE (prep)** — 4 sub-steps: WHEN+WHERE combined → CALENDAR REMINDER → ARMORY → SUDs before
+  - **ENGAGE (result)** — 6 sub-steps: outcome → SUDs after → 3 sequential reflection Qs → free text → SUDs comparison ("THE SHADOW LIED") → **functional REPEAT**
+  - REPEAT step: AI generates 3 follow-up exposure variations based on outcome (harder if victory, easier if retreat, creative "I FEEL LUCKY" option). User selects one, choice passed to `onVictory()` with `repeatChoice` field. Fully interactive (unlike TutorialBattle's read-only preview).
+- **`src/screens/TutorialBattle.jsx`** — REPEAT step converted to read-only preview: psychoeducation card + faded non-interactive suggestions + "GOT IT — ON TO THE PATH →" button. Prevents trial users from getting stuck in a repeat loop.
+- **`src/screens/ArmoryScreen.jsx`** — breathing practice reduced from 5 min to 3 min (`practiceDuration: 180`).
+- **AI test infra** — `test/ai-tester.js`, `test/ai-smoke.spec.js`, `test/ai-content-quality.spec.js`, `CLAUDE.md` all pushed to `main`.
+- Build verified: `npx vite build` passes cleanly (111 modules, 588 KB).
+
+### Session: 2026-04-30 — TutorialBattle RISE Restructure + D.A.R.E.R. Progress Bar
+
+- **`src/screens/BossBattle.jsx`** (previous session, continued):
+  - **RISE sub-step 0** restructured: WHEN options → `<input type="time">` picker → inline "SET CALENDAR REMINDER →" button (opens Google Calendar) → WHERE input, all on one screen
+  - Removed old separate sub-step 1 (calendar reminder screen), renumbered ARMORY from 2→1, SUDs from 3→2
+  - **D.A.R.E.R. progress bar**: Added 5th "R" (Repeat) step, made all letters clickable for navigation between completed/accessible prep steps
+  - **Decide section**: Multi-select value cards with `decideSelectedVals` array + separate `decideCustom` input, combined on submit with `"; "` join
+  - **Allow section**: Progressive multi-question flow — fearful thoughts textarea → likelihood slider (0-100%, dynamic color) → severity slider (0-10, dynamic color) → can-handle buttons → fear-showing buttons → physical sensation tags (multi-select)
+  - Removed "HOW LOUD IS THE SHADOW" slider
+  - Removed quick action buttons from battle/engage phase
+  - Repeat extracted as its own `phase === "repeat"` block (was embedded in engage sub-step 5)
+  - Slider dynamic colors: green ≤33%, amber ≤66%, red >66%
+- **`src/screens/TutorialBattle.jsx`** — RISE section restructured to match BossBattle:
+  - `riseSubStep 0`: Combined WHEN + TIME + WHERE on one screen with inline time picker and calendar reminder button
+  - Removed old separate `riseSubStep 1` (calendar reminder screen)
+  - Renumbered ARMORY from sub-step 2→1, SUDs from sub-step 3→2
+  - All `setRiseSubStep` calls updated to new numbering
+  - TutorialBattle's REPEAT step remains a read-only preview within engage sub-step 6 (intentionally different from BossBattle's interactive repeat)
+- Build verified: `npx vite build` passes cleanly (1.13s).
+
+### Session: 2026-04-30 (continued) — Allow Validation, Armory Sync, Practice Integration, SUDs Colors, Reflection Skip
+
+- **Allow section — all fields required before proceeding** (`BossBattle.jsx`, `TutorialBattle.jsx`):
+  - Added 6-field validation gate: `allowFearful` (textarea), `allowLikelihood` (slider 0-100%), `allowSeverity` (slider 0-10), `allowCanHandle` (buttons), `allowFearShowing` (buttons), `allowPhysicalSensations` (multi-select tags)
+  - Progressive disclosure: each field appears only after the previous one is filled
+  - Continue button disabled until all 6 fields are complete
+  - Added "Nothing significant — my body feels fine" option to physical sensations list
+  - Added custom sensation input for manual entry
+
+- **Armory tool display synced with `hero.armory`** (`BossBattle.jsx`, `TutorialBattle.jsx`):
+  - Replaced hardcoded tool list with dynamic rendering from `hero.armory` array
+  - Only unlocked tools (`t.unlocked === true`) shown as clickable buttons in RISE armory step
+  - Locked tools displayed as grayed-out previews with lock icon (opacity 0.5, pointerEvents: "none")
+  - Tool selection stores `selectedArmoryTool` for practice prompt
+
+- **Practice prompt after armory selection** (`BossBattle.jsx`):
+  - RISE sub-step 2: After selecting an armory tool, prompt "Do you want to practice this skill now?" with YES → SKIP buttons
+  - RISE sub-step 2.5: `PracticeSession` launches with the selected tool
+  - `PracticeSession.onComplete` or `onQuit` returns to sub-step 3 (SUDs before)
+  - "Trust strategy alone" button skips practice prompt, goes directly to SUDs
+
+- **SUDs sliders — dynamic color + subtitle** (`BossBattle.jsx`, `TutorialBattle.jsx`):
+  - Added subtitle "How much distress do you feel right now?" to SUDs before/after screens
+  - Slider track color changes based on value: green (≤33), amber (34-66), red (>66)
+  - Same dynamic color applied to the numeric percentage display
+
+- **ENGAGE step — two-path engagement** (`BossBattle.jsx`, `TutorialBattle.jsx`):
+  - Added two buttons: "ENGAGE RIGHT AWAY" (jumps to outcome/result) and "TALK TO DARA FIRST" (enters battle chat)
+  - Battle chat phase replaced BATTLE COMPLETE/RETREAT with single "I'M READY TO ENGAGE" button
+  - New engage sub-step 0.5 for Dara chat before outcome selection
+
+- **Reflection questions — conditional skip** (`BossBattle.jsx`, `TutorialBattle.jsx`):
+  - Q2 ("How severe was it actually?") hidden when Q1 answer is "No, they didn't happen at all"
+  - Q3 ("Did you get through it?") also hidden when Q1 answer is "No, they didn't happen at all"
+  - Selecting "No" clears `fearedSeverity` and `madeItThrough` state to prevent stale values
+  - Continue button auto-enabled when Q1 is "No" (no further answers required)
+
+- **`src/components/PracticeSession.jsx` — timer/phase bug fix**:
+  - Fixed breathing exercise stuck on "BREATHE IN" — original code had `setTimer` nested inside `setBreathPhase`, but outer setter always returned same value causing React to bail out
+  - Rewrote using useEffect pattern: interval increments `timer` independently, separate useEffect watches `timer` + `breathPhase` to detect phase transitions and advance
+  - Applied same pattern to grounding, allowing, and values practice timers
+  - Simplified `togglePause` to flip boolean flag; useEffect handles pause/resume via dependency restart
+
 ### Pending / Next Steps
 - **Fix remaining Values test** — intake auto-transition timing with typewriter/TTS sync delay.
 - **BossBattle prep/visual smoke test** — navigate to a boss on the map, enter prep phase, validate DARER steps layout.

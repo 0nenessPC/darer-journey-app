@@ -13,31 +13,17 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
     }}>
       <link href={FONT_LINK} rel="stylesheet" />
 
-      {/* STEP 0 — Dara pivots from meeting to facing the Shadow */}
+      {/* STEP 0 — Dara: meeting + F.E.A.R. reveal (combined) */}
       {step === 0 && (
-        <div style={{ animation: "fadeIn 0.6s ease-out" }}>
-          <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.7 }}>🧚</div>
-          <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-              {heroName}, now that we've{"\n"}found each other... there's{"\n"}something you need to face{"\n"}before we can walk this{"\n"}road together.{"\n"}{"\n"}
-              F.E.A.R.{"\n"}Not the feeling — the enemy{"\n"}itself.{"\n"}{"\n"}
-              Looking into its eyes is{"\n"}how we map where to go.
-            </PixelText>
-          </DialogBox>
-          <PixelBtn onClick={() => setStep(1)}>
-            CONTINUE
-          </PixelBtn>
-        </div>
-      )}
-
-      {step === 1 && (
         <div style={{ animation: "fadeIn 0.6s ease-out" }}>
           <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.7 }}>👁</div>
           <DialogBox speaker="DARA">
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-              {heroName}, before we go further,{"\n"}you need to understand the true{"\n"}nature of the Shadow.{"\n"}{"\n"}
-              The Shadow of Fear has no fixed{"\n"}shape. That is what makes it so{"\n"}dangerous. It reaches into the{"\n"}deepest corners of your mind and{"\n"}body, and turns what it finds{"\n"}there into a monster — one so{"\n"}terrifying you dare not look at{"\n"}it, or even be in the same room{"\n"}with it.{"\n"}{"\n"}
-              It feeds on avoidance. Every{"\n"}time you look away, it grows{"\n"}stronger.
+              {heroName}, now that we've{"\n"}found each other... before we{"\n"}can walk this road together,{"\n"}there's something you need{"\n"}to face.{"\n"}{"\n"}
+              F.E.A.R. Not the feeling —{"\n"}the enemy itself.{"\n"}{"\n"}
+              The Shadow of Fear has no{"\n"}fixed shape. That's what makes{"\n"}it so dangerous. It reaches{"\n"}into the deepest corners of{"\n"}your mind and body, and turns{"\n"}what it finds there into a{"\n"}monster — one so terrifying{"\n"}you dare not look at it, or{"\n"}even be in the same room{"\n"}with it.{"\n"}{"\n"}
+              It feeds on avoidance. Every{"\n"}time you look away, it grows{"\n"}stronger.{"\n"}{"\n"}
+              Looking into its eyes is how{"\n"}we map where to go.
             </PixelText>
           </DialogBox>
           <PixelBtn onClick={onPsychoed} style={{ marginTop: 12 }}>
@@ -46,7 +32,8 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
         </div>
       )}
 
-      {step === 2 && (
+      {/* STEP 1 — Dara post-PsychoEd: ready to map personal Shadow */}
+      {step === 1 && (
         <div style={{ animation: "fadeIn 0.6s ease-out" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔥</div>
           <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 16 }}>

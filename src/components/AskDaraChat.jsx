@@ -2,20 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
-import { useTypewriter } from '../hooks/useTypewriter';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
-const TTS_CHARS_PER_SEC = 12;
 
 function AskDaraTypewriterBubble({ text, muted }) {
-  const [showFull, setShowFull] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
-  const { revealed, isComplete, skipToEnd } = useTypewriter(
-    text,
-    true,
-    TTS_CHARS_PER_SEC / 1000
-  );
 
-  // Start speech simultaneously with typewriter
+  // Start speech simultaneously with text render
   React.useEffect(() => {
     if (muted || !text || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -32,29 +24,14 @@ function AskDaraTypewriterBubble({ text, muted }) {
     return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
   }, [text, muted]);
 
-  const handleSkip = React.useCallback(() => {
-    skipToEnd();
-    window.speechSynthesis.cancel();
-    setShowFull(true);
-    setIsSpeaking(false);
-  }, [skipToEnd]);
-
-  const displayText = showFull || isComplete ? text : revealed;
-  const canSkip = !isComplete && !showFull;
-
   return (
     <div style={{
       maxWidth: "80%", padding: "10px 14px", borderRadius: 8,
-      background: muted ? "#222" : "#222",
+      background: "#222",
       border: `2px solid ${C.teal}40`,
-      cursor: canSkip ? "pointer" : "default",
-    }}
-    onClick={canSkip ? handleSkip : undefined}
-    title={canSkip ? "Tap to reveal full text" : ""}
-    >
+    }}>
       <PixelText size={7} color={C.cream} style={{ whiteSpace: "pre-wrap" }}>
-        {displayText}
-        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
+        {text}
       </PixelText>
     </div>
   );

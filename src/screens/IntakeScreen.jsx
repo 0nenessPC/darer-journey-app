@@ -2,67 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { buildHeroContext } from "../utils/aiHelper.jsx";
 import { useAIChat } from "../utils/chat";
 import { useCloudVoice } from "../hooks/useCloudVoice";
-import { useTypewriter } from "../hooks/useTypewriter";
 import { VoiceInputBar } from "../components/VoiceToggle";
 import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
-// Estimated speech rate: ~150 WPM → ~2.5 words/sec → ~12 chars/sec (avg word=5 chars)
-const TTS_CHARS_PER_SEC = 12;
-
-function TypewriterBubble({ text, role, onSkip, speak, cancelSpeech }) {
-  const [showFull, setShowFull] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
-  // Typewriter: reveal text at speech pace
-  const { revealed, isComplete, skipToEnd } = useTypewriter(
-    text,
-    true,
-    TTS_CHARS_PER_SEC / 1000
-  );
-
-  // Speak via cloud TTS simultaneously with typewriter
-  useEffect(() => {
-    if (!text || !speak || !isComplete) return;
-    speak(text, { voice: 'nova', speed: 0.9 }).then(() => {
-      setIsSpeaking(false);
-    }).catch(() => {
-      setIsSpeaking(false);
-    });
-    setIsSpeaking(true);
-    return () => { cancelSpeech?.(); setIsSpeaking(false); };
-  }, [text, isComplete]);
-
-  const handleSkip = useCallback(() => {
-    skipToEnd();
-    cancelSpeech?.();
-    setShowFull(true);
-    if (onSkip) onSkip();
-  }, [skipToEnd, onSkip, cancelSpeech]);
-
-  const displayText = showFull || isComplete ? text : revealed;
-  const canSkip = !isComplete && !showFull;
-
-  return (
-    <div style={{
-      maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
-      background: role === "user" ? C.plum : "#1A1218",
-      border: "2px solid #5C3A50",
-      position: "relative",
-      cursor: canSkip ? "pointer" : "default",
-    }}
-    onClick={canSkip ? handleSkip : undefined}
-    title={canSkip ? "Tap to reveal full text" : ""}
-    >
-      <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>
-        {displayText}
-        {canSkip && <span style={{ opacity: 0.3 }}>▌</span>}
-      </PixelText>
-    </div>
-  );
-}
 
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
@@ -89,9 +33,17 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
     if (ok) setInput("");
   };
 
-  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, typing]);
   const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
   const hasShadowSummary = lastAssistant?.text?.includes("SHADOW'S TRUE NATURE") || lastAssistant?.text?.includes("WHERE IT APPEARS");
+
+  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, typing]);
+
+  // Speak Dara's latest message via browser TTS
+  useEffect(() => {
+    if (!muted && lastAssistant?.text) {
+      voice.speak(lastAssistant.text, { voice: 'nova', speed: 0.9 });
+    }
+  }, [lastAssistant?.text, muted]);
 
   // Auto-transition when Dara generates the shadow summary
   useEffect(() => {
@@ -134,12 +86,13 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
                 <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
               </div>
             ) : (
-              <TypewriterBubble
-                text={muted ? m.text : m.text}
-                role={m.role}
-                speak={muted ? null : voice.speak}
-                cancelSpeech={voice.cancelSpeech}
-              />
+              <div style={{
+                maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
+                background: "#1A1218",
+                border: "2px solid #5C3A50",
+              }}>
+                <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
+              </div>
             )}
           </div>
         ))}

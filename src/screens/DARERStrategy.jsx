@@ -53,9 +53,10 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
         <PixelText size={11} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>THE DARER STRATEGY</PixelText>
         <DialogBox speaker="DARA">
           <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-            Now you've seen your Shadow's{"\n"}true nature — its territory, its{"\n"}storm, and its escape.{"\n"}{"\n"}
+            {heroName}, you've already{"\n"}seen the Shadow's trap. You{"\n"}know what you're fighting for.{"\n"}{"\n"}
+            Now let's look at how you{"\n"}break it.{"\n"}{"\n"}
             Every trick the Shadow uses{"\n"}has a counter. The D.A.R.E.R.{"\n"}path was built to break each{"\n"}one.{"\n"}{"\n"}
-            Let me show you your strategies.
+            Here are your strategies.
           </PixelText>
         </DialogBox>
       </div>

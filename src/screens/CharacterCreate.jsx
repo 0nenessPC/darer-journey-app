@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 
-export default function CharacterCreate({ onComplete, initialName, darerId, obState, setOBState }) {
+export default function CharacterCreate({ onComplete, onFastForward, initialName, darerId, obState, setOBState }) {
   const step = obState?.step ?? "name";
   const setStep = (v) => setOBState({ step: typeof v === 'function' ? v(step) : v });
   const name = obState?.name ?? initialName ?? "";
@@ -122,6 +122,15 @@ export default function CharacterCreate({ onComplete, initialName, darerId, obSt
               <PixelBtn onClick={() => setStep("meetDara")} color={C.gold} textColor={C.charcoal}>
                 CONTINUE →
               </PixelBtn>
+              {onFastForward && (
+                <button onClick={onFastForward} style={{
+                  marginTop: 8, width: "100%", padding: "8px 16px",
+                  background: "transparent", border: "1px dashed #555",
+                  borderRadius: 4, cursor: "pointer",
+                }}>
+                  <PixelText size={7} color="#666">⚡ FAST-FORWARD TO BATTLES</PixelText>
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -9,13 +9,13 @@ import TutorialBattle from "./screens/TutorialBattle.jsx";
 import GameMap from "./components/GameMap.jsx";
 import HeroProfile from "./components/HeroProfile.jsx";
 import ExposureSortScreen from "./screens/ExposureSortScreen.jsx";
+import ExposureBankScreen from "./screens/ExposureBankScreen.jsx";
 import CharacterCreate from "./screens/CharacterCreate.jsx";
 import ValuesScreen from "./screens/ValuesScreen.jsx";
 import AskDaraChat from "./components/AskDaraChat.jsx";
 import PsychoEdScreen from "./screens/PsychoEdScreen.jsx";
 import PracticeSession from "./components/PracticeSession.jsx";
 import DARERStrategy from "./screens/DARERStrategy.jsx";
-import GameArmory from "./screens/GameArmory.jsx";
 import LoginScreen from "./screens/LoginScreen.jsx";
 import GameIntro from "./screens/GameIntro.jsx";
 import ShadowLore from "./screens/ShadowLore.jsx";
@@ -40,6 +40,7 @@ export default function DARERQuest() {
     quest, setQuest,
     battleHistory, setBattleHistory,
     activeBoss, setActiveBoss,
+    focusedBoss, setFocusedBoss,
     isAuthenticated, setIsAuthenticated,
     authReady,
     onboardingState, setOnboardingState,
@@ -65,10 +66,62 @@ export default function DARERQuest() {
     setHero, setQuest, setActiveBoss, setScreen, setShadowText, setBattleHistory,
   });
 
+  // --- Fast-forward: populate mock hero data, skip onboarding → tutorial ---
+  const handleFastForward = useCallback(() => {
+    const heroName = hero.darerId;
+    const mockStats = { courage: 3, resilience: 3, openness: 3 };
+    const mockCoreValues = [
+      { id: "a8", word: "Connection", desc: "Being fully present with others in what I'm doing", icon: "🔗", dim: "openness" },
+      { id: "a10", word: "Courage", desc: "Being brave and persisting in the face of fear", icon: "⚔️", dim: "courage" },
+      { id: "a11", word: "Curiosity", desc: "Being open-minded, interested, willing to explore", icon: "🔍", dim: "openness" },
+    ];
+    const mockValues = [
+      { id: "v1", text: "I want to feel comfortable being myself around others", icon: "🌟" },
+      { id: "v2", text: "I want to speak up in groups without feeling paralyzed", icon: "🗣" },
+      { id: "v3", text: "I want to build genuine friendships", icon: "❤" },
+    ];
+    const mockShadow = `The hero experiences moderate to severe social anxiety across multiple domains. Primary fears include: being judged negatively in social situations, speaking in groups due to fear of appearing incompetent, authority figures and feeling scrutinized, eating in public due to fear of being watched. Coping strategies are predominantly avoidant: avoiding social gatherings and parties, staying quiet in group conversations, using phone as distraction, limiting eye contact. Core belief is "If people see the real me, they'll think I'm awkward and weird." Physical symptoms include racing heart, blushing, and stomach tightness in social situations. Currently experiencing significant functional impact: avoiding workplace social events, rarely initiating conversations, feeling exhausted after social interactions. The hero's shadow manifests as a harsh inner critic that amplifies perceived social threats and minimizes positive social evidence.`;
+
+    setHero(h => ({
+      ...h,
+      name: heroName,
+      darerId: heroName,
+      stats: mockStats,
+      strengths: [mockCoreValues[0].word, mockCoreValues[1].word, mockCoreValues[2].word],
+      coreValues: mockCoreValues,
+      values: mockValues,
+      valuesText: mockValues.map(v => v.text).join(". "),
+      traits: [
+        { type: "challenge", text: "Fear of being judged negatively in social situations" },
+        { type: "challenge", text: "Avoiding group conversations and social gatherings" },
+        { type: "challenge", text: "Difficulty speaking up in meetings and groups" },
+        { type: "challenge", text: "Fear of authority figures and feeling scrutinized" },
+        { type: "challenge", text: "Discomfort eating in public settings" },
+      ],
+      sads: 65,
+    }));
+    setShadowText(mockShadow);
+    setQuest(q => ({ ...q, goal: mockValues[0].text }));
+
+    // Mark all intermediate screens as complete so resume skips them
+    setOnboardingState({
+      shadowLore: { step: 99 },
+      psychoed: { step: 99 },
+      shadowLorePost: { step: 99 },
+      shadowReveal: { revealed: true },
+      values: { step: "complete" },
+      darerStrategy: { step: 99 },
+      armoryIntro: { step: "complete" },
+    });
+
+    // Skip tutorial directly, land on exposureSort
+    setScreen("exposureSort");
+  }, [hero.darerId, setHero, setShadowText, setQuest, setOnboardingState, setScreen]);
+
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'DM Sans', sans-serif", position: "relative" }}>
       {/* Global back button — shown on all screens except login and map */}
-      {!["login", "map", "battle"].includes(screen) && screenHistory.length > 0 && (
+      {!["login", "map", "battle", "bank"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 8, zIndex: 100,
           background: "#1A1218CC", border: "1px solid #5C3A50",
@@ -125,7 +178,7 @@ export default function DARERQuest() {
       <OnboardingProgress screen={screen} />
       <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
-      {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
+      {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} onFastForward={handleFastForward} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
       {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {
         setHero(h => ({ ...h, values: cards, valuesText: text }));
         setScreen("darerStrategy");
@@ -134,7 +187,7 @@ export default function DARERQuest() {
       {/* mapPreview → shadowLore → psychoed → shadowLorePost → intake → shadowReveal → values → darerStrategy → tutorial → exposureSort */}
       {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 0 })} setOBState={(s) => setOBState("shadowLore", s)} />}
       {screen === "psychoed" && <PsychoEdScreen heroName={hero.name} heroValues={hero.values || []} onContinue={() => setScreen("shadowLorePost")} obState={getOBState("psychoed", { step: 0 })} setOBState={(s) => setOBState("psychoed", s)} />}
-      {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={2} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLorePost", { step: 2 })} setOBState={(s) => setOBState("shadowLorePost", s)} />}
+      {screen === "shadowLorePost" && <ShadowLore heroName={hero.name} initialStep={1} onPsychoed={() => {}} onReady={() => setScreen("intake")} obState={getOBState("shadowLorePost", { step: 1 })} setOBState={(s) => setOBState("shadowLorePost", s)} />}
       {screen === "intake" && <IntakeScreen heroName={hero.name} hero={hero} quest={quest} onComplete={handleIntakeComplete} obState={getOBState("intake", { chatHistory: [] })} setOBState={(s) => setOBState("intake", s)} />}
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("values")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
       {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armoryIntro")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
@@ -142,17 +195,21 @@ export default function DARERQuest() {
       {screen === "tutorial" && <TutorialBattle heroName={hero.name} hero={hero} quest={quest} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
+        const firstBoss = bosses.length > 0 ? bosses[0] : null;
+        if (firstBoss) setFocusedBoss(firstBoss);
         setScreen("map");
       }} obState={getOBState("exposureSort", { currentCard: 0, accepted: [], rejected: [], done: false })} setOBState={(s) => setOBState("exposureSort", s)} />}
       {/* === END CLINICAL FLOW === */}
       {screen === "map" && <GameMap quest={quest} hero={hero} battleHistory={battleHistory} onSelectBoss={b => {
         setOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null, riseSubStep: 0 });
-        setActiveBoss(b);
+        // Restore HP for repeat attempts on defeated bosses
+        const battleBoss = b.defeated ? { ...b, hp: b.maxHp || 100 } : b;
+        setActiveBoss(battleBoss);
         setScreen("battle");
-      }} onViewProfile={() => setScreen("profile")} onArmory={() => setScreen("armory")} onLadder={() => setScreen("ladder")} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
-      {screen === "battle" && activeBoss && <BossBattle key={activeBoss.id} boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} setActiveBoss={setActiveBoss} setScreen={setScreen} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
-      {screen === "profile" && <HeroProfile hero={hero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
-      {screen === "armory" && <GameArmory hero={hero} setHero={setHero} setScreen={setScreen} onBack={() => setScreen("map")} />}
+      }} onViewProfile={() => setScreen("profile")} onLadder={() => setScreen("ladder")} onBank={() => setScreen("bank")} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
+      {screen === "battle" && activeBoss && <BossBattle key={activeBoss.id} boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} setActiveBoss={setActiveBoss} setScreen={setScreen} onBank={() => setScreen("bank")} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
+      {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} />}
+      {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
 
       {/* Delete Confirmation Dialog */}
