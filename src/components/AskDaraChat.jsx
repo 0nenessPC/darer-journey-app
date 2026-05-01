@@ -3,6 +3,7 @@ import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
+import { useCloudVoice } from '../hooks/useCloudVoice';
 
 function AskDaraTypewriterBubble({ text, muted }) {
   const [isSpeaking, setIsSpeaking] = React.useState(false);

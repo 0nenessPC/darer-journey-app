@@ -39,6 +39,65 @@ function BattleTypewriterBubble({ text, muted }) {
   );
 }
 
+// Debrief free-text sub-step: Dara speaks the question, user can type or speak their response
+function DebriefFreeText({ engageFreeText, setEngageFreeText, onNext, voice }) {
+  const [spoke, setSpoke] = useState(false);
+  const DEBRIEF_QUESTION = "Before we look at what the numbers tell us — in your own words, what did you learn from this battle?";
+
+  // Auto-speak Dara's question when this sub-step mounts
+  useEffect(() => {
+    if (!spoke) {
+      voice.speak(DEBRIEF_QUESTION, { speed: 0.9 });
+      setSpoke(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleVoiceSend = (text) => {
+    setEngageFreeText(text);
+  };
+
+  return (
+    <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+      <DialogBox speaker="DARA">
+        <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+          Before we look at what the{"\n"}numbers tell us — in your own{"\n"}words, what did you learn{"\n"}from this battle?
+        </PixelText>
+      </DialogBox>
+
+      {voice.supported ? (
+        <VoiceInputBar
+          input={engageFreeText}
+          onInputChange={setEngageFreeText}
+          onSend={handleVoiceSend}
+          typing={voice.isSpeaking}
+          disabled={false}
+          voice={voice}
+          placeholder="Speak your reflection or type below..."
+          style={{ marginTop: 14 }}
+        />
+      ) : null}
+
+      <textarea
+        value={engageFreeText}
+        onChange={e => setEngageFreeText(e.target.value)}
+        placeholder="What surprised you? What will you carry forward?..."
+        rows={3}
+        style={{
+          width: "100%", minHeight: 80, padding: 10, marginTop: voice.supported ? 8 : 14,
+          background: "#1A1218", border: "2px solid #5C3A50",
+          borderRadius: 4, color: C.cream, fontSize: 12,
+          fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+          lineHeight: 1.6, boxSizing: "border-box",
+        }}
+      />
+
+      <PixelBtn onClick={onNext} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+        SEE WHAT THE SHADOW DID →
+      </PixelBtn>
+    </div>
+  );
+}
+
 export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, setActiveBoss, setScreen, onBank, obState = {}, setOBState, shadowText = "", battleHistory = [] }) {
   const [phase, setPhase] = useState(obState.phase || "prep");
   const [prepStep, setPrepStep] = useState(obState.prepStep ?? 0);
@@ -59,7 +118,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   const [repeatOptions, setRepeatOptions] = useState([]);
   const [selectedRepeat, setSelectedRepeat] = useState("");
   const [chatInput, setChatInput] = useState("");
-  const [battleVoiceMode, setBattleVoiceMode] = useState(false);
+  const [battleVoiceMode, setBattleVoiceMode] = useState(true);
   const [victoryVoiceMode, setVictoryVoiceMode] = useState(false);
   const chatRef = useRef(null);
 
@@ -77,6 +136,11 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
   // Track selected values separately for toggle highlighting
   const [decideSelectedVals, setDecideSelectedVals] = useState([]);
 
+  // Engagement loot: proof of completion
+  const [showOutcome, setShowOutcome] = useState(false);
+  const [lootText, setLootText] = useState("");
+  const [lootImage, setLootImage] = useState(null);
+
   // Track the furthest D.A.R.E.R. step the user has reached (so they can go back but not skip ahead)
   const [maxPrepReached, setMaxPrepReached] = useState(0);
   const advancePrepStep = (to) => {
@@ -87,6 +151,15 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
 
   // Voice hook
   const voice = useCloudVoice({ useCloud: false });
+
+  // Auto-speak Dara's encouragement when Decide section appears (motivational interviewing: express empathy, build self-efficacy)
+  const decideSpoken = useRef(false);
+  useEffect(() => {
+    if (phase === "prep" && prepStep === 0 && !decideSpoken.current) {
+      decideSpoken.current = true;
+      voice.speak(`${hero.name}, this battle is yours to face. The fear is real, but so is your strength. What matters to you most about facing this? That "why" — that's your anchor.`, { speed: 0.9 });
+    }
+  }, [phase, prepStep]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset internal state when a new boss is selected (fixes stale state from batched React updates)
   const lastBossIdRef = useRef(null);
@@ -120,6 +193,7 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
       setAllowCustomSensation("");
       setDecideCustom("");
       setDecideSelectedVals([]);
+      decideSpoken.current = false;
     }
   }, [boss?.id]);
 
@@ -480,7 +554,7 @@ No other text.`,
 
                     <PixelBtn
                       onClick={() => setRiseSubStep(1)}
-                      disabled={!exposureWhen}
+                      disabled={!exposureWhen || !exposureWhere.trim()}
                       color={C.gold} textColor={C.charcoal}
                       style={{ width: "100%", marginTop: 16 }}
                     >
@@ -861,36 +935,117 @@ No other text.`,
       {phase === "result" && (
         <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "20px 20px 32px" }}>
 
-          {/* Sub-step 0: Outcome selection */}
+          {/* Sub-step 0: Outcome selection — sequential reveal */}
           {engageSubStep === 0 && (
             <div style={{ animation: "fadeIn 0.4s ease-out" }}>
               <DialogBox speaker="DARA">
                 <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                  You stepped into the arena.{"\n"}Whatever happened — you showed{"\n"}up. That matters.{"\n"}{"\n"}
-                  How did it go?
+                  You stepped into the arena.{"\n"}Whatever happened — you showed{"\n"}up. That matters.
                 </PixelText>
               </DialogBox>
 
-              <div style={{ marginTop: 14 }}>
-                {[
-                  { id: "victory", label: "⚔ BOSS DEFEATED — I did it!", desc: "I stayed all the way through" },
-                  { id: "partial", label: "🩹 PARTIAL VICTORY — I went partway", desc: "I didn't finish, but I stayed longer than I usually would" },
-                  { id: "retreat", label: "🛡 STRATEGIC RETREAT — Not this time", desc: "The Storm was too strong, but I'm not giving up" },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => setOutcome(opt.id)} style={{
-                    display: "block", width: "100%", marginBottom: 8, padding: "14px 12px",
-                    borderRadius: 4, border: `2px solid ${outcome === opt.id ? C.goldMd : "#5C3A50"}`,
-                    background: outcome === opt.id ? C.goldMd + "12" : "#1A1218",
-                    cursor: "pointer", textAlign: "left",
-                  }}>
-                    <PixelText size={7} color={outcome === opt.id ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
-                      {opt.label}
-                    </PixelText>
-                  </button>
-                ))}
-              </div>
+              {!showOutcome ? (
+                <PixelBtn onClick={() => setShowOutcome(true)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  📋 I AM READY TO REPORT
+                </PixelBtn>
+              ) : (
+                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                  <div style={{ marginTop: 14 }}>
+                    {[
+                      { id: "victory", label: "⚔ BOSS DEFEATED — I did it!", desc: "I stayed all the way through" },
+                      { id: "partial", label: "🩹 PARTIAL VICTORY — I went partway", desc: "I didn't finish, but I stayed longer than I usually would" },
+                      { id: "retreat", label: "🛡 STRATEGIC RETREAT — Not this time", desc: "The Storm was too strong, but I'm not giving up" },
+                    ].map(opt => (
+                      <button key={opt.id} onClick={() => setOutcome(opt.id)} style={{
+                        display: "block", width: "100%", marginBottom: 8, padding: "14px 12px",
+                        borderRadius: 4, border: `2px solid ${outcome === opt.id ? C.goldMd : "#5C3A50"}`,
+                        background: outcome === opt.id ? C.goldMd + "12" : "#1A1218",
+                        cursor: "pointer", textAlign: "left",
+                      }}>
+                        <PixelText size={7} color={outcome === opt.id ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
+                          {opt.label}
+                        </PixelText>
+                      </button>
+                    ))}
+                  </div>
 
-              <PixelBtn onClick={() => setEngageSubStep(1)} disabled={!outcome} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                  {outcome && (
+                    <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                      <PixelBtn onClick={() => setEngageSubStep(0.5)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
+                        🎒 SHOW ME THE LOOT
+                      </PixelBtn>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sub-step 0.5: Loot — proof of completion */}
+          {engageSubStep === 0.5 && (
+            <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+              <DialogBox speaker="DARA">
+                <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                  Every battle leaves a mark.{"\n"}{"\n"}
+                  Share a moment from this{"\n"}exposure — a photo, a memory, a{"\n"}feeling. This is your loot.
+                </PixelText>
+              </DialogBox>
+
+              {/* Image upload */}
+              <label style={{
+                display: "block", width: "100%", padding: 16, marginTop: 14,
+                border: `2px dashed #5C3A50`, borderRadius: 6,
+                background: "#1A1218", textAlign: "center", cursor: "pointer",
+                boxSizing: "border-box",
+              }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setLootImage(reader.result);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  style={{ display: "none" }}
+                />
+                {lootImage ? (
+                  <div style={{ position: "relative" }}>
+                    <img src={lootImage} alt="Battle proof" style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 6 }} />
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLootImage(null); }} style={{
+                      position: "absolute", top: 8, right: 8, background: "#1A1218CC", border: "1px solid #5C3A50",
+                      borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer",
+                    }}>
+                      <PixelText size={8} color={C.cream}>✕</PixelText>
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
+                    <PixelText size={7} color={C.grayLt}>Tap to upload a photo</PixelText>
+                  </div>
+                )}
+              </label>
+
+              {/* Meaningful moment text */}
+              <textarea
+                value={lootText}
+                onChange={e => setLootText(e.target.value)}
+                placeholder="Share a meaningful moment — what did you notice, feel, or create?..."
+                rows={3}
+                style={{
+                  width: "100%", minHeight: 80, padding: 10, marginTop: 12,
+                  background: "#1A1218", border: "2px solid #5C3A50",
+                  borderRadius: 4, color: C.cream, fontSize: 12,
+                  fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+                  lineHeight: 1.6, boxSizing: "border-box",
+                }}
+              />
+
+              <PixelBtn onClick={() => setEngageSubStep(1)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                 CONTINUE →
               </PixelBtn>
             </div>
@@ -984,7 +1139,7 @@ No other text.`,
               {fearedSeverity && fearedHappened !== "No, they didn't happen at all" && (
                 <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
                   <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
-                    3. Even though it was difficult — did you get through it?
+                    3. Did you get through it?
                   </PixelText>
                   {["Yes — I made it through, even if it was hard", "I'm still working on it, but I know I can", "Not this time, but I learned something"].map(opt => (
                     <button key={opt} onClick={() => setMadeItThrough(opt)} style={{
@@ -1007,31 +1162,12 @@ No other text.`,
 
           {/* Sub-step 3: Free text — what did you learn */}
           {engageSubStep === 3 && (
-            <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-              <DialogBox speaker="DARA">
-                <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                  Before we look at what the{"\n"}numbers tell us — in your own{"\n"}words, what did you learn{"\n"}from this battle?
-                </PixelText>
-              </DialogBox>
-
-              <textarea
-                value={engageFreeText}
-                onChange={e => setEngageFreeText(e.target.value)}
-                placeholder="What surprised you? What will you carry forward?..."
-                rows={3}
-                style={{
-                  width: "100%", minHeight: 80, padding: 10, marginTop: 14,
-                  background: "#1A1218", border: "2px solid #5C3A50",
-                  borderRadius: 4, color: C.cream, fontSize: 12,
-                  fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                  lineHeight: 1.6, boxSizing: "border-box",
-                }}
-              />
-
-              <PixelBtn onClick={() => setEngageSubStep(4)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-                SEE WHAT THE SHADOW DID →
-              </PixelBtn>
-            </div>
+            <DebriefFreeText
+              engageFreeText={engageFreeText}
+              setEngageFreeText={setEngageFreeText}
+              onNext={() => setEngageSubStep(4)}
+              voice={voice}
+            />
           )}
 
           {/* Sub-step 4: SUDs comparison + victory chat */}
@@ -1070,7 +1206,7 @@ No other text.`,
 
               <DialogBox speaker="DARA">
                 <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
-                  {heroName}, do you see what{"\n"}happened?{"\n"}{"\n"}
+                  {hero.name}, do you see what{"\n"}happened?{"\n"}{"\n"}
                   The Shadow told you it would be{"\n"}unbearable. {suds.before > suds.after ? "But the actual experience was less intense than the fear predicted." : "And you survived it."}{"\n"}{"\n"}
                   {engageFreeText ? `"${engageFreeText}" — that's wisdom earned through action, not just thought.{"\n"}{"\n"}` : ""}
                   This is the D.A.R.E.R. cycle:{"\n"}Decide. Allow. Rise. Engage.{"\n"}Repeat. Every battle weakens{"\n"}the Shadow.{"\n"}{"\n"}
@@ -1228,8 +1364,8 @@ No other text.`,
       )}
       {/* Bottom nav */}
       <div style={{
-        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218", zIndex: 20,
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        maxWidth: 480, margin: "0 auto", display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218", zIndex: 20,
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: onRetreat },

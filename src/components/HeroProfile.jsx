@@ -315,8 +315,8 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
 
       {/* Bottom nav — 4 tabs, HERO active */}
       <div style={{
-        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        maxWidth: 480, margin: "0 auto", display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },

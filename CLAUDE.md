@@ -255,3 +255,40 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 - **BossBattle prep/visual smoke test** — navigate to a boss on the map, enter prep phase, validate DARER steps layout.
 - **IntakeScreen real-AI visual test** — run intake chat with real AI responses, validate chat UI, typewriter bubbles, TTS.
 - **Visual regression baseline** — store approved screenshots as baselines to detect layout regressions.
+
+### Session: 2026-05-01 — Engagement Overhaul, Voice Consistency, Bottom Nav Fix
+
+- **`src/screens/BossBattle.jsx`**:
+  - **Engage sub-step 0 redesign** — sequential reveal flow: Dara's message → "I AM READY TO REPORT" → 3 outcome options appear → "SHOW ME THE LOOT" → proof upload area
+  - **Engage sub-step 0.5 (Loot)** — new proof upload with image picker (base64) + text input for meaningful moments
+  - **Decide voice encouragement** — auto-speaks motivational interviewing message when prepStep === 0 (empathy + self-efficacy + anchor framing)
+  - **DebriefFreeText component** — extracted sub-step 3 with auto-TTS + VoiceInputBar for spoken reflection
+  - **Fixed `heroName` not defined** → changed to `hero.name` in post-battle Dara speech
+  - **battleVoiceMode default** → `false` → `true` so Dara auto-speaks in battle phase
+  - **Q3 text simplified** — "Even though it was difficult — did you get through it?" → "Did you get through it?"
+  - **Bottom nav fix** — `position: fixed, left: 50%, translateX(-50%), width: 100%` → `left: 0, right: 0, maxWidth: 480, margin: 0 auto` (prevents overflow on wide screens)
+
+- **`src/screens/TutorialBattle.jsx`**:
+  - **SUDs before/after** — replaced 1-10 button grid with 0-100 range slider (matches BossBattle)
+  - **Rise dialog** — "The rehearsal is done. You've felt the Storm..." → "You're ready. The Storm may strike..." (removed incorrect rehearsal reference)
+  - **Progress bar** — 4 steps → 5 steps (D, A, R, E, R) with clickable navigation
+  - **Voice/TTS** — added `useCloudVoice` hook, auto-speak AI replies, VoiceInputBar in coach chat (sub-step 0.5)
+  - **Q3 text simplified** — same as BossBattle
+
+- **`src/components/PracticeSession.jsx`**:
+  - **Breathing duration selector** — 1min / 2min / 3min / 5min options (minimum 60s) with `elapsed` timer tracking
+  - **Running display** — shows elapsed/total time instead of "Cycle 1/1"
+  - **Fixed template literal syntax error** — stray quote in ternary broke build
+
+- **`src/components/GameMap.jsx`** — bottom nav centered with `left: 0, right: 0, maxWidth: 480, margin: 0 auto`
+- **`src/components/HeroProfile.jsx`** — same bottom nav fix
+- **`src/components/LadderScreen.jsx`** — same bottom nav fix
+- **`src/screens/ExposureBankScreen.jsx`** — same bottom nav fix
+
+- **`src/components/AskDaraChat.jsx`** — added missing `useCloudVoice` import (fixed "useCloudVoice is not defined" error)
+
+- **`src/screens/ValuesScreen.jsx`** — intro lore tightened from ~95 to ~55 words, 8→3 paragraphs
+
+- **`test/ai-tester.js`** — exposure activity library saved as memory docs (4 files covering Heimberg Protocol, DCS study, SMU/BU/MGH protocols)
+
+- Build verified: `npx vite build` passes cleanly (1.17s)

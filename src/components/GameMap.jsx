@@ -241,10 +241,10 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         </div>
       )}
 
-      {/* Bottom nav — 5 tabs */}
+      {/* Bottom nav — 4 tabs — positioned relative to the app container */}
       <div style={{
-        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", maxWidth: 480, display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
       }}>
         {[
           { icon: "🗺", label: "MAP", active: true, onClick: () => {} },

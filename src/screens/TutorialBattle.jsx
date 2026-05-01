@@ -4,6 +4,8 @@ import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, FONT_LINK, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
 import PracticeSession from '../components/PracticeSession';
+import { useCloudVoice } from '../hooks/useCloudVoice';
+import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 
 // Map emoji name strings to actual emoji characters
 const EMOJI_MAP = {
@@ -25,8 +27,8 @@ export default function TutorialBattle({ heroName, hero, quest, shadowText, hero
   const [phase, setPhase] = useState(obState.phase || "intro"); // intro, choose, decide, allow, rehearse, rise, waiting, engage, debrief
   const advancePhase = (newPhase) => { setPhase(newPhase); if (setOBState) setOBState({ phase: newPhase }); };
   const [chosenExposure, setChosenExposure] = useState(obState.chosenExposure || null);
-  const [sudsBefore, setSudsBefore] = useState(obState.sudsBefore ?? null);
-  const [sudsAfter, setSudsAfter] = useState(obState.sudsAfter ?? null);
+  const [sudsBefore, setSudsBefore] = useState(obState.sudsBefore ?? 0);
+  const [sudsAfter, setSudsAfter] = useState(obState.sudsAfter ?? 0);
   const [rehearsalStep, setRehearsalStep] = useState(0);
   const [allowInput, setAllowInput] = useState("");
   const [allowFearful, setAllowFearful] = useState("");
@@ -61,6 +63,20 @@ export default function TutorialBattle({ heroName, hero, quest, shadowText, hero
   const coachChat = useAIChat(SYS.preBoss, `${heroContext}\n\nTUTORIAL BATTLE: This is the hero's very first exposure — a micro-challenge. Reference their strengths, values, and shadow profile when coaching. Be encouraging and personal.`);
   const chatRef = useRef(null);
   const [coachInput, setCoachInput] = useState("");
+  const voice = useCloudVoice({ useCloud: false });
+
+  // Auto-speak AI replies
+  const spokenIdx = useRef(-1);
+  useEffect(() => {
+    const msgs = coachChat.messages;
+    if (msgs.length === 0) return;
+    const lastIdx = msgs.length - 1;
+    const last = msgs[lastIdx];
+    if (last?.role === "assistant" && lastIdx > spokenIdx.current) {
+      spokenIdx.current = lastIdx;
+      voice.speak(last.text, { speed: 0.9 });
+    }
+  }, [coachChat.messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [coachChat.messages, coachChat.typing]);
 
@@ -253,22 +269,30 @@ No other text.`,
     </div>
   );
 
-  // D.A.R.E.R. mini progress bar
-  const phases = ["D", "A", "R", "E", "R"];
-  const phaseIndex = phase === "decide" ? 0 : phase === "allow" || phase === "rehearse" ? 1 : phase === "rise" ? 2 : phase === "engage" ? 3 : -1;
+  // D.A.R.E.R. mini progress bar — clickable to navigate completed steps
+  const phaseNames = ["decide", "allow", "rise", "engage", "repeat"];
+  const phaseIndex = phase === "decide" ? 0 : phase === "allow" || phase === "rehearse" ? 1 : phase === "rise" ? 2 : phase === "engage" ? 3 : phase === "repeat" ? 4 : -1;
 
   const ProgressBar = () => (
     <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
-      {phases.map((p, i) => (
-        <div key={i} style={{
-          flex: 1, padding: "5px 2px", textAlign: "center", borderRadius: 3,
-          background: i < phaseIndex ? C.hpGreen + "25" : i === phaseIndex ? C.goldMd + "20" : "#1A1218",
-          border: `2px solid ${i < phaseIndex ? C.hpGreen : i === phaseIndex ? C.goldMd : "#5C3A50"}`,
-          transition: "all 0.3s",
-        }}>
-          <PixelText size={7} color={i <= phaseIndex ? (i < phaseIndex ? C.hpGreen : C.goldMd) : C.grayLt}>{p}</PixelText>
-        </div>
-      ))}
+      {phaseNames.map((pName, i) => {
+        const canClick = i <= phaseIndex;
+        const isLast = i === 3; // engage is final, no repeat in training
+        return (
+          <button key={i}
+            onClick={() => { if (canClick && !isLast) advancePhase(pName); }}
+            style={{
+              flex: 1, padding: "5px 2px", textAlign: "center", borderRadius: 3,
+              background: i < phaseIndex ? C.hpGreen + "25" : i === phaseIndex ? C.goldMd + "20" : "#1A1218",
+              border: `2px solid ${i < phaseIndex ? C.hpGreen : i === phaseIndex ? C.goldMd : "#5C3A50"}`,
+              cursor: canClick && !isLast ? "pointer" : "default",
+              opacity: canClick ? 1 : 0.4,
+              transition: "all 0.3s",
+            }}>
+            <PixelText size={7} color={i <= phaseIndex ? (i < phaseIndex ? C.hpGreen : C.goldMd) : C.grayLt}>{pName[0].toUpperCase()}</PixelText>
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -622,7 +646,7 @@ No other text.`,
               <div style={{ animation: "fadeIn 0.4s ease-out" }}>
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                    The rehearsal is done. You've{"\n"}felt the Storm and you're still{"\n"}standing.{"\n"}{"\n"}
+                    You're ready. The Storm may{"\n"}strike, but you've already{"\n"}decided what matters.{"\n"}{"\n"}
                     Before you step into the arena —{"\n"}tell me when and where you'll{"\n"}face this battle.
                   </PixelText>
                 </DialogBox>
@@ -711,7 +735,7 @@ No other text.`,
 
                 <PixelBtn
                   onClick={() => setRiseSubStep(1)}
-                  disabled={!exposureWhen}
+                  disabled={!exposureWhen || !exposureWhere.trim()}
                   color={C.gold} textColor={C.charcoal}
                   style={{ width: "100%", marginTop: 16 }}
                 >
@@ -811,21 +835,21 @@ No other text.`,
                 <div style={{ marginTop: 12 }}>
                   <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
                   <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                      const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
-                      return (
-                        <button key={n} onClick={() => setSudsBefore(n)} style={{
-                          width: 40, height: 40, borderRadius: 4, cursor: "pointer",
-                          background: sudsBefore === n ? color + "30" : "#1A1218",
-                          border: `2px solid ${sudsBefore === n ? color : "#5C3A50"}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <PixelText size={9} color={sudsBefore === n ? color : C.grayLt}>{n}</PixelText>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {(() => {
+                    const pct = sudsBefore;
+                    const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
+                    return (
+                    <div>
+                      <input type="range" min="0" max="100" value={pct} onChange={e => setSudsBefore(+e.target.value)}
+                        style={{ width: "100%", accentColor: color }} />
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                        <PixelText size={8} color={color}>{pct}</PixelText>
+                        <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                      </div>
+                    </div>
+                    );
+                  })()}
                 </div>
                 <PixelBtn onClick={() => advancePhase("engage")} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                   LET'S GO →
@@ -877,41 +901,70 @@ No other text.`,
                   </PixelText>
                 </DialogBox>
 
-                <textarea
-                  value={coachInput}
-                  onChange={e => setCoachInput(e.target.value)}
-                  placeholder="Ask Dara anything — fears, doubts, encouragement..."
-                  rows={3}
-                  style={{
-                    width: "100%", minHeight: 70, padding: 10, marginTop: 14,
-                    background: "#1A1218", border: "2px solid #5C3A50",
-                    borderRadius: 4, color: C.cream, fontSize: 12,
-                    fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                    lineHeight: 1.6, boxSizing: "border-box",
-                  }}
-                />
-                <PixelBtn
-                  onClick={async () => {
-                    if (!coachInput.trim()) return;
-                    const msg = coachInput;
-                    setCoachInput("");
-                    coachChat.messages.push({ role: "user", text: msg });
-                    coachChat.setTyping(true);
-                    try {
-                      const reply = await callAI(SYS.preBoss, [...coachChat.messages.map(m => ({ role: m.role, content: m.text }))]);
-                      coachChat.setTyping(false);
-                      coachChat.messages.push({ role: "assistant", text: reply });
-                    } catch {
-                      coachChat.setTyping(false);
-                      coachChat.messages.push({ role: "assistant", text: "I'm here with you. You've got this." });
-                    }
-                  }}
-                  disabled={coachChat.typing || !coachInput.trim()}
-                  color={C.teal} textColor={C.cream}
-                  style={{ width: "100%", marginTop: 8 }}
-                >
-                  SEND TO DARA →
-                </PixelBtn>
+                {voice.supported ? (
+                  <div style={{ marginTop: 14 }}>
+                    <VoiceInputBar
+                      input={coachInput}
+                      onInputChange={setCoachInput}
+                      onSend={async (t) => {
+                        const msg = t;
+                        setCoachInput("");
+                        coachChat.messages.push({ role: "user", text: msg });
+                        coachChat.setTyping(true);
+                        try {
+                          const reply = await callAI(SYS.preBoss, [...coachChat.messages.map(m => ({ role: m.role, content: m.text }))]);
+                          coachChat.setTyping(false);
+                          coachChat.messages.push({ role: "assistant", text: reply });
+                        } catch {
+                          coachChat.setTyping(false);
+                          coachChat.messages.push({ role: "assistant", text: "I'm here with you. You've got this." });
+                        }
+                      }}
+                      typing={coachChat.typing}
+                      disabled={false}
+                      voice={voice}
+                      placeholder="Speak or type — ask Dara anything..."
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    value={coachInput}
+                    onChange={e => setCoachInput(e.target.value)}
+                    placeholder="Ask Dara anything — fears, doubts, encouragement..."
+                    rows={3}
+                    style={{
+                      width: "100%", minHeight: 70, padding: 10, marginTop: 14,
+                      background: "#1A1218", border: "2px solid #5C3A50",
+                      borderRadius: 4, color: C.cream, fontSize: 12,
+                      fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+                      lineHeight: 1.6, boxSizing: "border-box",
+                    }}
+                  />
+                )}
+                {voice.supported || (
+                  <PixelBtn
+                    onClick={async () => {
+                      if (!coachInput.trim()) return;
+                      const msg = coachInput;
+                      setCoachInput("");
+                      coachChat.messages.push({ role: "user", text: msg });
+                      coachChat.setTyping(true);
+                      try {
+                        const reply = await callAI(SYS.preBoss, [...coachChat.messages.map(m => ({ role: m.role, content: m.text }))]);
+                        coachChat.setTyping(false);
+                        coachChat.messages.push({ role: "assistant", text: reply });
+                      } catch {
+                        coachChat.setTyping(false);
+                        coachChat.messages.push({ role: "assistant", text: "I'm here with you. You've got this." });
+                      }
+                    }}
+                    disabled={coachChat.typing || !coachInput.trim()}
+                    color={C.teal} textColor={C.cream}
+                    style={{ width: "100%", marginTop: 8 }}
+                  >
+                    SEND TO DARA →
+                  </PixelBtn>
+                )}
 
                 {coachChat.messages.length > 0 && (
                   <div ref={chatRef} style={{ marginTop: 12, maxHeight: 300, overflowY: "auto" }}>
@@ -990,21 +1043,21 @@ No other text.`,
                 <div style={{ marginTop: 12 }}>
                   <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
                   <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                      const color = n <= 3 ? C.hpGreen : n <= 6 ? C.goldMd : C.bossRed;
-                      return (
-                        <button key={n} onClick={() => setSudsAfter(n)} style={{
-                          width: 40, height: 40, borderRadius: 4, cursor: "pointer",
-                          background: sudsAfter === n ? color + "30" : "#1A1218",
-                          border: `2px solid ${sudsAfter === n ? color : "#5C3A50"}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <PixelText size={9} color={sudsAfter === n ? color : C.grayLt}>{n}</PixelText>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {(() => {
+                    const pct = sudsAfter;
+                    const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
+                    return (
+                    <div>
+                      <input type="range" min="0" max="100" value={pct} onChange={e => setSudsAfter(+e.target.value)}
+                        style={{ width: "100%", accentColor: color }} />
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                        <PixelText size={8} color={color}>{pct}</PixelText>
+                        <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                      </div>
+                    </div>
+                    );
+                  })()}
                 </div>
 
                 <PixelBtn onClick={() => setEngageSubStep(3)} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
@@ -1066,7 +1119,7 @@ No other text.`,
                 {fearedSeverity && fearedHappened !== "No, they didn't happen at all" && (
                   <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
                     <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
-                      3. Even though it was difficult — did you get through it?
+                      3. Did you get through it?
                     </PixelText>
                     {["Yes — I made it through, even if it was hard", "I'm still working on it, but I know I can", "Not this time, but I learned something"].map(opt => (
                       <button key={opt} onClick={() => setMadeItThrough(opt)} style={{

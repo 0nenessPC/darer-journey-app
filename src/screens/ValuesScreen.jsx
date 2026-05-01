@@ -156,17 +156,11 @@ export default function ValuesScreen({ heroName, onComplete }) {
           </div>
 
           <DialogBox speaker="DARA">
-            <ValuesTypewriterText text={`${heroName}, you've just seen your Shadow's trap for what it is — the territory it claims, the storm it stirs, the escapes it feeds on. It has been hiding in the dark, counting on you never looking at it this clearly.
+            <ValuesTypewriterText text={`${heroName}, you've seen your Shadow's trap — the territory it claims, the storm it stirs, the escapes it feeds on. It thrived in the dark, counting on you never looking.
 
-Now that you can see it — the question is: what will you do about it?
+Now you can see it. So the question is: what will you do about it?
 
-Before we step onto this journey — one that will be rocky, and at times filled with pain and challenges — it is important to ask ourselves and connect with something deeper.
-
-Why are you here?
-What motivates you to start this journey?
-What is worth fighting for?
-
-This isn't about goals you "should" have. This is about what truly matters to your heart.`} />
+This path won't be easy — but what is worth fighting for? Not goals you "should" have. What truly matters to you. Why are you here?`} />
           </DialogBox>
 
           <PixelBtn onClick={() => setStep("cards")} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 12 }}>

@@ -31,6 +31,8 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
   const [timer, setTimer] = useState(0);
   const [breathPhase, setBreathPhase] = useState(0);
   const [breathCycles, setBreathCycles] = useState(0);
+  const [breathDuration, setBreathDuration] = useState(60);
+  const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   const intervalRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -76,11 +78,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
       const nextPhase = (breathPhase + 1) % 4;
       playToneForPhase(nextPhase);
       if (nextPhase === 0) {
-        setBreathCycles(c => {
-          const next = c + 1;
-          if (next >= 1) { setPhase("done"); }
-          return next;
-        });
+        setBreathCycles(c => c + 1);
       }
       setBreathPhase(nextPhase);
       setTimer(0);
@@ -92,9 +90,13 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     if (phase !== "running" || tool?.id !== "breathing" || paused) return;
     intervalRef.current = setInterval(() => {
       setTimer(t => t + 1);
+      setElapsed(e => {
+        if (e + 1 >= breathDuration) { setPhase("done"); }
+        return e + 1;
+      });
     }, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [breathPhase, phase, paused, tool?.id]);
+  }, [breathPhase, phase, paused, tool?.id, breathDuration]);
 
   // Manage grounding timer interval
   useEffect(() => {
@@ -139,6 +141,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     setPhase("running");
     setStep(0);
     setTimer(0);
+    setElapsed(0);
     setPaused(false);
     if (tool?.id === "breathing") {
       setBreathPhase(0);
@@ -147,9 +150,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
         audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
       playToneForPhase(0);
-      // Interval managed by useEffect — avoids stale closure issues
     }
-    // Grounding/allowing/values intervals managed by their respective useEffects
   };
 
   const togglePause = () => {
@@ -162,14 +163,44 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
   };
 
   if (phase === "intro") {
+    const isBreathing = tool?.id === "breathing";
+    const durationOptions = [
+      { label: "1 min", value: 60 },
+      { label: "2 min", value: 120 },
+      { label: "3 min", value: 180 },
+      { label: "5 min", value: 300 },
+    ];
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
         <link href={FONT_LINK} rel="stylesheet" />
         <div style={{ fontSize: 56, marginBottom: 16 }}>{tool?.icon}</div>
         <PixelText size={12} color={C.cream} style={{ display: "block", marginBottom: 8 }}>{tool?.name}</PixelText>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 24, lineHeight: 1.6 }}>{tool?.description}</PixelText>
+
+        {isBreathing && (
+          <div style={{ width: "100%", marginBottom: 20 }}>
+            <PixelText size={8} color={C.teal} style={{ display: "block", marginBottom: 10 }}>PRACTICE DURATION</PixelText>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              {durationOptions.map(opt => (
+                <button key={opt.value} onClick={() => setBreathDuration(opt.value)} style={{
+                  flex: 1, padding: "10px 8px", borderRadius: 4,
+                  border: `2px solid ${breathDuration === opt.value ? C.teal : "#5C3A50"}`,
+                  background: breathDuration === opt.value ? C.teal + "20" : "#1A1218",
+                  cursor: "pointer",
+                }}>
+                  <PixelText size={8} color={breathDuration === opt.value ? C.teal : C.grayLt}>{opt.label}</PixelText>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ padding: 12, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 24 }}>
-          <PixelText size={7} color={C.grayLt}>Follow the rhythm. There is no skip — complete the exercise to earn credit.{"\n"}You can pause at any time.</PixelText>
+          <PixelText size={7} color={C.grayLt}>
+            {isBreathing
+              ? `Follow the rhythm for ${breathDuration >= 60 ? `${breathDuration / 60} min` : `${breathDuration}s`}. You can pause at any time.`
+              : "Follow the rhythm. There is no skip — complete the exercise to earn credit. You can pause at any time."}
+          </PixelText>
         </div>
         <PixelBtn onClick={startPractice} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginBottom: 12 }}>▶ START</PixelBtn>
         <button onClick={onQuit} style={{ background: "none", border: "none", cursor: "pointer" }}>
@@ -209,7 +240,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
           <div style={{ fontSize: 48, marginBottom: 16 }}>⏸</div>
           <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>PAUSED</PixelText>
           <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 24 }}>
-            You were on: {breathLabels[breathPhase]} · Cycle {breathCycles + 1}/1
+            {breathLabels[breathPhase]} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} / {Math.floor(breathDuration / 60)}:{String(breathDuration % 60).padStart(2, "0")}
           </PixelText>
           <PixelBtn onClick={togglePause} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginBottom: 12 }}>▶ RESUME</PixelBtn>
           <button onClick={onQuit} style={{ background: "none", border: "none", cursor: "pointer" }}>
@@ -225,7 +256,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
         <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
-        <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>Cycle {breathCycles + 1}/1</PixelText>
+        <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>{breathLabels[breathPhase]} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} / {Math.floor(breathDuration / 60)}:{String(breathDuration % 60).padStart(2, "0")}</PixelText>
         <PixelText size={14} color={phaseColor} style={{ display: "block", marginBottom: 16 }}>{breathLabels[breathPhase]}</PixelText>
         <div style={{ width: 120, height: 120, borderRadius: "50%", border: `4px solid ${phaseColor}60`, background: `${phaseColor}15`, display: "flex", alignItems: "center", justifyContent: "center", animation: breathPhase === 0 ? "breatheIn 4s ease-in-out" : breathPhase === 2 ? "breatheOut 6s ease-in-out" : "none" }}>
           <PixelText size={20} color={phaseColor}>{remaining}</PixelText>
