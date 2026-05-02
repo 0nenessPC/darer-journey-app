@@ -31,6 +31,11 @@ function GameIntro({ onComplete, obState, setOBState }) {
         {last ? "BEGIN THE JOURNEY" : "NEXT"}
       </PixelBtn>
       {slide > 0 && <button onClick={() => setSlide(s => s - 1)} style={{ background: "none", border: "none", marginTop: 12, cursor: "pointer" }}><PixelText size={7} color={C.subtleText}>BACK</PixelText></button>}
+      {!last && (
+        <button onClick={onComplete} style={{ background: "none", border: "none", marginTop: 8, cursor: "pointer" }}>
+          <PixelText size={6} color={C.subtleText}>SKIP INTRO →</PixelText>
+        </button>
+      )}
 
     </div>
   );

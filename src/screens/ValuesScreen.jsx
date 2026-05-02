@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { C, DM_SANS_FONT } from '../constants/gameData';
-import { PixelText, PixelBtn, DialogBox } from '../components/shared';
+import { PixelText, PixelBtn, DialogBox, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 import VoiceInputField from '../components/VoiceInputField';
 import { useCloudVoice } from '../hooks/useCloudVoice';
@@ -302,7 +302,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
               </PixelBtn>
             ) : (
               <PixelBtn onClick={generateValuesFromAnswers} disabled={!guideAnswers[guideStep].trim() || loadingValues} color={C.gold} textColor={C.charcoal} style={{ flex: 1 }}>
-                {loadingValues ? "DARA IS REFLECTING..." : "DISCOVER MY VALUES →"}
+                {loadingValues ? (<>DARA IS REFLECTING <TypingDots /></>) : "DISCOVER MY VALUES →"}
               </PixelBtn>
             )}
           </div>

@@ -2,16 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 import { parseShadowSection } from "../utils/parseShadow.js";
+import { useCloudVoice } from "../hooks/useCloudVoice";
 
 function ShadowReveal({ heroName, shadowText, onContinue }) {
   const [revealed, setRevealed] = useState(0);
+  const voice = useCloudVoice({ useCloud: false });
   const speechStartedRef = useRef(false);
 
   const where = parseShadowSection("WHERE IT APPEARS", shadowText);
   const whisper = parseShadowSection("WHAT IT WHISPERS", shadowText);
   const grip = parseShadowSection("HOW IT KEEPS ITS GRIP", shadowText);
 
-  // Chain-read all three sections sequentially, then stop
+  // Chain-read all three sections sequentially using the voice hook's browserSpeak
   // speechStartedRef prevents double-firing in React Strict Mode (dev)
   useEffect(() => {
     if (speechStartedRef.current) return;
@@ -19,15 +21,19 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
 
     let cancelled = false;
 
+    // Use window.speechSynthesis directly for chaining (hook.speak cancels first)
     const speakChain = (texts, idx = 0) => {
-      if (idx >= texts.length || cancelled) return;
+      if (idx >= texts.length || cancelled || !window.speechSynthesis) return;
       const text = texts[idx];
       if (!text) { speakChain(texts, idx + 1); return; }
 
       const utt = new SpeechSynthesisUtterance(text);
       utt.rate = 0.9;
+      // Use the same voice selection as the hook
       const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => /female|zira|samantha|moira/i.test(v.name))
+      const femaleVoiceNames = ['Google US English Female', 'Samantha', 'Microsoft Zira', 'Google UK English Female', 'Alex', 'Moira', 'Tessa'];
+      const preferred = voices.find(v => v.lang.startsWith('en') && femaleVoiceNames.some(n => v.name.includes(n)))
+        || voices.find(v => v.lang.startsWith('en') && /female|zira|samantha|moira|tessa/i.test(v.name))
         || voices.find(v => v.lang.startsWith('en'));
       if (preferred) utt.voice = preferred;
 
@@ -40,9 +46,9 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
 
     return () => {
       cancelled = true;
-      window.speechSynthesis.cancel();
+      voice.cancelSpeech();
     };
-  }, []);
+  }, [voice]);
 
   // Reveal cards on staggered timers (visual only, independent of speech)
   useEffect(() => {

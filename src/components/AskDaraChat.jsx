@@ -5,35 +5,35 @@ import { callAI } from '../utils/chat';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import { useCloudVoice } from '../hooks/useCloudVoice';
 
-function AskDaraTypewriterBubble({ text, muted }) {
+function AskDaraTypewriterBubble({ text, muted, voice }) {
   const [isSpeaking, setIsSpeaking] = React.useState(false);
 
   // Start speech simultaneously with text render
   React.useEffect(() => {
-    if (muted || !text || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.9;
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
-      || voices.find(v => v.lang.startsWith('en'));
-    if (preferred) utterance.voice = preferred;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
-  }, [text, muted]);
+    if (muted || !text || !voice?.speak) return;
+    voice.speak(text, { speed: 0.9 });
+  }, [text, muted, voice]);
+
+  // Track speaking state from hook
+  React.useEffect(() => {
+    setIsSpeaking(voice?.isSpeaking || false);
+  }, [voice?.isSpeaking]);
 
   return (
     <div style={{
       maxWidth: "80%", padding: "10px 14px", borderRadius: 8,
       background: C.grayBg,
-      border: `2px solid ${C.teal}40`,
+      border: `2px solid ${isSpeaking ? C.teal : C.teal + "40"}`,
+      boxShadow: isSpeaking ? `0 0 8px ${C.teal}40` : "none",
     }}>
       <PixelText size={7} color={C.cream} style={{ whiteSpace: "pre-wrap" }}>
         {text}
       </PixelText>
+      {isSpeaking && (
+        <PixelText size={6} color={C.teal} style={{ display: "block", marginTop: 4, opacity: 0.8 }}>
+          🔊 speaking
+        </PixelText>
+      )}
     </div>
   );
 }
@@ -87,10 +87,7 @@ Always keep the exposure small, actionable, and specific.`;
       setStep(1);
       // Speak greeting if voice mode is on
       if (voiceMode) {
-        window.speechSynthesis?.cancel();
-        const u = new SpeechSynthesisUtterance(initMsg.text);
-        u.lang = 'en-US'; u.rate = 0.9;
-        window.speechSynthesis.speak(u);
+        voice.speak(initMsg.text, { speed: 0.9 });
       }
     }
   }, [step, messages.length, voiceMode, voice.speak, voice.supported]);
@@ -131,10 +128,7 @@ Always keep the exposure small, actionable, and specific.`;
               chatHistory.current.push(finalMsg);
               setMessages(prev => [...prev, finalMsg]);
               if (voiceMode) {
-                window.speechSynthesis?.cancel();
-                const u = new SpeechSynthesisUtterance(finalMsg.text);
-                u.lang = 'en-US'; u.rate = 0.9;
-                window.speechSynthesis.speak(u);
+                voice.speak(finalMsg.text, { speed: 0.9 });
               }
               setGeneratedExposure({
                 name: exposure.name,
@@ -170,10 +164,7 @@ Always keep the exposure small, actionable, and specific.`;
       setMessages(prev => [...prev, aiMsg]);
       // Speak reply if voice mode is on
       if (voiceMode) {
-        window.speechSynthesis?.cancel();
-        const u = new SpeechSynthesisUtterance(res);
-        u.lang = 'en-US'; u.rate = 0.9;
-        window.speechSynthesis.speak(u);
+        voice.speak(res, { speed: 0.9 });
       }
     }
     setTyping(false);
@@ -288,7 +279,7 @@ Always keep the exposure small, actionable, and specific.`;
               gap: 6,
             }}>
               {m.role === "assistant" ? (
-                <AskDaraTypewriterBubble text={m.text} muted={!voiceMode} />
+                <AskDaraTypewriterBubble text={m.text} muted={!voiceMode} voice={voice} />
               ) : (
                 <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
                   maxWidth: "85%", padding: "10px 14px",
@@ -324,7 +315,7 @@ Always keep the exposure small, actionable, and specific.`;
             display: "flex", alignItems: "center", justifyContent: "flex-end",
           }}>
             <button
-              onClick={() => { if (voiceMode) window.speechSynthesis?.cancel(); setVoiceMode(v => !v); }}
+              onClick={() => { if (voiceMode) voice.cancelSpeech(); setVoiceMode(v => !v); }}
               style={{
                 padding: "4px 10px",
                 background: voiceMode ? C.plum + "40" : "transparent",

@@ -344,8 +344,8 @@ No other text.`,
 
             {exposuresLoading ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
-                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>🔨 FORGING YOUR TRAINING</PixelText>
-                <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
+                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>FORGING YOUR TRAINING</PixelText>
+                <TypingDots />
               </div>
             ) : (
               <>
@@ -471,6 +471,39 @@ No other text.`,
                 The Storm will speak — let{"\n"}it. Name every whisper, every{"\n"}signal your body sends.{"\n"}Don't fight them. Let them be.
               </PixelText>
             </DialogBox>
+
+            {/* ALLOW progress dots — 6 fields */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+              {[
+                { label: "Thoughts", done: !!allowFearful.trim() },
+                { label: "Likelihood", done: allowLikelihood !== null },
+                { label: "Severity", done: allowSeverity !== null },
+                { label: "Can Handle", done: !!allowCanHandle },
+                { label: "Fear Showing", done: !!allowFearShowing },
+                { label: "Body", done: allowPhysicalSensations.length > 0 },
+              ].map((f, i) => {
+                const prevDone = i === 0 ? true : (
+                  i === 1 ? !!allowFearful.trim() :
+                  i === 2 ? allowLikelihood !== null :
+                  i === 3 ? allowSeverity !== null :
+                  i === 4 ? !!allowCanHandle :
+                  !!allowFearShowing
+                );
+                const isCurrent = prevDone && !f.done;
+                const isDone = f.done;
+                return (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div style={{
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: isDone ? C.hpGreen : isCurrent ? C.goldMd : C.mutedBorder,
+                      border: isCurrent ? `2px solid ${C.goldMd}` : "2px solid transparent",
+                      transition: "all 0.3s ease",
+                    }} />
+                    <PixelText size={5} color={isDone ? C.hpGreen : isCurrent ? C.goldMd : C.subtleText}>{f.label}</PixelText>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* 1. Fearful thoughts */}
             <div style={{ marginTop: 16 }}>

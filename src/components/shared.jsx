@@ -58,6 +58,12 @@ export function DialogBox({ speaker, text, typing, children }) {
 }
 
 export function OnboardingProgress({ screen }) {
+  const CHAPTERS = [
+    { name: "ORIGIN", color: C.plumMd, start: 0, end: 2 },
+    { name: "SHADOW", color: C.bossRed, start: 3, end: 7 },
+    { name: "STRATEGY", color: C.teal, start: 8, end: 9 },
+    { name: "TRAINING", color: C.hpGreen, start: 10, end: 10 },
+  ];
   const ONBOARDING = [
     { key: "intro", label: "Story" },
     { key: "character", label: "Hero" },
@@ -74,6 +80,7 @@ export function OnboardingProgress({ screen }) {
   const idx = ONBOARDING.findIndex(s => s.key === screen);
   if (idx === -1) return null;
   const pct = ((idx + 1) / ONBOARDING.length) * 100;
+  const chapter = CHAPTERS.find(c => idx >= c.start && idx <= c.end);
   return (
     <div role="navigation" aria-label="DARER phase navigation" style={{
       position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
@@ -81,10 +88,26 @@ export function OnboardingProgress({ screen }) {
       padding: "8px 12px 6px",
       boxSizing: "border-box",
     }}>
+      {/* Chapter progress bar */}
+      <div style={{ display: "flex", gap: 2, marginBottom: 6 }}>
+        {CHAPTERS.map((ch, i) => {
+          const totalSteps = ch.end - ch.start + 1;
+          const completedSteps = Math.max(0, Math.min(totalSteps, idx - ch.start + 1));
+          const chPct = (completedSteps / totalSteps) * 100;
+          const isActive = idx >= ch.start && idx <= ch.end;
+          return (
+            <div key={ch.name} style={{ flex: 1, height: 3, background: C.mapBg, borderRadius: 1, overflow: "hidden", opacity: isActive ? 1 : 0.4 }}>
+              <div style={{ height: "100%", width: `${chPct}%`, background: ch.color, transition: "width 0.3s ease" }} />
+            </div>
+          );
+        })}
+      </div>
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
       }}>
-        <PixelText size={7} color={C.goldMd} aria-current="step">STEP {idx + 1}/{ONBOARDING.length}</PixelText>
+        <PixelText size={7} color={chapter?.color || C.goldMd} aria-current="step">
+          CHAPTER {CHAPTERS.indexOf(chapter) + 1}: {chapter?.name} — STEP {idx + 1}/{ONBOARDING.length}
+        </PixelText>
         <PixelText size={7} color={C.subtleText}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
       </div>
       <div style={{ height: 4, background: C.mapBg, borderRadius: 2, border: `1px solid ${C.mutedBorder}`, overflow: "hidden" }}>

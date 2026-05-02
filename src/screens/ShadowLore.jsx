@@ -26,6 +26,9 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
           <PixelBtn onClick={onPsychoed} style={{ marginTop: 12 }}>
             CONTINUE
           </PixelBtn>
+          <button onClick={onPsychoed} style={{ background: "none", border: "none", marginTop: 8, cursor: "pointer" }}>
+            <PixelText size={6} color={C.subtleText}>SKIP →</PixelText>
+          </button>
         </div>
       )}
 

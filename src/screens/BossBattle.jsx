@@ -2,39 +2,42 @@
 import { useAIChat } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
-import { PixelText, PixelBtn, HPBar, DialogBox } from '../components/shared';
+import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 import { useCloudVoice } from '../hooks/useCloudVoice';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import PracticeSession from '../components/PracticeSession';
 
-function BattleTypewriterBubble({ text, muted }) {
+function BattleTypewriterBubble({ text, muted, voice }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Start speech simultaneously with text render
   useEffect(() => {
-    if (muted || !text || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.9;
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
-      || voices.find(v => v.lang.startsWith('en'));
-    if (preferred) utterance.voice = preferred;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
-  }, [text, muted]);
+    if (muted || !text || !voice?.speak) return;
+    voice.speak(text, { speed: 0.9 });
+  }, [text, muted, voice]);
+
+  // Track speaking state from hook
+  useEffect(() => {
+    if (!voice?.isSpeaking) return;
+    if (voice.isSpeaking) setIsSpeaking(true);
+    else setIsSpeaking(false);
+  }, [voice?.isSpeaking]);
 
   return (
     <div style={{
       maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
-      background: C.cardBg, border: "2px solid ${C.mutedBorder}",
+      background: C.cardBg,
+      border: `2px solid ${isSpeaking ? C.teal : C.mutedBorder}`,
+      boxShadow: isSpeaking ? `0 0 8px ${C.teal}40` : "none",
     }}>
       <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>
         {text}
       </PixelText>
+      {isSpeaking && (
+        <PixelText size={6} color={C.teal} style={{ display: "block", marginTop: 4, opacity: 0.8 }}>
+          🔊 speaking
+        </PixelText>
+      )}
     </div>
   );
 }
@@ -303,21 +306,13 @@ No other text.`,
     const last = msgs[lastIdx];
     if (last?.role === "assistant" && lastIdx > spokenIndices.current[phaseKey]) {
       spokenIndices.current[phaseKey] = lastIdx;
-      window.speechSynthesis?.cancel();
-      const utterance = new SpeechSynthesisUtterance(last.text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9;
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha')))
-        || voices.find(v => v.lang.startsWith('en'));
-      if (preferred) utterance.voice = preferred;
-      window.speechSynthesis.speak(utterance);
+      voice.speak(last.text, { speed: 0.9 });
     }
   }, [activeChat.messages, battleVoiceMode, phase]);
 
   // Cancel speech on unmount or phase change
   useEffect(() => {
-    return () => { window.speechSynthesis?.cancel(); };
+    return () => { voice.cancelSpeech(); };
   }, [phase]);
 
   return (
@@ -701,6 +696,39 @@ No other text.`,
                   </PixelText>
                 </DialogBox>
 
+                {/* ALLOW progress dots — 6 fields */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+                  {[
+                    { label: "Thoughts", done: !!allowFearful.trim() },
+                    { label: "Likelihood", done: allowLikelihood !== null },
+                    { label: "Severity", done: allowSeverity !== null },
+                    { label: "Can Handle", done: !!allowCanHandle },
+                    { label: "Fear Showing", done: !!allowFearShowing },
+                    { label: "Body", done: allowPhysicalSensations.length > 0 },
+                  ].map((f, i) => {
+                    const prevDone = i === 0 ? true : (
+                      i === 1 ? !!allowFearful.trim() :
+                      i === 2 ? allowLikelihood !== null :
+                      i === 3 ? allowSeverity !== null :
+                      i === 4 ? !!allowCanHandle :
+                      !!allowFearShowing
+                    );
+                    const isCurrent = prevDone && !f.done;
+                    const isDone = f.done;
+                    return (
+                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                        <div style={{
+                          width: 10, height: 10, borderRadius: "50%",
+                          background: isDone ? C.hpGreen : isCurrent ? C.goldMd : C.mutedBorder,
+                          border: isCurrent ? `2px solid ${C.goldMd}` : "2px solid transparent",
+                          transition: "all 0.3s ease",
+                        }} />
+                        <PixelText size={5} color={isDone ? C.hpGreen : isCurrent ? C.goldMd : C.subtleText}>{f.label}</PixelText>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {/* 1. Fearful thoughts */}
                 <div style={{ marginTop: 16 }}>
                   <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 4 }}>
@@ -916,7 +944,7 @@ No other text.`,
           {battleChat.messages.map((m, i) => (
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start", gap: 6, marginBottom: 8 }}>
               {m.role === "assistant" ? (
-                <BattleTypewriterBubble text={m.text} muted={!battleVoiceMode} />
+                <BattleTypewriterBubble text={m.text} muted={!battleVoiceMode} voice={voice} />
               ) : (
                 <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
                   maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
@@ -1258,7 +1286,8 @@ No other text.`,
 
             {repeatOptions.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>🔨 DARA IS FINDING OPTIONS...</PixelText>
+                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>DARA IS FINDING OPTIONS</PixelText>
+                <TypingDots />
               </div>
             ) : (
               <>
