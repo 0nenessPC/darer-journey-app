@@ -24,3 +24,24 @@ button {
   0%, 100% { box-shadow: 0 0 8px rgba(255, 68, 68, 0.13); }
   50%      { box-shadow: 0 0 24px rgba(255, 68, 68, 0.31); }
 }
+
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes victoryFlash {
+  0%   { opacity: 0; transform: scale(0.8); box-shadow: none; }
+  40%  { opacity: 1; transform: scale(1.05); box-shadow: 0 0 40px rgba(76, 175, 80, 0.5); }
+  100% { opacity: 1; transform: scale(1); box-shadow: none; }
+}
+
+@keyframes retreatFade {
+  0%   { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lootShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}

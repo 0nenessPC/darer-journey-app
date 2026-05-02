@@ -92,7 +92,6 @@ export default function ValuesScreen({ heroName, onComplete }) {
         `You are a values counselor for a social anxiety RPG game. Based on what the user shared about what matters to them, generate exactly 3 personalized value statements. Each should be an outcome-oriented value (what they want in life, not how they want to behave). Keep each to 8 words or fewer. Return ONLY a JSON array like: [{"text":"value text","icon":"emoji"}]. No other text.`,
         [{ role: "user", text: `Here is what the user shared:\n1. Social highlights: "${guideAnswers[0]}"\n2. Social qualities they admire: "${guideAnswers[1]}"\n3. What they'd do without fear: "${guideAnswers[2]}"` }]
       );
-      console.log('[ValuesScreen] AI raw response:', res);
       // Guard against API fallback responses ("..." or "Dara gathers her thoughts...")
       if (!res || res === "..." || res.includes("Dara gathers")) {
         console.warn('[ValuesScreen] AI call failed (API error), showing default cards');
@@ -100,12 +99,10 @@ export default function ValuesScreen({ heroName, onComplete }) {
         return;
       }
       const parsed = extractJsonArray(res);
-      console.log('[ValuesScreen] Parsed values:', parsed);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const newCards = parsed.slice(0, 3).map((v, i) => ({
           id: "vg" + i, text: v.text, icon: v.icon || "💫", domain: "personal", generated: true,
         }));
-        console.log('[ValuesScreen] newCards:', newCards);
         setGeneratedValues(newCards);
         setAllCards(prev => [...newCards, ...DEFAULT_CARDS]);
         setValues([]);

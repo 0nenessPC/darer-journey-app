@@ -1,35 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { loadProgress, NDA_VERSION } from "./utils/supabase";
 import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
 import { C, SYS, DEFAULT_ARMORY, ONBOARDING, DM_SANS_FONT } from "./constants/gameData";
 import { PixelText, HPBar, TypingDots, DialogBox, OnboardingProgress } from "./components/shared.jsx";
-import BossBattle from "./screens/BossBattle.jsx";
-import TutorialBattle from "./screens/TutorialBattle.jsx";
 import GameMap from "./components/GameMap.jsx";
 import HeroProfile from "./components/HeroProfile.jsx";
-import ExposureSortScreen from "./screens/ExposureSortScreen.jsx";
-import ExposureBankScreen from "./screens/ExposureBankScreen.jsx";
-import CharacterCreate from "./screens/CharacterCreate.jsx";
-import ValuesScreen from "./screens/ValuesScreen.jsx";
 import AskDaraChat from "./components/AskDaraChat.jsx";
-import PsychoEdScreen from "./screens/PsychoEdScreen.jsx";
-import PracticeSession from "./components/PracticeSession.jsx";
-import DARERStrategy from "./screens/DARERStrategy.jsx";
-import LoginScreen from "./screens/LoginScreen.jsx";
-import GameIntro from "./screens/GameIntro.jsx";
-import ShadowLore from "./screens/ShadowLore.jsx";
-import IntakeScreen from "./screens/IntakeScreen.jsx";
 import AddExposureModal from "./components/AddExposureModal.jsx";
 import AddManualEntryForm from "./components/AddManualEntryForm.jsx";
 import LadderScreen from "./components/LadderScreen.jsx";
-import ShadowReveal from "./screens/ShadowReveal.jsx";
-import ArmoryScreen from "./screens/ArmoryScreen.jsx";
 import DeleteConfirm from "./components/DeleteConfirm.jsx";
 import FeedbackModal from "./components/FeedbackModal.jsx";
 import { useAppState } from "./hooks/useAppState.jsx";
 import { useBossHandlers } from "./hooks/useBossHandlers.jsx";
 import { useCompletionHandlers } from "./hooks/useCompletionHandlers.jsx";
+
+// Code-split lazy-loaded screens
+const BossBattle = lazy(() => import("./screens/BossBattle.jsx"));
+const TutorialBattle = lazy(() => import("./screens/TutorialBattle.jsx"));
+const ExposureSortScreen = lazy(() => import("./screens/ExposureSortScreen.jsx"));
+const ExposureBankScreen = lazy(() => import("./screens/ExposureBankScreen.jsx"));
+const CharacterCreate = lazy(() => import("./screens/CharacterCreate.jsx"));
+const ValuesScreen = lazy(() => import("./screens/ValuesScreen.jsx"));
+const PsychoEdScreen = lazy(() => import("./screens/PsychoEdScreen.jsx"));
+const DARERStrategy = lazy(() => import("./screens/DARERStrategy.jsx"));
+const LoginScreen = lazy(() => import("./screens/LoginScreen.jsx"));
+const GameIntro = lazy(() => import("./screens/GameIntro.jsx"));
+const ShadowLore = lazy(() => import("./screens/ShadowLore.jsx"));
+const IntakeScreen = lazy(() => import("./screens/IntakeScreen.jsx"));
+const ShadowReveal = lazy(() => import("./screens/ShadowReveal.jsx"));
+const ArmoryScreen = lazy(() => import("./screens/ArmoryScreen.jsx"));
 
 // ============ MAIN APP ============
 export default function DARERQuest() {
@@ -68,6 +69,7 @@ export default function DARERQuest() {
 
   // --- Fast-forward: populate mock hero data, skip onboarding → tutorial ---
   const handleFastForward = useCallback(() => {
+    if (!import.meta.env.DEV) return;
     const heroName = hero.darerId;
     const mockStats = { courage: 3, resilience: 3, openness: 3 };
     const mockCoreValues = [
@@ -120,6 +122,8 @@ export default function DARERQuest() {
 
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: DM_SANS_FONT, position: "relative" }}>
+      {/* Screen transition wrapper — re-mounts on screen change for fade animation */}
+      <div key={screen} style={{ animation: "screenFadeIn 0.25s ease-out" }}>
       {/* Global back button — shown on all screens except login and map */}
       {!["login", "map", "battle", "bank"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} aria-label="Go back" style={{
@@ -176,6 +180,11 @@ export default function DARERQuest() {
       {/* Onboarding progress bar — shown from intro through training ground */}
       <OnboardingProgress screen={screen} />
       <div style={{ paddingTop: ONBOARDING.some(s => s.key === screen) ? 56 : 0 }}>
+      <Suspense fallback={
+        <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.mapBg }}>
+          <PixelText size={10} color={C.goldMd}>Loading...</PixelText>
+        </div>
+      }>
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} onFastForward={handleFastForward} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
       {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {
@@ -210,6 +219,7 @@ export default function DARERQuest() {
       {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} />}
       {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
+      </Suspense>
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirm
@@ -285,6 +295,7 @@ export default function DARERQuest() {
           onClose={() => setShowFeedback(false)}
         />
       )}
+      </div>
       </div>
     </div>
   );

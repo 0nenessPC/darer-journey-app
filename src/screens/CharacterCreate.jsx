@@ -117,7 +117,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
               <PixelBtn onClick={() => setStep("meetDara")} color={C.gold} textColor={C.charcoal}>
                 CONTINUE →
               </PixelBtn>
-              {onFastForward && (
+              {import.meta.env.DEV && onFastForward && (
                 <button onClick={onFastForward} style={{
                   marginTop: 8, width: "100%", padding: "8px 16px",
                   background: "transparent", border: `1px dashed ${C.mutedBorder}`,

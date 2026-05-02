@@ -554,6 +554,24 @@ No other text.`,
 
                   {outcome && (
                     <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                      {/* Animated outcome banner */}
+                      <div style={{
+                        marginTop: 16, padding: "20px 16px", textAlign: "center",
+                        background: outcome === "victory" ? C.hpGreen + "15" : outcome === "partial" ? C.goldMd + "10" : C.bossRed + "10",
+                        border: `2px solid ${outcome === "victory" ? C.hpGreen + "60" : outcome === "partial" ? C.goldMd + "40" : C.bossRed + "40"}`,
+                        borderRadius: 8,
+                        animation: outcome === "victory" ? "victoryFlash 0.8s ease-out" : outcome === "partial" ? "fadeIn 0.5s ease-out" : "retreatFade 0.5s ease-out",
+                      }}>
+                        <div style={{ fontSize: 40, marginBottom: 8 }}>
+                          {outcome === "victory" ? "⚔️" : outcome === "partial" ? "🌟" : "🛡️"}
+                        </div>
+                        <PixelText size={10} color={outcome === "victory" ? C.hpGreen : outcome === "partial" ? C.goldMd : C.bossRed} style={{ display: "block" }}>
+                          {outcome === "victory" ? "BOSS DEFEATED" : outcome === "partial" ? "PARTIAL VICTORY" : "STRATEGIC RETREAT"}
+                        </PixelText>
+                        <PixelText size={7} color={C.grayLt} style={{ display: "block", marginTop: 4 }}>
+                          {outcome === "victory" ? "You stayed all the way through" : outcome === "partial" ? "Progress, not perfection" : "The Storm was too strong this time"}
+                        </PixelText>
+                      </div>
                       <PixelBtn onClick={() => setEngageSubStep(0.5)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                         🎒 SHOW ME THE LOOT
                       </PixelBtn>

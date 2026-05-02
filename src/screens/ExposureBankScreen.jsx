@@ -1,12 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { C } from '../constants/gameData';
 import { PixelText, HPBar } from '../components/shared';
 import SwipeableBoss from '../components/SwipeableBoss';
 import BottomNav from '../components/BottomNav';
 
 export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocusedBoss, onBack, onAchieveBoss, onDeleteBoss }) {
-  const unfinishedBosses = quest.bosses.filter(b => !b.defeated);
-  const defeatedBosses = quest.bosses.filter(b => b.defeated);
+  const [searchQuery, setSearchQuery] = useState("");
+  const allBosses = quest.bosses;
+  const unfinishedBosses = allBosses.filter(b => !b.defeated);
+  const defeatedBosses = allBosses.filter(b => b.defeated);
+
+  const filtered = (bosses) => {
+    if (!searchQuery.trim()) return bosses;
+    const q = searchQuery.toLowerCase();
+    return bosses.filter(b =>
+      b.name.toLowerCase().includes(q) || b.desc.toLowerCase().includes(q)
+    );
+  };
+  const filteredUnfinished = filtered(unfinishedBosses);
+  const filteredDefeated = filtered(defeatedBosses);
 
   const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
 
@@ -125,30 +137,45 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         <PixelText size={7} color={C.grayLt}>{quest.bosses.length} total</PixelText>
       </div>
 
+      {/* Search bar */}
+      <div style={{ padding: "8px 16px 0" }}>
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search exposures..."
+          style={{
+            width: "100%", padding: "8px 12px", boxSizing: "border-box",
+            background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
+            borderRadius: 6, color: C.cream, fontSize: 13,
+            fontFamily: "inherit", outline: "none",
+          }}
+        />
+      </div>
+
       <div style={{ padding: C.padLg }}>
-        {unfinishedBosses.length === 0 && defeatedBosses.length === 0 && (
+        {allBosses.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 16px" }}>
             <PixelText size={9} color={C.grayLt}>No exposures in your bank.</PixelText>
           </div>
         )}
 
         {/* UNFINISHED group */}
-        {unfinishedBosses.length > 0 && (
-          <div style={{ marginBottom: defeatedBosses.length > 0 ? 20 : 0 }}>
+        {filteredUnfinished.length > 0 && (
+          <div style={{ marginBottom: filteredDefeated.length > 0 ? 20 : 0 }}>
             <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 12 }}>
-              — UNFINISHED —
+              — UNFINISHED — {searchQuery && `(${filteredUnfinished.length})`}
             </PixelText>
-            {unfinishedBosses.map(b => renderBossCard(b))}
+            {filteredUnfinished.map(b => renderBossCard(b))}
           </div>
         )}
 
         {/* COMPLETED group */}
-        {defeatedBosses.length > 0 && (
+        {filteredDefeated.length > 0 && (
           <div>
             <PixelText size={9} color={C.hpGreen} style={{ display: "block", marginBottom: 12 }}>
-              — COMPLETED —
+              — COMPLETED — {searchQuery && `(${filteredDefeated.length})`}
             </PixelText>
-            {defeatedBosses.map(b => renderBossCard(b))}
+            {filteredDefeated.map(b => renderBossCard(b))}
             <div style={{ textAlign: "center", marginTop: 8 }}>
               <PixelText size={6} color={C.grayLt}>Tap to re-focus and repeat</PixelText>
             </div>

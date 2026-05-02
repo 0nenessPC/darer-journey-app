@@ -50,8 +50,9 @@ Single custom React hook, no external state library. All state is plain `useStat
 
 `DARERQuest` is a single large component that:
 - Consumes everything from `useAppState` + `useBossHandlers` + `useCompletionHandlers`
-- Renders screens via conditional matching: `screen === "intro" && <GameIntro ... />`
-- Wraps in a `maxWidth: 480` container
+- Renders 14 lazy-loaded screens via `React.lazy()` + `<Suspense>` with conditional matching
+- Smaller shared components (GameMap, HeroProfile, modals) are static imports
+- Wraps in a `maxWidth: 480` container with `screenFadeIn` animation on screen change
 - Provides global Back button, Logout button, and Feedback modal overlay
 
 ### Screen Navigation Flow
@@ -102,7 +103,7 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 ### Styling
 
 - **Design tokens**: `C` object in `src/constants/gameData.js` (e.g., `C.plum`, `C.goldMd`, `C.mapBg`, `C.bossRed`)
-- **Global CSS**: `src/index.css` has reset + `fadeIn`/`fearPulse` keyframes only
+- **Global CSS**: `src/index.css` has reset + `fadeIn`/`fearPulse`/`screenFadeIn`/`victoryFlash`/`retreatFade`/`lootShimmer` keyframes
 - **Fonts**: `Press Start 2P` (pixel) + `DM Sans` (body) — loaded via Google Fonts `<link>` injected dynamically
 - **All component styling is inline** `style={{}}` using tokens from `C`
 
@@ -297,9 +298,9 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
   - **Fixed template literal syntax error** — stray quote in ternary broke build
 
 - **`src/components/GameMap.jsx`** — bottom nav centered with `left: 0, right: 0, maxWidth: 480, margin: 0 auto`
-- **`src/components/HeroProfile.jsx`** — same bottom nav fix
+- **`src/components/HeroProfile.jsx`** — same bottom nav fix; 3-tab layout (HERO/BATTLE LOG/ARMORY)
 - **`src/components/LadderScreen.jsx`** — same bottom nav fix
-- **`src/screens/ExposureBankScreen.jsx`** — same bottom nav fix
+- **`src/screens/ExposureBankScreen.jsx`** — same bottom nav fix; search bar filtering by name/description
 
 - **`src/components/AskDaraChat.jsx`** — added missing `useCloudVoice` import (fixed "useCloudVoice is not defined" error)
 
@@ -399,6 +400,43 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
   - Phase 3: Component extraction (BottomNav, shared Modal, D.A.R.E.R. logic dedup, dead code cleanup, leaderboard, voice selection)
   - Phase 4: Polish (profile tabs, battle log animation, armory locked items, bank search/filter, swipe hints, difficulty coding)
 
+### Session: 2026-05-04 — Phase 3 Finalization + Phase 4 Polish
+
+- **`src/App.jsx` — Code-split lazy loading completed**:
+  - Wrapped all 14 lazy-loaded screen components in `<Suspense fallback={...}>`
+  - Loading fallback: centered "Loading..." text on map background
+  - Lazy screens: BossBattle, TutorialBattle, ExposureSortScreen, ExposureBankScreen, CharacterCreate, ValuesScreen, PsychoEdScreen, DARERStrategy, LoginScreen, GameIntro, ShadowLore, IntakeScreen, ShadowReveal, ArmoryScreen
+
+- **`src/index.css` — New animation keyframes**:
+  - `screenFadeIn` — 0.25s fade + slide-up on screen transitions
+  - `victoryFlash` — scale bounce + green glow for boss defeat
+  - `retreatFade` — slide-in from left for strategic retreat
+  - `lootShimmer` — shimmer effect for loot upload
+
+- **`src/components/HeroProfile.jsx` — 3-tab navigation**:
+  - Tabs: HERO (values, goal, coreValues) / BATTLE LOG (expandable battle records) / ARMORY (practice tools)
+  - Replaced previous 2-tab HERO/ARMORY toggle
+  - Battle log tab renders `battleHistory` with SUDS breakdown, prep answers, and expandable chat logs
+
+- **`src/screens/BossBattle.jsx` — Animated outcome banner**:
+  - Outcome selection now shows animated banner (victoryFlash/retreatFade/partial)
+  - Visual feedback: green flash for victory, amber fade for partial, red slide for retreat
+
+- **`src/screens/ExposureBankScreen.jsx` — Search bar**:
+  - Added search input filtering bosses by name and description
+  - Filtered counts shown in group headers (UNFINISHED/COMPLETED)
+
+- **`src/screens/ExposureSortScreen.jsx` — Swipe hints**:
+  - Floating ←/→ arrows on card sides with pulsing animation
+  - `swipeHintLeft` (green) and `swipeHintRight` (gold) keyframes
+
+- **Armory locked items** — already implemented (progress bars, lock icons, unlock requirements in HeroProfile armory view)
+- **Difficulty coding** — already implemented (color-coded LV badges on GameMap, ExposureBank, ExposureSortScreen)
+
+**Verification**:
+- `npx vite build` — 119 modules, 445 KB main bundle + 17 lazy chunks
+- `npm run test:e2e` — 1/1 passing
+- `npm run test:ai` — 12/12 passing
+
 ### Pending / Next Steps
-- **Finish design token migration** — BossBattle (~40 occurrences), TutorialBattle (~40), PracticeSession (~14), CharacterCreate (~16), VoiceToggle (~4), shared.jsx (~1 remaining), IntakeScreen, ShadowReveal, ValuesScreen, GameIntro, DARERStrategy, PsychoEdScreen.
-- **Phase 1 start** — Dual-font system (DM Sans for body, Press Start 2P for headers) is the highest-impact accessibility improvement.
+- None — Phase 1–4 all complete.

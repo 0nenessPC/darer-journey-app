@@ -304,6 +304,17 @@ No other text.`,
               opacity: swipeDir ? 0 : 1, transition: swipeDir ? "all 0.3s" : "none",
             }}
           >
+            {/* Floating swipe hint arrows */}
+            <div style={{
+              position: "absolute", left: -32, top: "50%", transform: "translateY(-50%)",
+              fontSize: 20, color: C.hpGreen,
+              animation: "swipeHintLeft 1.5s ease-in-out infinite", pointerEvents: "none",
+            }}>←</div>
+            <div style={{
+              position: "absolute", right: -32, top: "50%", transform: "translateY(-50%)",
+              fontSize: 20, color: C.goldMd,
+              animation: "swipeHintRight 1.5s ease-in-out infinite", pointerEvents: "none",
+            }}>→</div>
             {/* Difficulty badge */}
             <div style={{
               display: "inline-block", padding: "3px 10px", borderRadius: 3, marginBottom: 12,
@@ -363,7 +374,7 @@ No other text.`,
         </div>
       ) : null}
 
-      <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }`}</style>
+      <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} } @keyframes swipeHintLeft { 0%,100%{opacity:0.3;transform:translateY(-50%) translateX(0)} 50%{opacity:1;transform:translateY(-50%) translateX(-6px)} } @keyframes swipeHintRight { 0%,100%{opacity:0.3;transform:translateY(-50%) translateX(0)} 50%{opacity:1;transform:translateY(-50%) translateX(6px)} }`}</style>
     </div>
   );
 }
