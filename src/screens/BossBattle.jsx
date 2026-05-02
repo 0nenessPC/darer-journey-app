@@ -5,6 +5,10 @@ import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 import BottomNav from '../components/BottomNav';
 import AllowFields from '../components/DARER/AllowFields';
+import SUDSSlider from '../components/DARER/SUDSSlider';
+import SUDSComparison from '../components/DARER/SUDSComparison';
+import ReflectionQuestions from '../components/DARER/ReflectionQuestions';
+import DebriefFreeText from '../components/DARER/DebriefFreeText';
 import { useCloudVoice } from '../hooks/useCloudVoice';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import PracticeSession from '../components/PracticeSession';
@@ -40,65 +44,6 @@ function BattleTypewriterBubble({ text, muted, voice }) {
           🔊 speaking
         </PixelText>
       )}
-    </div>
-  );
-}
-
-// Debrief free-text sub-step: Dara speaks the question, user can type or speak their response
-function DebriefFreeText({ engageFreeText, setEngageFreeText, onNext, voice }) {
-  const [spoke, setSpoke] = useState(false);
-  const DEBRIEF_QUESTION = "Before we look at what the numbers tell us — in your own words, what did you learn from this battle?";
-
-  // Auto-speak Dara's question when this sub-step mounts
-  useEffect(() => {
-    if (!spoke) {
-      voice.speak(DEBRIEF_QUESTION, { speed: 0.9 });
-      setSpoke(true);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleVoiceSend = (text) => {
-    setEngageFreeText(text);
-  };
-
-  return (
-    <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-      <DialogBox speaker="DARA">
-        <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-          Before we look at what the{"\n"}numbers tell us — in your own{"\n"}words, what did you learn{"\n"}from this battle?
-        </PixelText>
-      </DialogBox>
-
-      {voice.supported ? (
-        <VoiceInputBar
-          input={engageFreeText}
-          onInputChange={setEngageFreeText}
-          onSend={handleVoiceSend}
-          typing={voice.isSpeaking}
-          disabled={false}
-          voice={voice}
-          placeholder="Speak your reflection or type below..."
-          style={{ marginTop: 14 }}
-        />
-      ) : null}
-
-      <textarea
-        value={engageFreeText}
-        onChange={e => setEngageFreeText(e.target.value)}
-        placeholder="What surprised you? What will you carry forward?..."
-        rows={3}
-        style={{
-          width: "100%", minHeight: 80, padding: 10, marginTop: voice.supported ? 8 : 14,
-          background: C.cardBg, border: "2px solid ${C.mutedBorder}",
-          borderRadius: 4, color: C.cream, fontSize: 12,
-          fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-          lineHeight: 1.6, boxSizing: "border-box",
-        }}
-      />
-
-      <PixelBtn onClick={onNext} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-        SEE WHAT THE SHADOW DID →
-      </PixelBtn>
     </div>
   );
 }
@@ -650,22 +595,13 @@ No other text.`,
                     </DialogBox>
                     <div style={{ margin: "12px 0" }}>
                       <PixelText size={7} color={C.subtleText}>STORM INTENSITY (before):</PixelText>
-                      <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                      {(() => {
-                        const pct = suds.before;
-                        const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
-                        return (
-                        <div>
-                          <input type="range" min="0" max="100" value={pct} onChange={e => setSuds(s => ({...s, before: +e.target.value}))}
-                            aria-label="Distress level before exposure" style={{ width: "100%", accentColor: color }} />
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <PixelText size={6} color={C.subtleText}>Calm</PixelText>
-                            <PixelText size={8} color={color}>{pct}</PixelText>
-                            <PixelText size={6} color={C.subtleText}>Intense</PixelText>
-                          </div>
-                        </div>
-                        );
-                      })()}
+                      <SUDSSlider
+                        value={suds.before}
+                        onChange={v => setSuds(s => ({...s, before: v}))}
+                        label="STORM INTENSITY (before)"
+                        subtitle="How much distress do you feel right now?"
+                        ariaLabel="Distress level before exposure"
+                      />
                     </div>
                     <PixelBtn onClick={() => advancePrepStep(s => s + 1)} color={vs.color} textColor={C.charcoal} style={{ width: "100%" }}>
                       LET'S GO →
@@ -904,22 +840,13 @@ No other text.`,
 
               <div style={{ marginTop: 12 }}>
                 <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
-                <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                {(() => {
-                  const pct = suds.after;
-                  const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
-                  return (
-                  <div>
-                    <input type="range" min="0" max="100" value={pct} onChange={e => setSuds(s => ({...s, after: +e.target.value}))}
-                      aria-label="Distress level after exposure" style={{ width: "100%", accentColor: color }} />
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <PixelText size={6} color={C.subtleText}>Calm</PixelText>
-                      <PixelText size={8} color={color}>{pct}</PixelText>
-                      <PixelText size={6} color={C.subtleText}>Intense</PixelText>
-                    </div>
-                  </div>
-                  );
-                })()}
+                <SUDSSlider
+                  value={suds.after}
+                  onChange={v => setSuds(s => ({...s, after: v}))}
+                  label="STORM INTENSITY (after)"
+                  subtitle="How much distress do you feel right now?"
+                  ariaLabel="Distress level after exposure"
+                />
               </div>
 
               <PixelBtn onClick={() => setEngageSubStep(2)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
@@ -931,71 +858,11 @@ No other text.`,
           {/* Sub-step 2: Reflection questions */}
           {engageSubStep === 2 && (
             <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-              <PixelText size={10} color={C.goldMd} style={{ display: "block", textAlign: "center", marginBottom: 16 }}>
-                REFLECT ON THE BATTLE
-              </PixelText>
-
-              {/* Q1 */}
-              <div style={{ marginBottom: 16 }}>
-                <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
-                  1. Did the consequences you feared actually happen?
-                </PixelText>
-                {["No, they didn't happen at all", "Some did, but not like I expected", "Yes, they did happen"].map(opt => (
-                  <button key={opt} onClick={() => {
-                    setFearedHappened(opt);
-                    if (opt === "No, they didn't happen at all") {
-                      setFearedSeverity("");
-                      setMadeItThrough("");
-                    }
-                  }} style={{
-                    display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${fearedHappened === opt ? C.teal : C.mutedBorder}`,
-                    background: fearedHappened === opt ? C.teal + "20" : C.cardBg,
-                    cursor: "pointer", textAlign: "left",
-                  }}>
-                    <PixelText size={7} color={fearedHappened === opt ? C.teal : C.grayLt}>{opt}</PixelText>
-                  </button>
-                ))}
-              </div>
-
-              {/* Q2 */}
-              {fearedHappened && fearedHappened !== "No, they didn't happen at all" && (
-                <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
-                  <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
-                    2. If it did happen — how bad was it really?
-                  </PixelText>
-                  {["It was much less severe than I feared", "It was about what I expected", "It was as bad as I feared"].map(opt => (
-                    <button key={opt} onClick={() => setFearedSeverity(opt)} style={{
-                      display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${fearedSeverity === opt ? C.teal : C.mutedBorder}`,
-                      background: fearedSeverity === opt ? C.teal + "20" : C.cardBg,
-                      cursor: "pointer", textAlign: "left",
-                    }}>
-                      <PixelText size={7} color={fearedSeverity === opt ? C.teal : C.grayLt}>{opt}</PixelText>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Q3 */}
-              {fearedSeverity && fearedHappened !== "No, they didn't happen at all" && (
-                <div style={{ marginBottom: 16, animation: "fadeIn 0.3s ease-out" }}>
-                  <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>
-                    3. Did you get through it?
-                  </PixelText>
-                  {["Yes — I made it through, even if it was hard", "I'm still working on it, but I know I can", "Not this time, but I learned something"].map(opt => (
-                    <button key={opt} onClick={() => setMadeItThrough(opt)} style={{
-                      display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${madeItThrough === opt ? C.teal : C.mutedBorder}`,
-                      background: madeItThrough === opt ? C.teal + "20" : C.cardBg,
-                      cursor: "pointer", textAlign: "left",
-                    }}>
-                      <PixelText size={7} color={madeItThrough === opt ? C.teal : C.grayLt}>{opt}</PixelText>
-                    </button>
-                  ))}
-                </div>
-              )}
-
+              <ReflectionQuestions
+                fearedHappened={fearedHappened} setFearedHappened={setFearedHappened}
+                fearedSeverity={fearedSeverity} setFearedSeverity={setFearedSeverity}
+                madeItThrough={madeItThrough} setMadeItThrough={setMadeItThrough}
+              />
               <PixelBtn onClick={() => setEngageSubStep(3)} disabled={fearedHappened === "No, they didn't happen at all" ? false : (!fearedHappened || !fearedSeverity || !madeItThrough)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                 CONTINUE →
               </PixelBtn>
@@ -1016,35 +883,7 @@ No other text.`,
           {engageSubStep === 4 && (
             <div style={{ animation: "fadeIn 0.6s ease-out" }}>
               {/* SUDs comparison */}
-              <div style={{ background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, padding: 14, marginBottom: 12 }}>
-                <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
-                <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
-                  <div>
-                    <PixelText size={7} color={C.subtleText}>BEFORE</PixelText>
-                    <div style={{ fontSize: 28, margin: "4px 0" }}>
-                      <PixelText size={20} color={C.bossRed}>{suds.before}</PixelText>
-                    </div>
-                    <PixelText size={6} color={C.bossRed}>FEARED</PixelText>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <PixelText size={16} color={C.goldMd}>→</PixelText>
-                  </div>
-                  <div>
-                    <PixelText size={7} color={C.subtleText}>AFTER</PixelText>
-                    <div style={{ fontSize: 28, margin: "4px 0" }}>
-                      <PixelText size={20} color={C.hpGreen}>{suds.after}</PixelText>
-                    </div>
-                    <PixelText size={6} color={C.hpGreen}>ACTUAL</PixelText>
-                  </div>
-                </div>
-                {suds.before > suds.after && (
-                  <div style={{ marginTop: 10, textAlign: "center" }}>
-                    <PixelText size={7} color={C.hpGreen}>
-                      The Storm dropped {suds.before - suds.after} points. That's damage dealt to the Shadow.
-                    </PixelText>
-                  </div>
-                )}
-              </div>
+              <SUDSComparison before={suds.before} after={suds.after} />
 
               <DialogBox speaker="DARA">
                 <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>

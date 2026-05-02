@@ -7,6 +7,9 @@ import PracticeSession from '../components/PracticeSession';
 import { useCloudVoice } from '../hooks/useCloudVoice';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import AllowFields from '../components/DARER/AllowFields';
+import SUDSSlider from '../components/DARER/SUDSSlider';
+import SUDSComparison from '../components/DARER/SUDSComparison';
+import DebriefFreeText from '../components/DARER/DebriefFreeText';
 
 // Map emoji name strings to actual emoji characters
 const EMOJI_MAP = {
@@ -680,22 +683,12 @@ No other text.`,
                 </DialogBox>
                 <div style={{ marginTop: 12 }}>
                   <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
-                  <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                  {(() => {
-                    const pct = sudsBefore;
-                    const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
-                    return (
-                    <div>
-                      <input type="range" min="0" max="100" value={pct} onChange={e => setSudsBefore(+e.target.value)}
-                        style={{ width: "100%", accentColor: color }} />
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.subtleText}>Calm</PixelText>
-                        <PixelText size={8} color={color}>{pct}</PixelText>
-                        <PixelText size={6} color={C.subtleText}>Intense</PixelText>
-                      </div>
-                    </div>
-                    );
-                  })()}
+                  <SUDSSlider
+                    value={sudsBefore}
+                    onChange={setSudsBefore}
+                    label="STORM INTENSITY (before)"
+                    subtitle="How much distress do you feel right now?"
+                  />
                 </div>
                 <PixelBtn onClick={() => advancePhase("engage")} disabled={!sudsBefore} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                   LET'S GO →
@@ -872,22 +865,12 @@ No other text.`,
 
                 <div style={{ marginTop: 12 }}>
                   <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
-                  <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
-                  {(() => {
-                    const pct = sudsAfter;
-                    const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
-                    return (
-                    <div>
-                      <input type="range" min="0" max="100" value={pct} onChange={e => setSudsAfter(+e.target.value)}
-                        style={{ width: "100%", accentColor: color }} />
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.subtleText}>Calm</PixelText>
-                        <PixelText size={8} color={color}>{pct}</PixelText>
-                        <PixelText size={6} color={C.subtleText}>Intense</PixelText>
-                      </div>
-                    </div>
-                    );
-                  })()}
+                  <SUDSSlider
+                    value={sudsAfter}
+                    onChange={setSudsAfter}
+                    label="STORM INTENSITY (after)"
+                    subtitle="How much distress do you feel right now?"
+                  />
                 </div>
 
                 <PixelBtn onClick={() => setEngageSubStep(3)} disabled={!sudsAfter} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
@@ -972,31 +955,12 @@ No other text.`,
 
             {/* Sub-step 4: Free text — what did you learn */}
             {engageSubStep === 4 && (
-              <div style={{ animation: "fadeIn 0.4s ease-out" }}>
-                <DialogBox speaker="DARA">
-                  <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-                    Before we look at what the{"\n"}numbers tell us — in your own{"\n"}words, what did you learn{"\n"}from this battle?
-                  </PixelText>
-                </DialogBox>
-
-                <textarea
-                  value={engageFreeText}
-                  onChange={e => setEngageFreeText(e.target.value)}
-                  placeholder="What surprised you? What will you carry forward?..."
-                  rows={3}
-                  style={{
-                    width: "100%", minHeight: 80, padding: 10, marginTop: 14,
-                    background: C.cardBg, border: "2px solid ${C.mutedBorder}",
-                    borderRadius: 4, color: C.cream, fontSize: 12,
-                    fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                    lineHeight: 1.6, boxSizing: "border-box",
-                  }}
-                />
-
-                <PixelBtn onClick={() => setEngageSubStep(5)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
-                  SEE WHAT THE SHADOW DID →
-                </PixelBtn>
-              </div>
+              <DebriefFreeText
+                engageFreeText={engageFreeText}
+                setEngageFreeText={setEngageFreeText}
+                onNext={() => setEngageSubStep(5)}
+                voice={voice}
+              />
             )}
 
             {/* Sub-step 5: SUDs comparison + debrief (moved from old debrief phase) */}
@@ -1009,35 +973,7 @@ No other text.`,
                 </div>
 
                 {/* SUDs comparison */}
-                <div style={{ background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, padding: 14, marginBottom: 12 }}>
-                  <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
-                  <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
-                    <div>
-                      <PixelText size={7} color={C.subtleText}>BEFORE</PixelText>
-                      <div style={{ fontSize: 28, margin: "4px 0" }}>
-                        <PixelText size={20} color={C.bossRed}>{sudsBefore}</PixelText>
-                      </div>
-                      <PixelText size={6} color={C.bossRed}>FEARED</PixelText>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <PixelText size={16} color={C.goldMd}>→</PixelText>
-                    </div>
-                    <div>
-                      <PixelText size={7} color={C.subtleText}>AFTER</PixelText>
-                      <div style={{ fontSize: 28, margin: "4px 0" }}>
-                        <PixelText size={20} color={C.hpGreen}>{sudsAfter}</PixelText>
-                      </div>
-                      <PixelText size={6} color={C.hpGreen}>ACTUAL</PixelText>
-                    </div>
-                  </div>
-                  {sudsBefore > sudsAfter && (
-                    <div style={{ marginTop: 10, textAlign: "center" }}>
-                      <PixelText size={7} color={C.hpGreen}>
-                        The Storm dropped {sudsBefore - sudsAfter} point{sudsBefore - sudsAfter !== 1 ? "s" : ""}. That's damage dealt to the Shadow.
-                      </PixelText>
-                    </div>
-                  )}
-                </div>
+                <SUDSComparison before={sudsBefore} after={sudsAfter} />
 
                 <DialogBox speaker="DARA">
                   <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
