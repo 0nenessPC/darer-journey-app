@@ -28,7 +28,7 @@ function AskDaraTypewriterBubble({ text, muted }) {
   return (
     <div style={{
       maxWidth: "80%", padding: "10px 14px", borderRadius: 8,
-      background: "#222",
+      background: C.grayBg,
       border: `2px solid ${C.teal}40`,
     }}>
       <PixelText size={7} color={C.cream} style={{ whiteSpace: "pre-wrap" }}>
@@ -193,7 +193,7 @@ Always keep the exposure small, actionable, and specific.`;
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            width: "100%", maxWidth: 480, background: "#1A1218",
+            width: "100%", maxWidth: 480, background: C.cardBg,
             borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
             padding: "24px 20px 32px",
           }}
@@ -228,7 +228,7 @@ Always keep the exposure small, actionable, and specific.`;
                 background: C.teal, border: `3px solid ${C.teal}`,
                 borderRadius: 6, cursor: "pointer",
                 color: C.cream, fontSize: 10, fontFamily: PIXEL_FONT,
-                boxShadow: `0 4px 0 #4A7A60`,
+                boxShadow: `0 4px 0 ${C.btnShadow}`,
               }}
             >
               ✅ Add to My Journey
@@ -263,7 +263,7 @@ Always keep the exposure small, actionable, and specific.`;
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: 480, height: "80vh",
-          background: "#1A1218", border: `3px solid ${C.teal}`,
+          background: C.cardBg, border: `3px solid ${C.teal}`,
           borderRadius: 12, display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}
@@ -307,7 +307,7 @@ Always keep the exposure small, actionable, and specific.`;
             <div style={{ marginBottom: 12 }}>
               <div style={{
                 maxWidth: "85%", padding: "10px 14px",
-                background: "#222", border: `2px solid ${C.teal}40`,
+                background: C.grayBg, border: `2px solid ${C.teal}40`,
                 borderRadius: 8,
               }}>
                 <TypingDots />
@@ -365,7 +365,7 @@ Always keep the exposure small, actionable, and specific.`;
               disabled={typing || step >= 5}
               style={{
                 flex: 1, padding: "10px 12px",
-                background: "#222", border: `2px solid ${C.teal}60`,
+                background: C.grayBg, border: `2px solid ${C.teal}60`,
                 borderRadius: 6, color: C.cream, fontSize: 12,
                 fontFamily: "inherit", outline: "none",
                 opacity: typing || step >= 5 ? 0.5 : 1,

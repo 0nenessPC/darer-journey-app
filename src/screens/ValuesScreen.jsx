@@ -200,8 +200,8 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
                   )}
                   <button onClick={() => toggleValue(v)} style={{
                     padding: "14px 10px",
-                    background: active ? C.goalGold + "15" : isGenerated ? C.plumMd + "08" : "#1A1218",
-                    border: `2px solid ${active ? C.goalGold : isGenerated ? C.plumMd + "60" : "#5C3A50"}`,
+                    background: active ? C.goalGold + "15" : isGenerated ? C.plumMd + "08" : "C.cardBg",
+                    border: `2px solid ${active ? C.goalGold : isGenerated ? C.plumMd + "60" : C.mutedBorder}`,
                     borderRadius: 6, cursor: "pointer", textAlign: "center",
                     boxShadow: active ? `0 0 12px ${C.goalGold}20` : isGenerated ? `0 0 8px ${C.plumMd}15` : "none",
                     transition: "all 0.2s",
@@ -231,7 +231,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
               rows={2}
               style={{
                 width: "100%", padding: 10,
-                background: "#1A1218", border: "2px solid #5C3A50",
+                background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
                 borderRadius: 4, color: C.cream, fontSize: 13,
                 fontFamily: "'DM Sans', sans-serif",
                 outline: "none", resize: "none", boxSizing: "border-box",
@@ -347,7 +347,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
 
           {freeText.trim() && (
             <div style={{
-              padding: 14, background: "#1A1218", border: "2px solid #5C3A50",
+              padding: 14, background: "C.cardBg", border: "2px solid ${C.mutedBorder}",
               borderRadius: 6, marginBottom: 12, textAlign: "left",
             }}>
               <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 4 }}>IN YOUR WORDS:</PixelText>

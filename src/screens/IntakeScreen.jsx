@@ -57,8 +57,8 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
       <link href={FONT_LINK} rel="stylesheet" />
-      <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: "2px solid #5C3A50" }}>
-        <div style={{ width: 32, height: 32, borderRadius: 4, background: "#1A1218", border: "2px solid #5C3A50", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧚</div>
+      <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `2px solid ${C.mutedBorder}` }}>
+        <div style={{ width: 32, height: 32, borderRadius: 4, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧚</div>
         <div>
           <PixelText size={9} color={C.goldMd}>DARA</PixelText>
           <div><PixelText size={7} color={typing ? C.rose : C.grayLt}>{typing ? "thinking..." : "soul companion"}</PixelText></div>
@@ -68,7 +68,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
             if (muted) setMuted(false);
             else { setMuted(true); voice.cancelSpeech(); }
           }}
-          style={{ background: "transparent", border: "1px solid #5C3A50", borderRadius: 4, cursor: "pointer", padding: "4px 6px", fontSize: 14, lineHeight: 1 }}
+          style={{ background: "transparent", border: `1px solid ${C.mutedBorder}`, borderRadius: 4, cursor: "pointer", padding: "4px 6px", fontSize: 14, lineHeight: 1 }}
           title={muted ? "Unmute DARER's voice" : "Mute DARER's voice"}
         >
           {muted ? "🔇" : "🔊"}
@@ -81,15 +81,15 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
               <div style={{
                 maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
                 background: C.plum,
-                border: "2px solid #5C3A50",
+                border: `2px solid ${C.mutedBorder}`,
               }}>
                 <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
               </div>
             ) : (
               <div style={{
                 maxWidth: "82%", padding: "10px 14px", borderRadius: 4,
-                background: "#1A1218",
-                border: "2px solid #5C3A50",
+                background: C.cardBg,
+                border: `2px solid ${C.mutedBorder}`,
               }}>
                 <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
               </div>
@@ -100,7 +100,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
         {error && (
           <div style={{ textAlign: "center", marginTop: 16, marginBottom: 10, animation: "fadeIn 0.3s ease-out" }}>
             <div style={{
-              padding: "10px 16px", background: "#1A1218", border: "1px solid #FF444440",
+              padding: "10px 16px", background: C.cardBg, border: `1px solid ${C.fearRed}40`,
               borderRadius: 4, display: "inline-block",
             }}>
               <PixelText size={7} color={C.amber} style={{ display: "block", marginBottom: 6 }}>{error}</PixelText>

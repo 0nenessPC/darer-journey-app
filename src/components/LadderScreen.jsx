@@ -22,7 +22,7 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       {/* Header */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           <PixelText size={9} color={C.grayLt}>←</PixelText>
         </button>
@@ -42,14 +42,14 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
         {mockEntries.map(entry => (
           <div key={entry.rank} style={{
             display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-            background: entry.rank <= 3 ? "#1A1218" : "#15101a",
-            border: `2px solid ${entry.rank === 1 ? C.goalGold : entry.rank === 2 ? C.plumMd : entry.rank === 3 ? C.amber : "#333"}`,
+            background: entry.rank <= 3 ? C.cardBg : C.lockedBg,
+            border: `2px solid ${entry.rank === 1 ? C.goalGold : entry.rank === 2 ? C.plumMd : entry.rank === 3 ? C.amber : C.grayBorder}`,
             borderRadius: 6, marginBottom: 6,
           }}>
             <div style={{
               width: 28, height: 28, borderRadius: "50%",
-              background: entry.rank === 1 ? C.goalGold + "30" : entry.rank === 2 ? C.plumMd + "20" : entry.rank === 3 ? C.amber + "20" : "#222",
-              border: `2px solid ${entry.rank === 1 ? C.goalGold : entry.rank === 2 ? C.plumMd : entry.rank === 3 ? C.amber : "#555"}`,
+              background: entry.rank === 1 ? C.goalGold + "30" : entry.rank === 2 ? C.plumMd + "20" : entry.rank === 3 ? C.amber + "20" : C.grayBg,
+              border: `2px solid ${entry.rank === 1 ? C.goalGold : entry.rank === 2 ? C.plumMd : entry.rank === 3 ? C.amber : C.grayBorderLt}`,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <PixelText size={8} color={entry.rank <= 3 ? (entry.rank === 1 ? C.goalGold : entry.rank === 2 ? C.plumMd : C.amber) : C.grayLt}>{entry.rank}</PixelText>
@@ -90,8 +90,8 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
 
       {/* Bottom nav */}
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        maxWidth: 480, margin: "0 auto", display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },

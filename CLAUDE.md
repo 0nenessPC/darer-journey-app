@@ -349,3 +349,56 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 - **Values timeout** — extended test timeout to 180s (from default 120s) since this test has the longest navigation path.
 
 **Results**: 12/12 tests passing consistently across 3 consecutive full-suite runs.
+
+### Session: 2026-05-03 — Design Token Migration, Bottom Nav Standardization, Talk to Dara Fix, 40-Item UI Audit
+
+- **New design tokens added** (`src/constants/gameData.js`):
+  - `C.cardBg` = `"#1A1218"` (dark card/panel backgrounds)
+  - `C.mutedBorder` = `"#5C3A50"` (borders, dividers)
+  - `C.inputBg` = `"#222"` (input field backgrounds)
+  - `C.fearRed` = `"#FF4444"` (F.E.A.R. node highlights)
+  - `C.levelAmber` = `"#E8A04A"` (level 7-8 difficulty indicator)
+  - `C.overlay` = `"rgba(0,0,0,0.7)"` (modal backdrops)
+  - Spacing tokens: `padSm: 8, padMd: 12, padLg: 16, padXl: 24, padXxl: 32`
+
+- **Design token migration** (~12 files edited, ~50 occurrences replaced):
+  - `src/screens/ExposureSortScreen.jsx` — `levelAmber`, `cardBg`, `mutedBorder`
+  - `src/components/DeleteConfirm.jsx` — `cardBg`, `inputBg`, `overlay`
+  - `src/components/ErrorBoundary.jsx` — `cardBg`
+  - `src/components/AddExposureModal.jsx` — `cardBg`, `overlay`
+  - `src/components/AddManualEntryForm.jsx` — `cardBg`, `inputBg`, `mutedBorder`
+  - `src/screens/LoginScreen.jsx` — `cardBg`, `mutedBorder` (all occurrences)
+  - `src/components/shared.jsx` — `cardBg`, `mutedBorder` in HPBar, DialogBox, OnboardingProgress
+  - `src/components/VoiceInputField.jsx` — `cardBg`, `inputBg`, `mutedBorder`, `C.red`
+  - `src/screens/ArmoryScreen.jsx` — `cardBg`, `mutedBorder`
+  - `src/components/FeedbackModal.jsx` — `overlay`
+  - `src/components/NdaAgreementScreen.jsx` — `cardBg`, `mutedBorder`
+  - `src/components/GameMap.jsx` — `cardBg`, `mutedBorder`, `inputBg`, `levelAmber`, `overlay`
+  - `src/screens/ExposureBankScreen.jsx` — `mutedBorder`, `cardBg` (bottom nav)
+  - `src/components/LadderScreen.jsx` — `mutedBorder`, `cardBg` (bottom nav)
+  - `src/components/HeroProfile.jsx` — `mutedBorder`, `cardBg` (bottom nav)
+  - `src/screens/BossBattle.jsx` — `mutedBorder`, `cardBg` (bottom nav)
+  - *Remaining*: BossBattle (~40), TutorialBattle (~40), PracticeSession (~14), CharacterCreate (~16), VoiceToggle (~4), shared.jsx (~1), IntakeScreen (~4), ShadowReveal (~4), ValuesScreen (~4), GameIntro (~1), DARERStrategy (~1), PsychoEdScreen (~3)
+
+- **Bottom nav standardization** (fixed content overlap and positioning inconsistency):
+  - Changed HeroProfile, LadderScreen, ExposureBankScreen, BossBattle from `position: "fixed"` → `position: "absolute"` to match GameMap
+  - All now positioned relative to the 480px App container (prevents misalignment on wide screens)
+  - BossBattle prep content area bottom padding: `12px` → `80px` (prevents "I'M ALLOWING IT" button from hiding behind nav)
+
+- **Talk to Dara fix** (`src/screens/TutorialBattle.jsx`):
+  - Coach chat now uses `coachChat.sendMessage()` (the `useAIChat` hook, same as IntakeScreen) instead of manual `callAI` calls
+  - Fixes send button not passing text (was calling `onSend()` with no args) and wrong message format for the API
+  - Added auto-speak of Dara's replies via `voice.speak(ok)`
+  - Replaced hardcoded colors in chat bubbles
+
+- **Build verified**: `npx vite build` passes cleanly (1.30s)
+
+- **40-item UI audit consolidated** into 4 phases:
+  - Phase 1: Accessibility (dual-font system, type ramp, WCAG contrast, safe areas, "← BACK" fix, font dedup)
+  - Phase 2: UX fixes (loading indicators, ALLOW progress indicator, swipe tutorial, skip option, onboarding chapters, voice consistency, TTS indicator)
+  - Phase 3: Component extraction (BottomNav, shared Modal, D.A.R.E.R. logic dedup, dead code cleanup, leaderboard, voice selection)
+  - Phase 4: Polish (profile tabs, battle log animation, armory locked items, bank search/filter, swipe hints, difficulty coding)
+
+### Pending / Next Steps
+- **Finish design token migration** — BossBattle (~40 occurrences), TutorialBattle (~40), PracticeSession (~14), CharacterCreate (~16), VoiceToggle (~4), shared.jsx (~1 remaining), IntakeScreen, ShadowReveal, ValuesScreen, GameIntro, DARERStrategy, PsychoEdScreen.
+- **Phase 1 start** — Dual-font system (DM Sans for body, Press Start 2P for headers) is the highest-impact accessibility improvement.

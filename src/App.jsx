@@ -124,7 +124,7 @@ export default function DARERQuest() {
       {!["login", "map", "battle", "bank"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 8, zIndex: 100,
-          background: "#1A1218CC", border: "1px solid #5C3A50",
+          background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
           backdropFilter: "blur(4px)",
@@ -151,7 +151,7 @@ export default function DARERQuest() {
       {isAuthenticated && screen !== "login" && screen !== "nda" && (
         <button onClick={handleLogout} style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 8, zIndex: 100,
-          background: "#1A1218CC", border: "1px solid #5C3A50",
+          background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           backdropFilter: "blur(4px)",
         }}>

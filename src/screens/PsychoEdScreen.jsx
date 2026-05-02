@@ -19,10 +19,10 @@ export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
     const nodes = [
       { label: "SHADOW'S\nTERRITORY", icon: "📍", color: C.plumMd },
       { label: "INNER\nSTORM", icon: "🌀", color: C.bossRed },
-      { label: "F.E.A.R.", icon: "😨", color: "#FF4444" },
-      { label: "THE\nESCAPE", icon: "🏃", color: "#E8A04A" },
+      { label: "F.E.A.R.", icon: "😨", color: C.fearGlow },
+      { label: "THE\nESCAPE", icon: "🏃", color: C.levelAmber },
       { label: "BRIEF\nRELIEF", icon: "😮‍💨", color: C.hpGreen },
-      { label: "SHADOW\nGROWS", icon: "👤", color: "#888" },
+      { label: "SHADOW\nGROWS", icon: "👤", color: C.grayNeutral },
     ];
     const size = 280;
     const cx = size / 2, cy = size / 2, r = 100;
@@ -40,7 +40,7 @@ export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
             const active = cycleHighlight === i;
             return (
               <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke={active ? nodes[i].color : "#5C3A50"}
+                stroke={active ? nodes[i].color : C.mutedBorder}
                 strokeWidth={active ? 3 : 1.5}
                 strokeDasharray={active ? "none" : "4,4"}
                 markerEnd="url(#arrow)"
@@ -50,7 +50,7 @@ export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
           })}
           <defs>
             <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#5C3A50" />
+              <path d="M0,0 L8,4 L0,8 Z" fill={C.mutedBorder} />
             </marker>
           </defs>
         </svg>
@@ -72,18 +72,18 @@ export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
             }}>
               {isFear && <div style={{
                 position: "absolute", inset: -8, borderRadius: "50%",
-                background: "#FF444425", border: "2px solid #FF444480",
-                boxShadow: active ? "0 0 30px #FF444460, 0 0 60px #FF444420" : "0 0 16px #FF444430, 0 0 40px #FF444415",
+                background: `${C.fearGlow}25`, border: `2px solid ${C.fearGlow}80`,
+                boxShadow: active ? `0 0 30px ${C.fearGlow}60, 0 0 60px ${C.fearGlow}20` : `0 0 16px ${C.fearGlow}30, 0 0 40px ${C.fearGlow}15`,
                 animation: "fearPulse 1.5s ease-in-out infinite",
               }} />}
               <div style={{ fontSize: isFear ? 24 : 18, position: "relative" }}>{n.icon}</div>
               <div style={{
                 fontFamily: PIXEL_FONT, fontSize: isFear ? 9 : 6,
-                color: active ? n.color : isFear ? "#FF4444" : C.grayLt,
+                color: active ? n.color : isFear ? C.fearGlow : C.grayLt,
                 lineHeight: 1.3, whiteSpace: "pre-line",
                 fontWeight: isFear ? "bold" : "normal",
                 position: "relative",
-                textShadow: isFear ? "0 0 8px #FF444460" : "none",
+                textShadow: isFear ? `0 0 8px ${C.fearGlow}60` : "none",
               }}>{n.label}</div>
             </div>
           );
@@ -209,7 +209,7 @@ export default function PsychoEdScreen({ heroName, heroValues, onContinue }) {
         {slides[step].render()}
       </div>
       <div style={{ display: "flex", gap: 6, margin: "16px 0" }}>
-        {slides.map((_, i) => <div key={i} style={{ width: i === step ? 16 : 6, height: 6, borderRadius: 3, background: i === step ? C.goldMd : "#5C3A50", transition: "all 0.3s" }} />)}
+        {slides.map((_, i) => <div key={i} style={{ width: i === step ? 16 : 6, height: 6, borderRadius: 3, background: i === step ? C.goldMd : C.mutedBorder, transition: "all 0.3s" }} />)}
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         {step > 0 && <PixelBtn onClick={() => setStep(s => s - 1)} color={C.plum}>← BACK</PixelBtn>}

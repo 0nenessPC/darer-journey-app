@@ -11,6 +11,39 @@ export const C = {
   // Game-specific
   mapBg: "#2A1F28", mapPath: "#5C3A50", bossRed: "#C45A5A", goalGold: "#E8C87A",
   hpGreen: "#6BA56B", hpRed: "#C45A5A", xpPurple: "#9B7BAA",
+  // Common UI tokens (previously hardcoded across 70+ locations)
+  cardBg: "#1A1218",       // dark card/panel backgrounds
+  mutedBorder: "#5C3A50",  // borders, dividers (same hex as mapPath, different semantic use)
+  inputBg: "#222",         // input field backgrounds
+  fearRed: "#FF4444",      // F.E.A.R. node highlights
+  levelAmber: "#E8A04A",   // level 7-8 difficulty indicator
+  overlay: "rgba(0,0,0,0.7)", // modal backdrops
+  // Additional dark tones (cards, locked states, disabled)
+  cardBgAlt: "#2A1A28",      // alternate dark card (boss list)
+  cardCompleted: "#151E14",  // completed boss card (green tint)
+  cardCustom: "#1E1620",     // custom boss card (purple tint)
+  deepDark: "#0D0A0C",       // near-black inner panels
+  warmDark: "#1E1A18",       // warm dark brown (stat displays)
+  disabledBg: "#3A2830",     // disabled button bg
+  lockedBg: "#15101a",       // locked content dark bg
+  grayBorder: "#333",        // gray borders for locked/disabled
+  grayBorderMid: "#444",     // mid-gray borders
+  grayBorderLt: "#555",      // light-gray borders
+  grayBg: "#222",            // gray backgrounds (leaderboard)
+  btnShadow: "#4A7A60",      // teal button shadow (3D effect)
+  plumBtnShadow: "#4A2D40",  // plum button shadow
+  goldBtnShadow: "#806020",  // gold/amber button shadow
+  // Map environment colors
+  forestGreen: "#6B8E6B",    // Whisper Woods environment
+  mistyPurple: "#8B7BAA",    // Misty Bridge environment
+  ravineDark: "#5C4A5C",     // Dark Ravine environment
+  shadowBoss: "#9B3A3A",     // Shadow King boss color
+  pathBlack: "#000000",      // Map path outline
+  grayNeutral: "#888",       // neutral gray for icons/nodes
+  // F.E.A.R. token (alias of fearRed)
+  fearGlow: "#FF4444",       // F.E.A.R. node pulse & glow effects
+  // Spacing tokens
+  padSm: 8, padMd: 12, padLg: 16, padXl: 24, padXxl: 32,
 };
 
 export const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";

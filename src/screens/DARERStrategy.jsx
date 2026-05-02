@@ -30,9 +30,9 @@ function DARERSide({ children }) {
 function VSdivider() {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", margin: "4px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "#5C3A5040" }} />
+      <div style={{ flex: 1, height: 1, background: `${C.mutedBorder}40` }} />
       <PixelText size={7} color={C.goldMd} style={{ margin: "0 10px" }}>VS</PixelText>
-      <div style={{ flex: 1, height: 1, background: "#5C3A5040" }} />
+      <div style={{ flex: 1, height: 1, background: `${C.mutedBorder}40` }} />
     </div>
   );
 }
@@ -147,7 +147,7 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
             { letter: "E", word: "ENGAGE", desc: "Be fully present — no escape, no checking out" },
             { letter: "R", word: "REPEAT", desc: "Do it again. The Shadow weakens every time" },
           ].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: i < 4 ? "1px solid #5C3A5025" : "none" }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: i < 4 ? `1px solid ${C.mutedBorder}25` : "none" }}>
               <div style={{
                 width: 28, height: 28, borderRadius: 4,
                 background: C.goldMd + "20", border: `1.5px solid ${C.goldMd}60`,
@@ -179,7 +179,7 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
         {slides[step].render()}
       </div>
       <div style={{ display: "flex", gap: 6, margin: "16px 0" }}>
-        {slides.map((_, i) => <div key={i} style={{ width: i === step ? 16 : 6, height: 6, borderRadius: 3, background: i === step ? C.goldMd : "#5C3A50", transition: "all 0.3s" }} />)}
+        {slides.map((_, i) => <div key={i} style={{ width: i === step ? 16 : 6, height: 6, borderRadius: 3, background: i === step ? C.goldMd : C.mutedBorder, transition: "all 0.3s" }} />)}
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         {step > 0 && <PixelBtn onClick={() => setStep(s => s - 1)} color={C.plum}>← BACK</PixelBtn>}

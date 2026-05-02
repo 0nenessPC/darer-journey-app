@@ -70,7 +70,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
         <div style={{ animation: "fadeIn 0.5s ease-out", width: "100%" }}>
           <div style={{
             width: 80, height: 80, margin: "0 auto 24px", borderRadius: 6,
-            background: "#1A1218", border: `4px solid ${nameConfirmed ? C.goldMd : "#5C3A50"}`,
+            background: C.cardBg, border: `4px solid ${nameConfirmed ? C.goldMd : C.mutedBorder}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: nameConfirmed ? `0 0 20px ${C.goldMd}30` : "none",
             transition: "all 0.5s",
@@ -94,7 +94,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
             autoFocus
             style={{
               width: "100%", padding: 14, textAlign: "center",
-              background: "#1A1218", border: `3px solid ${nameConfirmed ? C.goldMd : "#5C3A50"}`,
+              background: C.cardBg, border: `3px solid ${nameConfirmed ? C.goldMd : C.mutedBorder}`,
               borderRadius: 4, color: C.cream, fontSize: 16,
               fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
               transition: "border-color 0.3s",
@@ -111,7 +111,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
 
           {nameConfirmed && (
             <div style={{ marginTop: 20, animation: "fadeIn 0.5s ease-out" }}>
-              <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 16 }}>
+              <div style={{ padding: 16, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
                 <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
                   {name.trim() || darerId}. A name the Shadow{"\n"}will learn to fear.{"\n"}{"\n"}
                   Welcome to the DARER family.{"\n"}{"\n"}
@@ -125,10 +125,10 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
               {onFastForward && (
                 <button onClick={onFastForward} style={{
                   marginTop: 8, width: "100%", padding: "8px 16px",
-                  background: "transparent", border: "1px dashed #555",
+                  background: "transparent", border: `1px dashed ${C.mutedBorder}`,
                   borderRadius: 4, cursor: "pointer",
                 }}>
-                  <PixelText size={7} color="#666">⚡ FAST-FORWARD TO BATTLES</PixelText>
+                  <PixelText size={7} color={C.grayLt}>⚡ FAST-FORWARD TO BATTLES</PixelText>
                 </button>
               )}
             </div>
@@ -142,7 +142,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           {/* Dara portrait */}
           <div style={{
             width: 88, height: 88, margin: "0 auto 20px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #2A1A28 0%, #1A1218 100%)",
+            background: `linear-gradient(135deg, ${C.cardBgAlt} 0%, ${C.cardBg} 100%)`,
             border: `4px solid ${C.goldMd}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: `0 0 24px ${C.goldMd}25, 0 0 48px ${C.goldMd}10`,
@@ -155,7 +155,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
             SOUL COMPANION OF THE DARER ORDER
           </PixelText>
 
-          <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 16 }}>
+          <div style={{ padding: 16, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
               Every DARER is assigned a Soul{"\n"}Companion — someone who knows the{"\n"}Shadow's tricks and how to{"\n"}unravel them.{"\n"}{"\n"}
               Dara has walked beside hundreds{"\n"}of DARERs before you. She knows{"\n"}the path. She knows the fear.{"\n"}And she knows it can be beaten.{"\n"}{"\n"}
@@ -202,8 +202,8 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
                 return (
                   <div key={i} style={{
                     flex: 1, padding: "12px 8px", textAlign: "center", borderRadius: 6,
-                    background: picked ? C.goldMd + "15" : "#1A1218",
-                    border: `2px solid ${picked ? C.goldMd : "#5C3A50"}`,
+                    background: picked ? C.goldMd + "15" : "C.cardBg",
+                    border: `2px solid ${picked ? C.goldMd : C.mutedBorder}`,
                     minHeight: 60, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                     cursor: picked ? "pointer" : "default",
                   }} onClick={() => picked && setCoreValues(prev => prev.filter(x => x !== picked.id))}>
@@ -213,7 +213,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
                         <PixelText size={7} color={C.goldMd}>{picked.word.toUpperCase()}</PixelText>
                       </>
                     ) : (
-                      <PixelText size={10} color={"#5C3A50"}>?</PixelText>
+                      <PixelText size={10} color={C.mutedBorder}>?</PixelText>
                     )}
                   </div>
                 );
@@ -237,8 +237,8 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
                     setExpandedValue(v.id);
                   }
                 }} style={{
-                  padding: "14px 10px", background: active ? C.goldMd + "15" : "#1A1218",
-                  border: `2px solid ${active ? C.goldMd : expanded ? C.plumMd : "#5C3A50"}`,
+                  padding: "14px 10px", background: active ? C.goldMd + "15" : "C.cardBg",
+                  border: `2px solid ${active ? C.goldMd : expanded ? C.plumMd : C.mutedBorder}`,
                   borderRadius: 6, cursor: "pointer", textAlign: "center",
                   boxShadow: active ? `0 0 8px ${C.goldMd}15` : "none",
                   transition: "all 0.2s",
@@ -289,7 +289,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
             {ACT_VALUES.filter(v => coreValues.includes(v.id)).map((v, i) => (
               <div key={v.id} style={{
-                padding: 16, background: "#1A1218",
+                padding: 16, background: "C.cardBg",
                 border: `2px solid ${C.goldMd}60`, borderRadius: 6,
                 textAlign: "center",
                 animation: `fadeIn 0.5s ease-out ${i * 0.2}s both`,
@@ -362,8 +362,8 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
             assigned.sort((a, b) => dims.indexOf(a.assignedDim) - dims.indexOf(b.assignedDim));
             return assigned.map((v, i) => (
               <div key={v.id} style={{
-                padding: "12px 14px", marginBottom: 8, background: "#1A1218",
-                border: "2px solid #5C3A50", borderRadius: 6,
+                padding: "12px 14px", marginBottom: 8, background: "C.cardBg",
+                border: "2px solid ${C.mutedBorder}", borderRadius: 6,
                 display: "flex", alignItems: "center", gap: 12,
                 animation: statsRevealed ? `fadeIn 0.4s ease-out ${i * 0.15}s both` : "none",
                 opacity: statsRevealed ? 1 : 0,
@@ -374,7 +374,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
                     <PixelText size={8} color={colors[v.assignedDim]}>{v.word.toUpperCase()}</PixelText>
                     <PixelText size={8} color={C.cream}>{stats[v.assignedDim]}/10</PixelText>
                   </div>
-                  <div style={{ height: 8, background: C.mapBg, borderRadius: 2, border: "1px solid #5C3A50", overflow: "hidden" }}>
+                  <div style={{ height: 8, background: C.mapBg, borderRadius: 2, border: `1px solid ${C.mutedBorder}`, overflow: "hidden" }}>
                     <div style={{
                       height: "100%", width: statsRevealed ? `${stats[v.assignedDim] * 10}%` : "0%",
                       background: colors[v.assignedDim], borderRadius: 2,
@@ -390,16 +390,16 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           {/* Summary counts — tap to explain */}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button onClick={() => setShowTooltip(showTooltip === "strength" ? null : "strength")} style={{
-              flex: 1, padding: 10, background: showTooltip === "strength" ? C.goldMd + "15" : "#1A1218",
-              border: `2px solid ${showTooltip === "strength" ? C.goldMd : "#5C3A50"}`,
+              flex: 1, padding: 10, background: showTooltip === "strength" ? C.goldMd + "15" : "C.cardBg",
+              border: `2px solid ${showTooltip === "strength" ? C.goldMd : C.mutedBorder}`,
               borderRadius: 6, textAlign: "center", cursor: "pointer", transition: "all 0.2s",
             }}>
               <PixelText size={12} color={C.goldMd}>0</PixelText>
               <div><PixelText size={6} color={C.grayLt}>STRENGTHS ⓘ</PixelText></div>
             </button>
             <button onClick={() => setShowTooltip(showTooltip === "challenge" ? null : "challenge")} style={{
-              flex: 1, padding: 10, background: showTooltip === "challenge" ? C.plumMd + "15" : "#1A1218",
-              border: `2px solid ${showTooltip === "challenge" ? C.plumMd : "#5C3A50"}`,
+              flex: 1, padding: 10, background: showTooltip === "challenge" ? C.plumMd + "15" : "C.cardBg",
+              border: `2px solid ${showTooltip === "challenge" ? C.plumMd : C.mutedBorder}`,
               borderRadius: 6, textAlign: "center", cursor: "pointer", transition: "all 0.2s",
             }}>
               <PixelText size={12} color={C.plumMd}>0</PixelText>
@@ -410,7 +410,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           {/* Tooltip explanation */}
           {showTooltip && (
             <div style={{
-              marginTop: 8, padding: 12, background: "#1A1218",
+              marginTop: 8, padding: 12, background: "C.cardBg",
               border: `2px solid ${showTooltip === "strength" ? C.goldMd + "60" : C.plumMd + "60"}`,
               borderRadius: 6, animation: "fadeIn 0.2s ease-out",
             }}>

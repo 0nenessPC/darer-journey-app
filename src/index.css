@@ -21,6 +21,6 @@ button {
 }
 
 @keyframes fearPulse {
-  0%, 100% { box-shadow: 0 0 8px #FF444420; }
-  50%      { box-shadow: 0 0 24px #FF444450; }
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 68, 68, 0.13); }
+  50%      { box-shadow: 0 0 24px rgba(255, 68, 68, 0.31); }
 }

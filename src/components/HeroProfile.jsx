@@ -53,7 +53,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
         <div style={{ padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 56, marginBottom: 16, animation: "fearPulseScale 1.5s ease-in-out infinite" }}>{unlocked.icon}</div>
           <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>NEW ARMORY ITEM UNLOCKED!</PixelText>
-          <div style={{ padding: 16, background: "#1A1218", border: `3px solid ${C.goldMd}`, borderRadius: 6, marginBottom: 24 }}>
+          <div style={{ padding: 16, background: C.cardBg, border: `3px solid ${C.goldMd}`, borderRadius: 6, marginBottom: 24 }}>
             <PixelText size={10} color={C.cream}>{unlocked.name}</PixelText>
             <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{unlocked.description}</PixelText></div>
           </div>
@@ -73,7 +73,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{
           width: 80, height: 80, margin: "0 auto 12px", borderRadius: 6,
-          background: C.plum, border: "4px solid #5C3A50",
+          background: C.plum, border: "4px solid ${C.mutedBorder}",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}><PixelText size={32} color={C.goldMd}>⚔</PixelText></div>
         <PixelText size={14} color={C.cream}>{hero.name}</PixelText>
@@ -83,13 +83,13 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       {/* Tab toggle: Profile / Armory */}
       <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
         <button onClick={() => setArmoryView(false)} style={{
-          flex: 1, padding: "8px 0", border: `2px solid ${armoryView ? "#5C3A50" : C.goldMd}`, borderRadius: 4,
+          flex: 1, padding: "8px 0", border: `2px solid ${armoryView ? C.mutedBorder : C.goldMd}`, borderRadius: 4,
           background: armoryView ? "transparent" : C.goldMd + "20", cursor: "pointer",
         }}>
           <PixelText size={8} color={armoryView ? C.grayLt : C.goldMd}>HERO</PixelText>
         </button>
         <button onClick={() => setArmoryView(true)} style={{
-          flex: 1, padding: "8px 0", border: `2px solid ${armoryView ? C.plum + "80" : "#5C3A50"}`, borderRadius: 4,
+          flex: 1, padding: "8px 0", border: `2px solid ${armoryView ? C.plum + "80" : C.mutedBorder}`, borderRadius: 4,
           background: armoryView ? C.plum + "30" : "transparent", cursor: "pointer",
         }}>
           <PixelText size={8} color={armoryView ? C.plumMd : C.grayLt}>⚗ ARMORY</PixelText>
@@ -137,7 +137,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                   style={{
                     width: "100%",
                     padding: 10,
-                    background: "#1A1218",
+                    background: C.cardBg,
                     border: `2px solid ${expandedBossId === boss.id ? C.hpGreen : C.hpGreen + "40"}`,
                     borderRadius: 6,
                     cursor: "pointer",
@@ -156,14 +156,14 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                 {expandedBossId === boss.id && (() => {
                   const battle = battleHistory?.find(b => b.bossId === boss.id) || {};
                   return (
-                    <div style={{ marginTop: 4, padding: 10, background: "#1A1218", border: `1px solid ${C.hpGreen}30`, borderRadius: 4 }}>
+                    <div style={{ marginTop: 4, padding: 10, background: C.cardBg, border: `1px solid ${C.hpGreen}30`, borderRadius: 4 }}>
                       <div style={{ textAlign: "center", marginBottom: 6 }}>
                         <PixelText size={9} color={battle.outcome === "victory" ? C.hpGreen : battle.outcome === "partial" ? C.amber : C.bossRed}>
                           {battle.outcome === "victory" ? "VICTORY" : battle.outcome === "partial" ? "PARTIAL" : "DEFEATED"}
                         </PixelText>
                       </div>
                       {battle.suds && battle.suds.before !== undefined && (
-                        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 6, padding: 6, background: "#1E1A18", borderRadius: 4 }}>
+                        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 6, padding: 6, background: C.warmDark, borderRadius: 4 }}>
                           <div style={{ textAlign: "center" }}><PixelText size={9} color={C.bossRed}>{battle.suds.before}</PixelText><div><PixelText size={6} color={C.grayLt}>BEFORE</PixelText></div></div>
                           <div style={{ textAlign: "center" }}><PixelText size={9} color={C.amber}>{battle.suds.during ?? battle.suds.peak}</PixelText><div><PixelText size={6} color={C.grayLt}>PEAK</PixelText></div></div>
                           <div style={{ textAlign: "center" }}><PixelText size={9} color={C.hpGreen}>{battle.suds.after}</PixelText><div><PixelText size={6} color={C.grayLt}>AFTER</PixelText></div></div>
@@ -180,7 +180,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                           <summary style={{ cursor: "pointer", marginBottom: 4 }}>
                             <PixelText size={6} color={C.teal}>Battle conversation ({battle.battleMessages.length} messages)</PixelText>
                           </summary>
-                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: C.deepDark, borderRadius: 4, marginTop: 4 }}>
                             {battle.battleMessages.map((m, mi) => (
                               <div key={mi} style={{ marginBottom: 3 }}>
                                 <PixelText size={6} color={m.role === "assistant" ? C.rose : C.cream}>{m.role === "assistant" ? "Dara: " : "You: "}{m.text}</PixelText>
@@ -194,7 +194,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                           <summary style={{ cursor: "pointer", marginBottom: 4 }}>
                             <PixelText size={6} color={C.teal}>Victory reflection ({battle.victoryMessages.length} messages)</PixelText>
                           </summary>
-                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: "#0D0A0C", borderRadius: 4, marginTop: 4 }}>
+                          <div style={{ maxHeight: 150, overflowY: "auto", padding: 6, background: C.deepDark, borderRadius: 4, marginTop: 4 }}>
                             {battle.victoryMessages.map((m, mi) => (
                               <div key={mi} style={{ marginBottom: 3 }}>
                                 <PixelText size={6} color={m.role === "assistant" ? C.rose : C.cream}>{m.role === "assistant" ? "Dara: " : "You: "}{m.text}</PixelText>
@@ -215,7 +215,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       <div>
         <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>BATTLE LOG</PixelText>
         {quest.bosses.filter(b => b.defeated).map(b => (
-          <div key={b.id} style={{ padding: 10, marginBottom: 6, background: "#1A1218", border: "2px solid " + C.hpGreen + "60", borderRadius: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div key={b.id} style={{ padding: 10, marginBottom: 6, background: C.cardBg, border: "2px solid " + C.hpGreen + "60", borderRadius: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <PixelText size={7} color={C.hpGreen}>{b.name}</PixelText>
             <PixelText size={7} color={C.goldMd}>+100 XP</PixelText>
           </div>
@@ -243,16 +243,16 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
           return (
             <div key={item.id} style={{
               padding: 16, borderRadius: 6,
-              background: isLocked ? "#15101a" : "#1A1218",
-              border: `3px solid ${isLocked ? "#333" : C.plum + "80"}`,
+              background: isLocked ? C.lockedBg : C.cardBg,
+              border: `3px solid ${isLocked ? C.grayBorder : C.plum + "80"}`,
               opacity: isLocked ? 0.55 : 1,
               transition: "all 0.3s",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 6,
-                  background: isLocked ? "#222" : C.plum + "20",
-                  border: `2px solid ${isLocked ? "#444" : C.plum + "60"}`,
+                  background: isLocked ? C.grayBg : C.plum + "20",
+                  border: `2px solid ${isLocked ? C.grayBorderMid : C.plum + "60"}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   position: "relative",
                 }}>
@@ -261,7 +261,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                     <div style={{
                       position: "absolute", top: -4, right: -4,
                       width: 18, height: 18, borderRadius: "50%",
-                      background: "#333", border: "2px solid #555",
+                      background: C.grayBorder, border: "2px solid ${C.grayBorderLt}",
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <span style={{ fontSize: 9 }}>🔒</span>
@@ -282,7 +282,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                     <PixelText size={6} color={C.amber}>Practice {prevItem?.name || ""} to unlock</PixelText>
                     <PixelText size={6} color={C.grayLt}>{currentProgress}/{progressNeeded}</PixelText>
                   </div>
-                  <div style={{ height: 6, background: "#222", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: 6, background: C.grayBg, borderRadius: 3, overflow: "hidden" }}>
                     <div style={{
                       height: "100%", width: `${progressPct * 100}%`,
                       background: progressPct >= 1 ? C.hpGreen : C.amber,
@@ -315,8 +315,8 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
 
       {/* Bottom nav — 4 tabs, HERO active */}
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        maxWidth: 480, margin: "0 auto", display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
@@ -326,7 +326,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
         ].map(t => (
           <button key={t.label} onClick={t.onClick} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? "#2A1A28" : "transparent", display: "flex",
+            background: t.active ? C.cardBgAlt : "transparent", display: "flex",
             flexDirection: "column", alignItems: "center", gap: 2,
           }}>
             <span style={{ fontSize: 16 }}>{t.icon}</span>

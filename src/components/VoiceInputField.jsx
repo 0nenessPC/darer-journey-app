@@ -106,7 +106,7 @@ export default function VoiceInputField({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: isListening ? C.plum : '#222',
+            background: isListening ? C.plum : C.inputBg,
             border: `2px solid ${isListening ? C.plumLt : C.teal + '60'}`,
             borderRadius: 6,
             cursor: disabled || isTranscribing || !supported ? 'default' : 'pointer',
@@ -134,8 +134,8 @@ export default function VoiceInputField({
           style={{
             flex: 1,
             padding: 12,
-            background: '#1A1218',
-            border: `2px solid ${isListening ? C.plum : '#5C3A50'}`,
+            background: C.cardBg,
+            border: `2px solid ${isListening ? C.plum : C.mutedBorder}`,
             borderRadius: 4,
             color: C.cream,
             fontSize: 13,
@@ -151,7 +151,7 @@ export default function VoiceInputField({
       {/* Status / error */}
       {(statusText || error) && (
         <div style={{ marginTop: 6 }}>
-          <PixelText size={6} color={error ? '#e74c3c' : C.grayLt}>
+          <PixelText size={6} color={error ? C.red : C.grayLt}>
             {error || statusText}
           </PixelText>
         </div>

@@ -104,7 +104,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
             </PixelBtn>
             <button onClick={onContinue} style={{
               width: "100%", marginTop: 10, padding: 10,
-              background: "transparent", border: "1px dashed #5C3A50",
+              background: "transparent", border: `1px dashed ${C.mutedBorder}`,
               borderRadius: 4, cursor: "pointer",
             }}>
               <PixelText size={6} color={C.grayLt}>Skip the practice?</PixelText>
@@ -118,7 +118,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
               <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>PACED BREATHING</PixelText>
               <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>{formatTime(totalElapsed)} / {formatTime(practiceDuration)}</PixelText>
             </div>
-            <div style={{ height: 6, background: "#1A1218", borderRadius: 3, marginBottom: 24, border: "1px solid #5C3A50" }}>
+            <div style={{ height: 6, background: C.cardBg, borderRadius: 3, marginBottom: 24, border: `1px solid ${C.mutedBorder}` }}>
               <div style={{ height: "100%", width: progress + "%", background: C.teal, borderRadius: 3, transition: "width 1s linear" }} />
             </div>
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin: "30px 0" }}>
@@ -134,7 +134,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 16 }}>
               {["inhale", "hold", "exhale", "rest"].map(p => (
-                <div key={p} style={{ padding: "4px 10px", borderRadius: 3, background: breathPhase === p ? breathColor[p] + "20" : "transparent", border: breathPhase === p ? "1px solid " + breathColor[p] + "60" : "1px solid #5C3A50" }}>
+                <div key={p} style={{ padding: "4px 10px", borderRadius: 3, background: breathPhase === p ? breathColor[p] + "20" : "transparent", border: breathPhase === p ? "1px solid " + breathColor[p] + "60" : `1px solid ${C.mutedBorder}` }}>
                   <PixelText size={6} color={breathPhase === p ? breathColor[p] : C.grayLt}>{p === "inhale" ? "IN" : p === "hold" ? "HOLD" : p === "exhale" ? "OUT" : "REST"}</PixelText>
                 </div>
               ))}
@@ -144,7 +144,7 @@ export default function ArmoryScreen({ heroName, onContinue, obState = {}, setOB
                 Follow the rhythm. Let each{"\n"}exhale be longer than the inhale.{"\n"}If your mind wanders — it will —{"\n"}just return to the breath.{"\n"}No judgment. Just return.
               </PixelText>
             </DialogBox>
-            <button onClick={onContinue} style={{ width: "100%", marginTop: 10, padding: 10, background: "transparent", border: "1px dashed #5C3A50", borderRadius: 4, cursor: "pointer" }}><PixelText size={6} color={C.grayLt}>Skip the practice ?</PixelText></button>
+            <button onClick={onContinue} style={{ width: "100%", marginTop: 10, padding: 10, background: "transparent", border: `1px dashed ${C.mutedBorder}`, borderRadius: 4, cursor: "pointer" }}><PixelText size={6} color={C.grayLt}>Skip the practice ?</PixelText></button>
           </div>
         )}
 

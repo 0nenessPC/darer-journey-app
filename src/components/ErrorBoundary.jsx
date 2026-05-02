@@ -35,7 +35,7 @@ export default class ErrorBoundary extends React.Component {
           </PixelText>
           {this.state.error && (
             <div style={{
-              marginBottom: 20, padding: 12, background: "#1A1218",
+              marginBottom: 20, padding: 12, background: C.cardBg,
               border: `1px solid ${C.bossRed}40`, borderRadius: 6,
               maxWidth: 400,
             }}>

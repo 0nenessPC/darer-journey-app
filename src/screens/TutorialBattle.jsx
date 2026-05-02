@@ -256,8 +256,8 @@ No other text.`,
     }}>
       <div style={{
         width: 32, height: 32, borderRadius: 4,
-        background: active ? color + "25" : "#1A1218",
-        border: `2px solid ${active ? color : "#5C3A50"}`,
+        background: active ? color + "25" : C.cardBg,
+        border: `2px solid ${active ? color : C.mutedBorder}`,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <PixelText size={12} color={active ? color : C.grayLt}>{letter}</PixelText>
@@ -283,8 +283,8 @@ No other text.`,
             onClick={() => { if (canClick && !isLast) advancePhase(pName); }}
             style={{
               flex: 1, padding: "5px 2px", textAlign: "center", borderRadius: 3,
-              background: i < phaseIndex ? C.hpGreen + "25" : i === phaseIndex ? C.goldMd + "20" : "#1A1218",
-              border: `2px solid ${i < phaseIndex ? C.hpGreen : i === phaseIndex ? C.goldMd : "#5C3A50"}`,
+              background: i < phaseIndex ? C.hpGreen + "25" : i === phaseIndex ? C.goldMd + "20" : C.cardBg,
+              border: `2px solid ${i < phaseIndex ? C.hpGreen : i === phaseIndex ? C.goldMd : C.mutedBorder}`,
               cursor: canClick && !isLast ? "pointer" : "default",
               opacity: canClick ? 1 : 0.4,
               transition: "all 0.3s",
@@ -302,7 +302,7 @@ No other text.`,
 
       {/* Header */}
       {phase !== "intro" && phase !== "choose" && (
-        <div style={{ padding: "10px 16px", borderBottom: "2px solid #5C3A50", background: "#1A1218" }}>
+        <div style={{ padding: "10px 16px", borderBottom: "2px solid ${C.mutedBorder}", background: C.cardBg }}>
           <PixelText size={7} color={C.goldMd}>🏕 TRAINING GROUNDS</PixelText>
           {chosenExposure && (
             <div style={{ marginTop: 4 }}>
@@ -355,8 +355,8 @@ No other text.`,
                   return (
                     <button key={exp.id} onClick={() => setChosenExposure(exp)} style={{
                       width: "100%", textAlign: "left", padding: 14, marginBottom: 8,
-                      background: selected ? C.goldMd + "12" : "#1A1218",
-                      border: `2px solid ${selected ? C.goldMd : "#5C3A50"}`,
+                      background: selected ? C.goldMd + "12" : C.cardBg,
+                      border: `2px solid ${selected ? C.goldMd : C.mutedBorder}`,
                       borderRadius: 6, cursor: "pointer",
                       boxShadow: selected ? `0 0 12px ${C.goldMd}15` : "none",
                       transition: "all 0.2s",
@@ -386,7 +386,7 @@ No other text.`,
                 </PixelBtn>
                 <button onClick={() => generateTutorialExposures(prevExposureTexts)} style={{
                   width: "100%", marginTop: 8, padding: 10,
-                  background: "transparent", border: "1px dashed #5C3A50",
+                  background: "transparent", border: "1px dashed ${C.mutedBorder}",
                   borderRadius: 4, cursor: "pointer",
                 }}>
                   <PixelText size={6} color={C.grayLt}>🔄 Generate different training exposures</PixelText>
@@ -420,8 +420,8 @@ No other text.`,
                     );
                   }} style={{
                     display: "flex", alignItems: "center", gap: 8, width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${picked ? C.goalGold : "#5C3A50"}`,
-                    background: picked ? C.goalGold + "15" : "#1A1218",
+                    borderRadius: 4, border: `2px solid ${picked ? C.goalGold : C.mutedBorder}`,
+                    background: picked ? C.goalGold + "15" : C.cardBg,
                     cursor: "pointer", textAlign: "left",
                   }}>
                     <span style={{ fontSize: 18 }}>{v.icon || "💫"}</span>
@@ -438,7 +438,7 @@ No other text.`,
               placeholder="Or type your own reason..."
               style={{
                 width: "100%", padding: 10, marginTop: 10,
-                background: "#1A1218", border: "2px solid #5C3A50",
+                background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                 borderRadius: 4, color: C.cream, fontSize: 12,
                 fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
               }}
@@ -488,7 +488,7 @@ No other text.`,
                 rows={3}
                 style={{
                   width: "100%", minHeight: 70, padding: 10,
-                  background: "#1A1218", border: "2px solid #5C3A50",
+                  background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                   borderRadius: 4, color: C.cream, fontSize: 12,
                   fontFamily: PIXEL_FONT, outline: "none", resize: "none",
                   lineHeight: 1.6, boxSizing: "border-box",
@@ -553,8 +553,8 @@ No other text.`,
                 {["Yes — I'd get through it", "I'm not sure, but I think so", "I don't know if I could"].map(opt => (
                   <button key={opt} onClick={() => setAllowCanHandle(opt)} style={{
                     display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${allowCanHandle === opt ? C.teal : "#5C3A50"}`,
-                    background: allowCanHandle === opt ? C.teal + "20" : "#1A1218",
+                    borderRadius: 4, border: `2px solid ${allowCanHandle === opt ? C.teal : C.mutedBorder}`,
+                    background: allowCanHandle === opt ? C.teal + "20" : C.cardBg,
                     cursor: "pointer", textAlign: "left",
                   }}>
                     <PixelText size={7} color={allowCanHandle === opt ? C.teal : C.grayLt}>{opt}</PixelText>
@@ -572,8 +572,8 @@ No other text.`,
                 {["Yes — the Shadow is loud", "A little — a faint whisper", "Not really — it's quiet for now"].map(opt => (
                   <button key={opt} onClick={() => setAllowFearShowing(opt)} style={{
                     display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${allowFearShowing === opt ? C.bossRed : "#5C3A50"}`,
-                    background: allowFearShowing === opt ? C.bossRed + "20" : "#1A1218",
+                    borderRadius: 4, border: `2px solid ${allowFearShowing === opt ? C.bossRed : C.mutedBorder}`,
+                    background: allowFearShowing === opt ? C.bossRed + "20" : C.cardBg,
                     cursor: "pointer", textAlign: "left",
                   }}>
                     <PixelText size={7} color={allowFearShowing === opt ? C.bossRed : C.grayLt}>{opt}</PixelText>
@@ -598,8 +598,8 @@ No other text.`,
                         );
                       }} style={{
                         padding: "6px 10px", borderRadius: 4,
-                        border: `2px solid ${picked ? C.teal : "#5C3A50"}`,
-                        background: picked ? C.teal + "20" : "#1A1218",
+                        border: `2px solid ${picked ? C.teal : C.mutedBorder}`,
+                        background: picked ? C.teal + "20" : C.cardBg,
                         cursor: "pointer",
                       }}>
                         <PixelText size={6} color={picked ? C.teal : C.grayLt}>{s}</PixelText>
@@ -613,7 +613,7 @@ No other text.`,
                   placeholder="Or describe another sensation..."
                   style={{
                     width: "100%", padding: 8, marginTop: 8,
-                    background: "#1A1218", border: "2px solid #5C3A50",
+                    background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                     borderRadius: 4, color: C.cream, fontSize: 11,
                     fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
                   }}
@@ -663,8 +663,8 @@ No other text.`,
                   ].map(opt => (
                     <button key={opt} onClick={() => setExposureWhen(opt)} style={{
                       display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${exposureWhen === opt ? C.teal : "#5C3A50"}`,
-                      background: exposureWhen === opt ? C.teal + "20" : "#1A1218",
+                      borderRadius: 4, border: `2px solid ${exposureWhen === opt ? C.teal : C.mutedBorder}`,
+                      background: exposureWhen === opt ? C.teal + "20" : C.cardBg,
                       cursor: "pointer", textAlign: "left",
                     }}>
                       <PixelText size={7} color={exposureWhen === opt ? C.teal : C.grayLt}>{opt}</PixelText>
@@ -682,7 +682,7 @@ No other text.`,
                       onChange={e => setExposureScheduledTime(e.target.value)}
                       style={{
                         width: "100%", padding: "10px 14px",
-                        borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                        borderRadius: 4, border: "2px solid ${C.mutedBorder}", background: C.cardBg,
                         color: C.cream, fontFamily: "inherit", fontSize: 16, outline: "none",
                         boxSizing: "border-box", colorScheme: "dark",
                       }}
@@ -713,7 +713,7 @@ No other text.`,
                     onClick={() => window.open("https://maps.google.com", "_blank")}
                     style={{
                       width: "100%", padding: "8px 12px", marginBottom: 8,
-                      background: "transparent", border: `1px dashed #5C3A50`,
+                      background: "transparent", border: `1px dashed ${C.mutedBorder}`,
                       borderRadius: 4, cursor: "pointer",
                     }}
                   >
@@ -726,7 +726,7 @@ No other text.`,
                     onChange={e => setExposureWhere(e.target.value)}
                     style={{
                       display: "block", width: "100%", padding: "10px 14px",
-                      borderRadius: 4, border: "2px solid #5C3A50", background: "#1A1218",
+                      borderRadius: 4, border: "2px solid ${C.mutedBorder}", background: C.cardBg,
                       color: C.cream, fontFamily: "inherit", fontSize: 13, outline: "none",
                       boxSizing: "border-box",
                     }}
@@ -757,8 +757,8 @@ No other text.`,
                   {(hero.armory || []).filter(t => t.unlocked).map(tool => (
                     <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setSelectedArmoryTool(tool); setRiseSubStep(2); }} style={{
                       display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : "#5C3A50"}`,
-                      background: exposureArmory === tool.name ? C.teal + "20" : "#1A1218",
+                      borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : C.mutedBorder}`,
+                      background: exposureArmory === tool.name ? C.teal + "20" : C.cardBg,
                       cursor: "pointer", textAlign: "left",
                     }}>
                       <span style={{ fontSize: 18 }}>{tool.icon}</span>
@@ -767,8 +767,8 @@ No other text.`,
                   ))}
                   <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setSelectedArmoryTool(null); setRiseSubStep(3); }} style={{
                     display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : "#5C3A50"}`,
-                    background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : "#1A1218",
+                    borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : C.mutedBorder}`,
+                    background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : C.cardBg,
                     cursor: "pointer", textAlign: "left",
                   }}>
                     <span style={{ fontSize: 18 }}>🗡️</span>
@@ -780,7 +780,7 @@ No other text.`,
                       {(hero.armory || []).filter(t => !t.unlocked).map(tool => (
                         <div key={tool.id} style={{
                           display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                          borderRadius: 4, border: "2px solid #5C3A5040", background: "#1A1218",
+                          borderRadius: 4, border: "2px solid ${C.mutedBorder}40", background: C.cardBg,
                           pointerEvents: "none",
                         }}>
                           <span style={{ fontSize: 18, filter: "grayscale(1)" }}>{tool.icon}</span>
@@ -902,30 +902,23 @@ No other text.`,
                 </DialogBox>
 
                 {voice.supported ? (
-                  <div style={{ marginTop: 14 }}>
-                    <VoiceInputBar
-                      input={coachInput}
-                      onInputChange={setCoachInput}
-                      onSend={async (t) => {
-                        const msg = t;
-                        setCoachInput("");
-                        coachChat.messages.push({ role: "user", text: msg });
-                        coachChat.setTyping(true);
-                        try {
-                          const reply = await callAI(SYS.preBoss, [...coachChat.messages.map(m => ({ role: m.role, content: m.text }))]);
-                          coachChat.setTyping(false);
-                          coachChat.messages.push({ role: "assistant", text: reply });
-                        } catch {
-                          coachChat.setTyping(false);
-                          coachChat.messages.push({ role: "assistant", text: "I'm here with you. You've got this." });
-                        }
-                      }}
-                      typing={coachChat.typing}
-                      disabled={false}
-                      voice={voice}
-                      placeholder="Speak or type — ask Dara anything..."
-                    />
-                  </div>
+                  <VoiceInputBar
+                    input={coachInput}
+                    onInputChange={setCoachInput}
+                    onSend={async (text) => {
+                      const msg = text || coachInput;
+                      if (!msg?.trim() || coachChat.typing) return;
+                      setCoachInput("");
+                      const ok = await coachChat.sendMessage(msg);
+                      if (ok && voice.supported) {
+                        voice.speak(ok, { speed: 0.9 });
+                      }
+                    }}
+                    typing={coachChat.typing}
+                    disabled={false}
+                    voice={voice}
+                    placeholder="Speak or type — ask Dara anything..."
+                  />
                 ) : (
                   <textarea
                     value={coachInput}
@@ -934,29 +927,20 @@ No other text.`,
                     rows={3}
                     style={{
                       width: "100%", minHeight: 70, padding: 10, marginTop: 14,
-                      background: "#1A1218", border: "2px solid #5C3A50",
+                      background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
                       borderRadius: 4, color: C.cream, fontSize: 12,
                       fontFamily: PIXEL_FONT, outline: "none", resize: "none",
                       lineHeight: 1.6, boxSizing: "border-box",
                     }}
                   />
                 )}
-                {voice.supported || (
+                {!voice.supported && (
                   <PixelBtn
                     onClick={async () => {
-                      if (!coachInput.trim()) return;
+                      if (!coachInput.trim() || coachChat.typing) return;
                       const msg = coachInput;
                       setCoachInput("");
-                      coachChat.messages.push({ role: "user", text: msg });
-                      coachChat.setTyping(true);
-                      try {
-                        const reply = await callAI(SYS.preBoss, [...coachChat.messages.map(m => ({ role: m.role, content: m.text }))]);
-                        coachChat.setTyping(false);
-                        coachChat.messages.push({ role: "assistant", text: reply });
-                      } catch {
-                        coachChat.setTyping(false);
-                        coachChat.messages.push({ role: "assistant", text: "I'm here with you. You've got this." });
-                      }
+                      await coachChat.sendMessage(msg);
                     }}
                     disabled={coachChat.typing || !coachInput.trim()}
                     color={C.teal} textColor={C.cream}
@@ -975,8 +959,8 @@ No other text.`,
                       }}>
                         <div style={{
                           maxWidth: "85%", padding: "8px 12px", borderRadius: 4,
-                          background: m.role === "user" ? C.plum : "#1A1218",
-                          border: `2px solid ${m.role === "user" ? "#5C3A50" : C.teal + "40"}`,
+                          background: m.role === "user" ? C.plum : C.cardBg,
+                          border: `2px solid ${m.role === "user" ? C.mutedBorder : C.teal + "40"}`,
                         }}>
                           <PixelText size={7} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
                         </div>
@@ -1014,8 +998,8 @@ No other text.`,
                   ].map(opt => (
                     <button key={opt.id} onClick={() => setEngageOutcome(opt.id)} style={{
                       display: "block", width: "100%", marginBottom: 8, padding: "14px 12px",
-                      borderRadius: 4, border: `2px solid ${engageOutcome === opt.id ? C.goldMd : "#5C3A50"}`,
-                      background: engageOutcome === opt.id ? C.goldMd + "12" : "#1A1218",
+                      borderRadius: 4, border: `2px solid ${engageOutcome === opt.id ? C.goldMd : C.mutedBorder}`,
+                      background: engageOutcome === opt.id ? C.goldMd + "12" : C.cardBg,
                       cursor: "pointer", textAlign: "left",
                     }}>
                       <PixelText size={7} color={engageOutcome === opt.id ? C.goldMd : C.cream} style={{ display: "block", lineHeight: 1.5 }}>
@@ -1087,8 +1071,8 @@ No other text.`,
                       }
                     }} style={{
                       display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                      borderRadius: 4, border: `2px solid ${fearedHappened === opt ? C.teal : "#5C3A50"}`,
-                      background: fearedHappened === opt ? C.teal + "20" : "#1A1218",
+                      borderRadius: 4, border: `2px solid ${fearedHappened === opt ? C.teal : C.mutedBorder}`,
+                      background: fearedHappened === opt ? C.teal + "20" : C.cardBg,
                       cursor: "pointer", textAlign: "left",
                     }}>
                       <PixelText size={7} color={fearedHappened === opt ? C.teal : C.grayLt}>{opt}</PixelText>
@@ -1105,8 +1089,8 @@ No other text.`,
                     {["It was much less severe than I feared", "It was about what I expected", "It was as bad as I feared"].map(opt => (
                       <button key={opt} onClick={() => setFearedSeverity(opt)} style={{
                         display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                        borderRadius: 4, border: `2px solid ${fearedSeverity === opt ? C.teal : "#5C3A50"}`,
-                        background: fearedSeverity === opt ? C.teal + "20" : "#1A1218",
+                        borderRadius: 4, border: `2px solid ${fearedSeverity === opt ? C.teal : C.mutedBorder}`,
+                        background: fearedSeverity === opt ? C.teal + "20" : C.cardBg,
                         cursor: "pointer", textAlign: "left",
                       }}>
                         <PixelText size={7} color={fearedSeverity === opt ? C.teal : C.grayLt}>{opt}</PixelText>
@@ -1124,8 +1108,8 @@ No other text.`,
                     {["Yes — I made it through, even if it was hard", "I'm still working on it, but I know I can", "Not this time, but I learned something"].map(opt => (
                       <button key={opt} onClick={() => setMadeItThrough(opt)} style={{
                         display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                        borderRadius: 4, border: `2px solid ${madeItThrough === opt ? C.teal : "#5C3A50"}`,
-                        background: madeItThrough === opt ? C.teal + "20" : "#1A1218",
+                        borderRadius: 4, border: `2px solid ${madeItThrough === opt ? C.teal : C.mutedBorder}`,
+                        background: madeItThrough === opt ? C.teal + "20" : C.cardBg,
                         cursor: "pointer", textAlign: "left",
                       }}>
                         <PixelText size={7} color={madeItThrough === opt ? C.teal : C.grayLt}>{opt}</PixelText>
@@ -1156,7 +1140,7 @@ No other text.`,
                   rows={3}
                   style={{
                     width: "100%", minHeight: 80, padding: 10, marginTop: 14,
-                    background: "#1A1218", border: "2px solid #5C3A50",
+                    background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                     borderRadius: 4, color: C.cream, fontSize: 12,
                     fontFamily: PIXEL_FONT, outline: "none", resize: "none",
                     lineHeight: 1.6, boxSizing: "border-box",
@@ -1179,7 +1163,7 @@ No other text.`,
                 </div>
 
                 {/* SUDs comparison */}
-                <div style={{ background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, padding: 14, marginBottom: 12 }}>
+                <div style={{ background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, padding: 14, marginBottom: 12 }}>
                   <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
                   <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
                     <div>
@@ -1262,8 +1246,8 @@ No other text.`,
                     {repeatOptions.map((opt, i) => (
                       <div key={i} style={{
                         display: "block", width: "100%", marginBottom: 8, padding: "12px 14px",
-                        borderRadius: 4, border: "2px solid #5C3A50",
-                        background: "#1A1218", textAlign: "left",
+                        borderRadius: 4, border: "2px solid ${C.mutedBorder}",
+                        background: C.cardBg, textAlign: "left",
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                           <span style={{ fontSize: 20 }}>{opt.icon}</span>

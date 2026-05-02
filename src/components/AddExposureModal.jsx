@@ -7,14 +7,14 @@ function AddExposureModal({ onClose, onManualEntry, onAskDara }) {
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.8)",
+        background: C.overlay,
         display: "flex", alignItems: "flex-end", justifyContent: "center",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 480, background: "#1A1218",
+          width: "100%", maxWidth: 480, background: C.cardBg,
           borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
           padding: "24px 20px 32px",
         }}

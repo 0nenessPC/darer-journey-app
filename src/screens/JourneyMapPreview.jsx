@@ -28,19 +28,19 @@ export default function JourneyMapPreview({ heroName, onContinue, obState = {}, 
   const MAP_H = 1600;
   const nodes = [
     { y: 80, x: 50, label: "YOU ARE HERE", icon: "⚔", color: C.goldMd, size: 20, zone: "VILLAGE OF BEGINNINGS" },
-    { y: 220, x: 28, label: "WHISPER WOODS", icon: "🌲", color: "#6B8E6B", size: 10, type: "env" },
+    { y: 220, x: 28, label: "WHISPER WOODS", icon: "🌲", color: C.forestGreen, size: 10, type: "env" },
     { y: 280, x: 70, label: "BOSS 1", icon: "👁", color: C.bossRed, size: 16, name: "The Watcher" },
     { y: 350, x: 20, label: "REST POINT", icon: "🔥", color: C.amber, size: 12, type: "rest" },
     { y: 440, x: 40, label: "BOSS 2", icon: "🐍", color: C.bossRed, size: 16, name: "The Whisperer" },
-    { y: 520, x: 75, label: "MISTY BRIDGE", icon: "🌫", color: "#8B7BAA", size: 10, type: "env" },
+    { y: 520, x: 75, label: "MISTY BRIDGE", icon: "🌫", color: C.mistyPurple, size: 10, type: "env" },
     { y: 600, x: 55, label: "BOSS 3", icon: "🕷", color: C.bossRed, size: 18, name: "The Tangler" },
     { y: 680, x: 25, label: "REST POINT", icon: "⛺", color: C.amber, size: 12, type: "rest" },
     { y: 760, x: 60, label: "BOSS 4", icon: "👻", color: C.bossRed, size: 18, name: "The Phantom" },
-    { y: 830, x: 35, label: "DARK RAVINE", icon: "⛰", color: "#5C4A5C", size: 10, type: "env" },
+    { y: 830, x: 35, label: "DARK RAVINE", icon: "⛰", color: C.ravineDark, size: 10, type: "env" },
     { y: 920, x: 50, label: "BOSS 5", icon: "🐉", color: C.bossRed, size: 20, name: "The Dread" },
     { y: 1000, x: 70, label: "REST POINT", icon: "🏕", color: C.amber, size: 12, type: "rest" },
     { y: 1100, x: 45, label: "BOSS 6", icon: "⚡", color: C.bossRed, size: 22, name: "The Storm" },
-    { y: 1250, x: 50, label: "SHADOW KING", icon: "💀", color: "#9B3A3A", size: 28, name: "The Shadow King" },
+    { y: 1250, x: 50, label: "SHADOW KING", icon: "💀", color: C.shadowBoss, size: 28, name: "The Shadow King" },
     { y: 1420, x: 50, label: "YOUR GOAL", icon: "🏰", color: C.goalGold, size: 28 },
   ];
 
@@ -107,7 +107,7 @@ export default function JourneyMapPreview({ heroName, onContinue, obState = {}, 
         {/* Winding path */}
         <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: MAP_H, pointerEvents: "none" }} viewBox={`0 0 480 ${MAP_H}`} preserveAspectRatio="none">
           {/* Path shadow */}
-          <path d={pathD} fill="none" stroke="#000000" strokeWidth="12" opacity="0.2" strokeLinecap="round" />
+          <path d={pathD} fill="none" stroke={C.pathBlack} strokeWidth="12" opacity="0.2" strokeLinecap="round" />
           {/* Main path */}
           <path d={pathD} fill="none" stroke={C.mapPath} strokeWidth="6" strokeDasharray="12 8" opacity="0.5" strokeLinecap="round" />
           {/* Path glow */}

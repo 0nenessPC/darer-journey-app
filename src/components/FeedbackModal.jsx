@@ -38,7 +38,7 @@ export default function FeedbackModal({ screen, hero, onClose }) {
       <div style={{
         position: "fixed", inset: 0, zIndex: 999,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,0.7)", padding: 16,
+        background: C.overlay, padding: 16,
       }}>
         <div style={{
           background: C.charcoal, border: `2px solid ${C.plum}`,

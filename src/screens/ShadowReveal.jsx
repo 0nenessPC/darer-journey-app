@@ -82,8 +82,8 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
       {sections.map((s, i) => (
         <div key={s.title} style={{
           marginBottom: 12, padding: 16,
-          background: "#1A1218",
-          border: `2px solid ${revealed > i ? s.border + "80" : "#5C3A50"}`,
+          background: C.cardBg,
+          border: `2px solid ${revealed > i ? s.border + "80" : C.mutedBorder}`,
           borderRadius: 6,
           opacity: revealed > i ? 1 : 0.2,
           transform: revealed > i ? "translateY(0)" : "translateY(12px)",
@@ -111,7 +111,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
             {[
               { label: "YOU ENTER", detail: where ? (where.length > 60 ? where.slice(0, 60) + "..." : where) : "Social situations", icon: "📍", color: C.bossRed },
               { label: "THE STORM HITS", detail: whisper ? (whisper.length > 60 ? whisper.slice(0, 60) + "..." : whisper) : "Anxious thoughts and body sensations", icon: "🌀", color: C.amber },
-              { label: "F.E.A.R.", detail: "The storm becomes overwhelming. Your body and mind scream: GET OUT.", icon: "😨", color: "#FF4444", isFear: true },
+              { label: "F.E.A.R.", detail: "The storm becomes overwhelming. Your body and mind scream: GET OUT.", icon: "😨", color: C.fearRed, isFear: true },
               { label: "YOU ESCAPE", detail: grip ? (grip.length > 60 ? grip.slice(0, 60) + "..." : grip) : "Avoidance and safety behaviors", icon: "🏃", color: C.plumMd },
               { label: "BRIEF RELIEF", detail: "The fear fades — but only for now", icon: "😮‍💨", color: C.hpGreen },
               { label: "SHADOW GROWS", detail: "Next time it's harder. The territory expands. The storm gets stronger.", icon: "👤", color: C.grayLt },
@@ -121,24 +121,24 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
                 <div style={{ width: 40, display: "flex", flexDirection: "column", alignItems: "center" }}>
                   <div style={{
                     width: node.isFear ? 36 : 28, height: node.isFear ? 36 : 28, borderRadius: "50%",
-                    background: node.isFear ? "#FF444430" : node.color + "20",
+                    background: node.isFear ? `${C.fearGlow}30` : node.color + "20",
                     border: `${node.isFear ? 3 : 2}px solid ${node.color}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: node.isFear ? 18 : 14,
-                    boxShadow: node.isFear ? "0 0 16px #FF444440" : "none",
+                    boxShadow: node.isFear ? "0 0 16px ${C.fearRed}40" : "none",
                     animation: node.isFear ? "fearPulse 2s ease-in-out infinite" : "none",
                   }}>{node.icon}</div>
                   {i < arr.length - 1 && (
-                    <div style={{ width: 2, flex: 1, minHeight: 12, background: "#5C3A50", position: "relative" }}>
-                      <div style={{ position: "absolute", bottom: 0, left: -3, fontSize: 8, color: "#5C3A50" }}>▼</div>
+                    <div style={{ width: 2, flex: 1, minHeight: 12, background: C.mutedBorder, position: "relative" }}>
+                      <div style={{ position: "absolute", bottom: 0, left: -3, fontSize: 8, color: C.mutedBorder }}>▼</div>
                     </div>
                   )}
                 </div>
                 {/* Right: text */}
                 <div style={{
                   flex: 1, padding: node.isFear ? "8px 12px 12px 10px" : "4px 0 12px 10px",
-                  background: node.isFear ? "#FF444410" : "transparent",
-                  border: node.isFear ? "1px solid #FF444430" : "none",
+                  background: node.isFear ? `${C.fearGlow}10` : "transparent",
+                  border: node.isFear ? "1px solid ${C.fearRed}30" : "none",
                   borderRadius: node.isFear ? 6 : 0,
                   marginLeft: node.isFear ? 4 : 0,
                 }}>
@@ -148,7 +148,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
                   </div>
                   {node.isFear && (
                     <div style={{ marginTop: 6 }}>
-                      <PixelText size={6} color={"#FF4444"} style={{ fontStyle: "italic" }}>
+                      <PixelText size={6} color={`${C.fearGlow}`} style={{ fontStyle: "italic" }}>
                         This is the moment that drives the escape.
                       </PixelText>
                     </div>

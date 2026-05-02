@@ -7,7 +7,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
   const unfinishedBosses = quest.bosses.filter(b => !b.defeated);
   const defeatedBosses = quest.bosses.filter(b => b.defeated);
 
-  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? "#E8A04A" : C.bossRed;
+  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
 
   const handleSelectBoss = (boss) => {
     setFocusedBoss(boss);
@@ -19,8 +19,8 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
     return {
       width: "100%",
       padding: 14,
-      background: isFocused ? "#2A1A28" : isCompleted ? "#151E14" : boss.isCustom ? "#1E1620" : "#1A1218",
-      border: `2px solid ${isFocused ? C.goldMd : isCompleted ? C.hpGreen + "60" : boss.isCustom ? C.teal + "60" : "#5C3A50"}`,
+      background: isFocused ? C.cardBgAlt : isCompleted ? C.cardCompleted : boss.isCustom ? C.cardCustom : C.cardBg,
+      border: `2px solid ${isFocused ? C.goldMd : isCompleted ? C.hpGreen + "60" : boss.isCustom ? C.teal + "60" : C.mutedBorder}`,
       borderRadius: 6,
       cursor: "pointer",
       textAlign: "left",
@@ -112,9 +112,9 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       {/* Header */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{
-          background: "#1A1218", border: "1px solid #5C3A50", borderRadius: 4,
+          background: C.cardBg, border: "1px solid ${C.mutedBorder}", borderRadius: 4,
           padding: "4px 10px", cursor: "pointer",
         }}>
           <PixelText size={7} color={C.grayLt}>← BACK</PixelText>
@@ -158,8 +158,8 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
 
       {/* Bottom nav — 4 tabs, BANK active */}
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        maxWidth: 480, margin: "0 auto", display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
       }}>
         {[
           { icon: "🗺", label: "MAP", active: false, onClick: onBack },
@@ -169,7 +169,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         ].map(t => (
           <button key={t.label} onClick={t.onClick} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? "#2A1A28" : "transparent", display: "flex",
+            background: t.active ? C.cardBgAlt : "transparent", display: "flex",
             flexDirection: "column", alignItems: "center", gap: 2,
           }}>
             <span style={{ fontSize: 16 }}>{t.icon}</span>

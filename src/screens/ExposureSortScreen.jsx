@@ -20,7 +20,7 @@ export default function ExposureSortScreen({ hero, shadowText, onComplete, obSta
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
 
-  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? "#E8A04A" : C.bossRed;
+  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
   const levelLabel = (lv) => lv <= 3 ? "SHALLOW WATER" : lv <= 6 ? "GETTING DEEPER" : lv <= 8 ? "DEEP END" : "BOSS TERRITORY";
 
   useEffect(() => { generateExposures(); }, []);
@@ -210,12 +210,12 @@ No other text.`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 8, fontFamily: PIXEL_FONT, color: levelColor(b.level),
                 }}>{b.level}</div>
-                {i < finalBosses.length - 1 && <div style={{ width: 2, flex: 1, background: "#5C3A50", minHeight: 12 }} />}
+                {i < finalBosses.length - 1 && <div style={{ width: 2, flex: 1, background: C.mutedBorder, minHeight: 12 }} />}
               </div>
               {/* Boss card */}
               <div style={{
                 flex: 1, padding: "8px 12px", marginBottom: 4, marginLeft: 8,
-                background: "#1A1218", border: `1px solid ${levelColor(b.level)}30`,
+                background: C.cardBg, border: `1px solid ${levelColor(b.level)}30`,
                 borderRadius: 4,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -282,7 +282,7 @@ No other text.`,
           </PixelText>
 
           {/* Progress */}
-          <div style={{ height: 4, background: "#1A1218", borderRadius: 2, marginBottom: 14, border: "1px solid #5C3A50" }}>
+          <div style={{ height: 4, background: C.cardBg, borderRadius: 2, marginBottom: 14, border: `1px solid ${C.mutedBorder}` }}>
             <div style={{ height: "100%", width: `${(currentCard / exposures.length) * 100}%`, background: C.goldMd, borderRadius: 2, transition: "width 0.3s" }} />
           </div>
 
@@ -300,7 +300,7 @@ No other text.`,
             onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
             style={{
               padding: "20px 18px", position: "relative",
-              background: `linear-gradient(180deg, ${levelColor(card.level)}08 0%, #1A1218 100%)`,
+              background: `linear-gradient(180deg, ${levelColor(card.level)}08 0%, ${C.cardBg} 100%)`,
               border: `2px solid ${swipeDir === "right" ? C.hpGreen : swipeDir === "left" ? C.bossRed : levelColor(card.level) + "60"}`,
               borderRadius: 8, cursor: "grab", userSelect: "none", marginBottom: 14,
               transform: `translateX(${swipeDir === "right" ? 200 : swipeDir === "left" ? -200 : dragX}px) rotate(${(swipeDir === "right" ? 12 : swipeDir === "left" ? -12 : dragX * 0.08)}deg)`,
@@ -345,7 +345,7 @@ No other text.`,
           {/* Buttons */}
           <div style={{ display: "flex", justifyContent: "center", gap: 24, opacity: generatingReplacement ? 0.4 : 1, pointerEvents: generatingReplacement ? "none" : "auto" }}>
             <button onClick={handleReject} style={{
-              width: 48, height: 48, borderRadius: "50%", border: "2px solid #5C3A50",
+              width: 48, height: 48, borderRadius: "50%", border: `2px solid ${C.mutedBorder}`,
               background: C.plum, cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center", fontSize: 18,
             }}>✗</button>

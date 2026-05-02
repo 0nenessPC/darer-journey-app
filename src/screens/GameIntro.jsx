@@ -28,7 +28,7 @@ function GameIntro({ onComplete, obState, setOBState }) {
         {cur.emphasis && <PixelText size={14} color={C.goldMd} style={{ display: "block", marginTop: 16 }}>{cur.emphasis}</PixelText>}
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-        {slides.map((_, i) => <div key={i} style={{ width: i === slide ? 20 : 8, height: 8, borderRadius: 2, background: i === slide ? C.goldMd : "#5C3A50", transition: "all 0.3s" }} />)}
+        {slides.map((_, i) => <div key={i} style={{ width: i === slide ? 20 : 8, height: 8, borderRadius: 2, background: i === slide ? C.goldMd : C.mutedBorder, transition: "all 0.3s" }} />)}
       </div>
       <PixelBtn onClick={() => last ? onComplete() : setSlide(s => s + 1)} color={last ? C.gold : C.plum}>
         {last ? "BEGIN THE JOURNEY" : "NEXT"}

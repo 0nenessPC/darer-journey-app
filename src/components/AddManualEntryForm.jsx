@@ -29,14 +29,14 @@ function AddManualEntryForm({ onClose, onSubmit }) {
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.8)",
+        background: C.overlay,
         display: "flex", alignItems: "flex-end", justifyContent: "center",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 480, background: "#1A1218",
+          width: "100%", maxWidth: 480, background: C.cardBg,
           borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
           padding: "24px 20px 32px",
         }}
@@ -65,7 +65,7 @@ function AddManualEntryForm({ onClose, onSubmit }) {
             placeholder="e.g., Say hi to a coworker"
             style={{
               width: "100%", padding: "12px 14px",
-              background: "#222", border: `2px solid ${name.trim() ? C.teal : "#5C3A50"}`,
+              background: C.inputBg, border: `2px solid ${name.trim() ? C.teal : C.mutedBorder}`,
               borderRadius: 6, color: C.cream, fontSize: 14,
               fontFamily: "inherit", outline: "none",
               boxSizing: "border-box",
@@ -83,7 +83,7 @@ function AddManualEntryForm({ onClose, onSubmit }) {
             rows={3}
             style={{
               width: "100%", padding: "12px 14px",
-              background: "#222", border: `2px solid #5C3A50`,
+              background: C.inputBg, border: `2px solid ${C.mutedBorder}`,
               borderRadius: 6, color: C.cream, fontSize: 14,
               fontFamily: "inherit", outline: "none",
               resize: "vertical", boxSizing: "border-box",
@@ -123,7 +123,7 @@ function AddManualEntryForm({ onClose, onSubmit }) {
             border: `3px solid ${name.trim() ? C.teal : C.gray}`,
             borderRadius: 6, cursor: name.trim() ? "pointer" : "default",
             color: C.cream, fontSize: 12, fontFamily: PIXEL_FONT,
-            boxShadow: name.trim() ? `0 4px 0 #4A7A60` : "none",
+            boxShadow: name.trim() ? `0 4px 0 ${C.tealLt}` : "none",
             transition: "all 0.2s",
           }}
         >

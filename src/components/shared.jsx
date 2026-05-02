@@ -10,9 +10,9 @@ export function PixelBtn({ children, onClick, color = C.plum, textColor = C.crea
     <button onClick={onClick} disabled={disabled} style={{
       fontFamily: PIXEL_FONT, fontSize: 10, padding: "12px 20px",
       background: disabled ? C.grayLt : color, color: disabled ? C.gray : textColor,
-      border: `3px solid ${disabled ? C.gray : (color === C.plum ? "#5C3A50" : "#A07830")}`,
+      border: `3px solid ${disabled ? C.gray : (color === C.plum ? C.mutedBorder : C.goldBtnShadow)}`,
       borderRadius: 4, cursor: disabled ? "default" : "pointer",
-      boxShadow: disabled ? "none" : `0 4px 0 ${color === C.plum ? "#4A2D40" : "#806020"}`,
+      boxShadow: disabled ? "none" : `0 4px 0 ${color === C.plum ? C.plumBtnShadow : C.goldBtnShadow}`,
       transition: "transform 0.1s", imageRendering: "pixelated", ...style,
     }}>{children}</button>
   );
@@ -24,7 +24,7 @@ export function HPBar({ current, max, width = "100%", height = 12, label }) {
   return (
     <div style={{ width }}>
       {label && <PixelText size={8} color={C.grayLt}>{label}</PixelText>}
-      <div style={{ height, background: "#1A1218", borderRadius: 2, border: "2px solid #5C3A50", overflow: "hidden" }}>
+      <div style={{ height, background: C.cardBg, borderRadius: 2, border: `2px solid ${C.mutedBorder}`, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: color, transition: "width 0.6s ease", imageRendering: "pixelated" }} />
       </div>
     </div>
@@ -46,7 +46,7 @@ export function TypingDots() {
 export function DialogBox({ speaker, text, typing, children }) {
   return (
     <div style={{
-      background: "#1A1218", border: "3px solid #5C3A50", borderRadius: 6,
+      background: C.cardBg, border: `3px solid ${C.mutedBorder}`, borderRadius: 6,
       padding: "12px 14px", marginBottom: 10,
     }}>
       {speaker && <div style={{ marginBottom: 4 }}><PixelText size={7} color={C.goldMd}>{speaker}</PixelText></div>}
@@ -77,7 +77,7 @@ export function OnboardingProgress({ screen }) {
   return (
     <div style={{
       position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
-      background: "#1A1218", borderBottom: "2px solid #5C3A50",
+      background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`,
       padding: "8px 12px 6px",
       boxSizing: "border-box",
     }}>
@@ -87,7 +87,7 @@ export function OnboardingProgress({ screen }) {
         <PixelText size={7} color={C.goldMd}>STEP {idx + 1}/{ONBOARDING.length}</PixelText>
         <PixelText size={7} color={C.grayLt}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
       </div>
-      <div style={{ height: 4, background: C.mapBg, borderRadius: 2, border: "1px solid #5C3A50", overflow: "hidden" }}>
+      <div style={{ height: 4, background: C.mapBg, borderRadius: 2, border: `1px solid ${C.mutedBorder}`, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: C.plumMd, transition: "width 0.3s ease" }} />
       </div>
     </div>

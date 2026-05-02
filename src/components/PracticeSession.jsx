@@ -184,8 +184,8 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
               {durationOptions.map(opt => (
                 <button key={opt.value} onClick={() => setBreathDuration(opt.value)} style={{
                   flex: 1, padding: "10px 8px", borderRadius: 4,
-                  border: `2px solid ${breathDuration === opt.value ? C.teal : "#5C3A50"}`,
-                  background: breathDuration === opt.value ? C.teal + "20" : "#1A1218",
+                  border: `2px solid ${breathDuration === opt.value ? C.teal : C.mutedBorder}`,
+                  background: breathDuration === opt.value ? C.teal + "20" : C.cardBg,
                   cursor: "pointer",
                 }}>
                   <PixelText size={8} color={breathDuration === opt.value ? C.teal : C.grayLt}>{opt.label}</PixelText>
@@ -195,7 +195,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
           </div>
         )}
 
-        <div style={{ padding: 12, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 24 }}>
+        <div style={{ padding: 12, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 24 }}>
           <PixelText size={7} color={C.grayLt}>
             {isBreathing
               ? `Follow the rhythm for ${breathDuration >= 60 ? `${breathDuration / 60} min` : `${breathDuration}s`}. You can pause at any time.`
@@ -263,16 +263,16 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 24 }}>
           {breathLabels.map((label, i) => {
-            const bColor = i === breathPhase ? phaseColors[i] : "#5C3A50";
+            const bColor = i === breathPhase ? phaseColors[i] : C.mutedBorder;
             return (
-            <div key={i} style={{ padding: "4px 8px", borderRadius: 4, background: i === breathPhase ? phaseColors[i] + "30" : "#1A1218", border: `2px solid ${bColor}` }}>
+            <div key={i} style={{ padding: "4px 8px", borderRadius: 4, background: i === breathPhase ? phaseColors[i] + "30" : C.cardBg, border: `2px solid ${bColor}` }}>
               <PixelText size={6} color={i === breathPhase ? phaseColors[i] : C.grayLt}>{breathDurations[i]}s</PixelText>
             </div>
             );
           })}
         </div>
         <button onClick={togglePause} style={{
-          marginTop: 20, background: "#1A1218", border: `2px solid ${C.grayLt}40`,
+          marginTop: 20, background: C.cardBg, border: `2px solid ${C.grayLt}40`,
           borderRadius: 6, padding: "8px 20px", cursor: "pointer",
         }}>
           <PixelText size={8} color={C.grayLt}>⏸ PAUSE</PixelText>
@@ -304,11 +304,11 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
         <PixelText size={10} color={C.cream} style={{ display: "block", marginBottom: 8 }}>{gs.text}</PixelText>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>{gs.hint}</PixelText>
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-          {gSteps.map((_, i) => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i <= step ? C.teal : "#5C3A50" }} />)}
+          {gSteps.map((_, i) => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i <= step ? C.teal : C.mutedBorder }} />)}
         </div>
         <PixelText size={8} color={C.grayLt}>Continue in {10 - timer}s</PixelText>
         <button onClick={togglePause} style={{
-          marginTop: 16, background: "#1A1218", border: `2px solid ${C.grayLt}40`,
+          marginTop: 16, background: C.cardBg, border: `2px solid ${C.grayLt}40`,
           borderRadius: 6, padding: "8px 20px", cursor: "pointer",
         }}>
           <PixelText size={7} color={C.grayLt}>⏸ PAUSE</PixelText>
@@ -332,16 +332,16 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <div style={{ fontSize: 40, marginBottom: 16 }}>🛡️</div>
-        <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 16 }}>
+        <div style={{ padding: 16, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
           <PixelText size={9} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>{as.text}</PixelText>
         </div>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>{as.sub}</PixelText>
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-          {aSteps.map((_, i) => <div key={i} style={{ width: 24, height: 6, borderRadius: 3, background: i <= step ? C.hpGreen : "#5C3A50" }} />)}
+          {aSteps.map((_, i) => <div key={i} style={{ width: 24, height: 6, borderRadius: 3, background: i <= step ? C.hpGreen : C.mutedBorder }} />)}
         </div>
         <PixelText size={8} color={C.grayLt}>Continue in {15 - timer}s</PixelText>
         <button onClick={togglePause} style={{
-          marginTop: 16, background: "#1A1218", border: `2px solid ${C.grayLt}40`,
+          marginTop: 16, background: C.cardBg, border: `2px solid ${C.grayLt}40`,
           borderRadius: 6, padding: "8px 20px", cursor: "pointer",
         }}>
           <PixelText size={7} color={C.grayLt}>⏸ PAUSE</PixelText>
@@ -365,16 +365,16 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <div style={{ fontSize: 40, marginBottom: 16 }}>💎</div>
-        <div style={{ padding: 16, background: "#1A1218", border: "2px solid #5C3A50", borderRadius: 6, marginBottom: 16 }}>
+        <div style={{ padding: 16, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
           <PixelText size={9} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>{vs.text}</PixelText>
         </div>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>{vs.sub}</PixelText>
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-          {vSteps.map((_, i) => <div key={i} style={{ width: 24, height: 6, borderRadius: 3, background: i <= step ? C.goalGold : "#5C3A50" }} />)}
+          {vSteps.map((_, i) => <div key={i} style={{ width: 24, height: 6, borderRadius: 3, background: i <= step ? C.goalGold : C.mutedBorder }} />)}
         </div>
         <PixelText size={8} color={C.grayLt}>Continue in {12 - timer}s</PixelText>
         <button onClick={togglePause} style={{
-          marginTop: 16, background: "#1A1218", border: `2px solid ${C.grayLt}40`,
+          marginTop: 16, background: C.cardBg, border: `2px solid ${C.grayLt}40`,
           borderRadius: 6, padding: "8px 20px", cursor: "pointer",
         }}>
           <PixelText size={7} color={C.grayLt}>⏸ PAUSE</PixelText>

@@ -149,7 +149,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
           width: "100%", maxWidth: 400,
           maxHeight: "45vh", overflowY: "auto",
           padding: "16px", marginBottom: 16,
-          background: "#1A1218", border: "2px solid #5C3A50",
+          background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
           borderRadius: 6,
         }}
       >
@@ -169,7 +169,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
       <div style={{
         width: "100%", maxWidth: 400,
         padding: "16px",
-        background: "#1A1218", border: "2px solid #5C3A50",
+        background: C.cardBg, border: "2px solid ${C.mutedBorder}",
         borderRadius: 6,
       }}>
         {/* Checkbox */}
@@ -202,7 +202,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             placeholder="Your full name..."
             style={{
               width: "100%", padding: "10px 12px",
-              background: C.mapBg, border: `2px solid ${checked ? C.goldMd : "#5C3A50"}`,
+              background: C.mapBg, border: `2px solid ${checked ? C.goldMd : C.mutedBorder}`,
               borderRadius: 3, color: C.cream, fontSize: 13,
               fontFamily: PIXEL_FONT, outline: "none",
               transition: "border-color 0.3s",
@@ -217,8 +217,8 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             disabled={saving}
             style={{
               flex: 1, padding: "12px",
-              background: "#5C3A50", color: C.grayLt,
-              border: "2px solid #5C3A50", borderRadius: 4,
+              background: C.mutedBorder, color: C.grayLt,
+              border: "2px solid ${C.mutedBorder}", borderRadius: 4,
               fontFamily: PIXEL_FONT, fontSize: 9, cursor: "pointer",
               opacity: saving ? 0.5 : 1,
             }}
@@ -230,9 +230,9 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             disabled={!canAgree || saving}
             style={{
               flex: 1, padding: "12px",
-              background: canAgree && !saving ? C.gold : "#3A2830",
+              background: canAgree && !saving ? C.gold : C.disabledBg,
               color: canAgree && !saving ? C.charcoal : C.grayLt,
-              border: `2px solid ${canAgree && !saving ? C.goldMd : "#5C3A50"}`,
+              border: `2px solid ${canAgree && !saving ? C.goldMd : C.mutedBorder}`,
               borderRadius: 4,
               fontFamily: PIXEL_FONT, fontSize: 9,
               cursor: canAgree && !saving ? "pointer" : "not-allowed",

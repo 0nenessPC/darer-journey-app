@@ -41,7 +41,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
   const defeatedBosses = quest.bosses.filter(b => b.defeated);
   const activeCount = activeBosses.length;
 
-  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? "#E8A04A" : C.bossRed;
+  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
   const levelLabel = (lv) => lv <= 3 ? "SHALLOW WATER" : lv <= 6 ? "GETTING DEEPER" : lv <= 8 ? "DEEP END" : "BOSS TERRITORY";
 
   const boss = focusedBoss || nextBoss;
@@ -52,9 +52,9 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       {/* Hero status bar */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid #5C3A50", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{
-          width: 36, height: 36, background: C.plum, border: "2px solid #5C3A50", borderRadius: 4,
+          width: 36, height: 36, background: C.plum, border: `2px solid ${C.mutedBorder}`, borderRadius: 4,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}><PixelText size={14} color={C.goldMd}>⚔</PixelText></div>
         <div style={{ flex: 1 }}>
@@ -68,7 +68,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       </div>
 
       {/* Journey goal banner */}
-      <div style={{ padding: "12px 16px", background: "#1A1218", borderBottom: "2px solid #5C3A50", textAlign: "center" }}>
+      <div style={{ padding: "12px 16px", background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`, textAlign: "center" }}>
         <PixelText size={7} color={C.grayLt}>JOURNEY GOAL</PixelText>
         <div style={{ marginTop: 4 }}><PixelText size={9} color={C.goalGold}>🏰 {quest.goal}</PixelText></div>
       </div>
@@ -80,8 +80,8 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
           style={{
             width: "100%",
             padding: "10px 16px",
-            background: "#1A1218",
-            borderBottom: "2px solid #5C3A50",
+            background: C.cardBg,
+            borderBottom: `2px solid ${C.mutedBorder}`,
             borderLeft: "none",
             borderRight: "none",
             borderTop: "none",
@@ -117,7 +117,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
             {/* Focused boss hero card */}
             <div style={{
               padding: 20,
-              background: `linear-gradient(180deg, ${levelColor(bDiff)}10 0%, #1A1218 100%)`,
+              background: `linear-gradient(180deg, ${levelColor(bDiff)}10 0%, ${C.cardBg} 100%)`,
               border: `3px solid ${boss === nextBoss ? C.goldMd : levelColor(bDiff) + "80"}`,
               borderRadius: 8,
               boxShadow: boss === nextBoss ? `0 0 20px ${C.goldMd}25` : "none",
@@ -194,7 +194,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         {/* Goal castle */}
         <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-            <div style={{ width: 3, height: 20, background: "#5C3A50" }} />
+            <div style={{ width: 3, height: 20, background: C.mutedBorder }} />
           </div>
           <div style={{
             padding: 16, background: C.goalGold + "15", border: `3px solid ${C.goalGold}`,
@@ -211,18 +211,18 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       {pendingBoss && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 50,
-          background: "rgba(0,0,0,0.7)",
+          background: C.overlay,
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: 20,
         }}>
           <div style={{
-            width: "100%", maxWidth: 400, background: "#1A1218",
+            width: "100%", maxWidth: 400, background: C.cardBg,
             border: `3px solid ${C.amber}`, borderRadius: 8,
             padding: 20, textAlign: "center",
           }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
             <PixelText size={11} color={C.amber} style={{ display: "block", marginBottom: 8 }}>HIGH DIFFICULTY WARNING</PixelText>
-            <div style={{ padding: 12, background: "#222", borderRadius: 6, marginBottom: 16 }}>
+            <div style={{ padding: 12, background: "C.inputBg", borderRadius: 6, marginBottom: 16 }}>
               <PixelText size={9} color={C.cream}>{pendingBoss.name}</PixelText>
               <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingBoss.desc}</PixelText></div>
               <div style={{ marginTop: 6 }}>
@@ -244,7 +244,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       {/* Bottom nav — 4 tabs — positioned relative to the app container */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        display: "flex", borderTop: "3px solid #5C3A50", background: "#1A1218",
+        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
       }}>
         {[
           { icon: "🗺", label: "MAP", active: true, onClick: () => {} },
@@ -254,7 +254,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         ].map(t => (
           <button key={t.label} onClick={t.onClick} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? "#2A1A28" : "transparent", display: "flex",
+            background: t.active ? C.charcoal + "80" : "transparent", display: "flex",
             flexDirection: "column", alignItems: "center", gap: 2,
           }}>
             <span style={{ fontSize: 16 }}>{t.icon}</span>
