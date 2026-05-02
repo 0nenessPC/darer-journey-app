@@ -18,7 +18,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
       "Bash(npx vite *)",
       "WebFetch(domain:localhost)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(DARER_TEST_URL=http://localhost:3002 npx playwright *)"
     ]
   }
 }

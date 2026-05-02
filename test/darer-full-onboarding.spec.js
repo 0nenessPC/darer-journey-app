@@ -210,84 +210,34 @@ test.describe('DARER Journey', () => {
     // Name confirmed screen
     await btn(page, 'CONTINUE');
 
-    // 2b. Meet Dara
+    // 2b. Meet Dara → BEGIN JOURNEY routes directly to shadowLore (no core values in character creation)
     console.log('  → Meet Dara');
     await screen(page, 'SOUL COMPANION OF THE DARER ORDER');
-    await btn(page, "I'M READY, DARA");
-
-    // 2c. Core values — two-click: expand then select
-    console.log('  → Core values');
-    await screen(page, 'YOUR INNER CHARACTER', 20000);
-    await page.waitForTimeout(2000);
-    // Get first 3 value card buttons
-    const allBtns = page.locator('button');
-    const btnCount = await allBtns.count();
-    const valueBtnIndices = [];
-    for (let i = 0; i < btnCount; i++) {
-      const txt = await allBtns.nth(i).innerText().catch(() => '');
-      if (txt.length > 3 && !txt.includes('BACK') && !txt.includes('LOGOUT') && !txt.includes('DARA')) {
-        valueBtnIndices.push(i);
-      }
-    }
-    // For each card: click once to expand, wait, then click again to select
-    for (const idx of valueBtnIndices.slice(0, 3)) {
-      await allBtns.nth(idx).click();
-      await page.waitForTimeout(500);
-      await allBtns.nth(idx).click();
-      await page.waitForTimeout(500);
-    }
-    console.log(`  ✓ Selected 3 values`);
-    await page.waitForTimeout(1000);
-    // The button appears once 3 values are selected
-    await btn(page, 'THESE DEFINE ME');
-
-    // 2d. Core reveal + stats
-    console.log('  → Stats reveal');
-    await btn(page, 'CONTINUE');
-    await screen(page, 'SEE THE PATH AHEAD');
-    await btn(page, 'SEE THE PATH AHEAD');
+    await btn(page, 'BEGIN JOURNEY');
     console.log('✅ Character creation complete');
 
-    // ═══ 3. VALUES SCREEN ═══
-    console.log('💎 3. Values...');
-    await screen(page, 'WHY BECOME A DARER', 20000);
-    await btn(page, 'LET ME SHOW YOU');
-    await screen(page, 'WHAT MATTERS MOST', 20000);
-    await page.waitForTimeout(2000);
-    const vc2 = page.locator('button').filter({ hasText: /friendship|belonging|trust|speak|challenge|respect/i });
-    for (let i = 0; i < Math.min(3, await vc2.count()); i++) {
-      await vc2.nth(i).click({ force: true });
-      await page.waitForTimeout(500);
-    }
-    await btn(page, 'THESE MATTER TO ME');
-    // Values sealed confirmation screen → leads into Shadow Lore
-    await screen(page, 'VALUES SEALED', 20000);
-    await btn(page, 'FACE THE SHADOW');
-    console.log('✅ Values complete');
-
-    // ═══ 4. SHADOW LORE pt1 (step 0: F.E.A.R. intro → step 1: Dara dialog → psychoed) ═══
-    console.log('🌑 4. Shadow Lore...');
+    // ═══ 3. SHADOW LORE pt1 (step 0: F.E.A.R. intro → step 1: Dara dialog → psychoed) ═══
+    console.log('🌑 3. Shadow Lore...');
     await screen(page, 'F.E.A.R.', 20000);
-    await btn(page, '^CONTINUE$');  // step 0 → step 1
-    await btn(page, '^CONTINUE$');  // step 1 → onPsychoed → psychoed screen
+    await btn(page, 'CONTINUE');  // step 0 → psychoed
     console.log('✅ Shadow Lore complete');
 
-    // ═══ 5. PSYCHOED (6 slides: 0-5) ═══
-    console.log('📚 5. PsychoEd...');
+    // ═══ 4. PSYCHOED (6 slides: 0-5) ═══
+    console.log('📚 4. PsychoEd...');
     await screen(page, "THE SHADOW'S TRICKS", 20000);
     // Click through PsychoEd slides (5 NEXTs + 1 CONTINUE)
     for (let i = 0; i < 5; i++) { await btn(page, '^NEXT$'); }
     await btn(page, 'CONTINUE →');
     console.log('✅ PsychoEd complete');
 
-    // ═══ 6. SHADOW LORE pt2 ═══
-    console.log('🌑 6. Shadow Lore pt2...');
+    // ═══ 5. SHADOW LORE pt2 ═══
+    console.log('🌑 5. Shadow Lore pt2...');
     await screen(page, 'UNDERSTAND YOUR FEAR', 20000);
     await btn(page, "I'M READY, DARA");
     console.log('✅ Shadow Lore pt2 complete');
 
-    // ═══ 7. INTAKE ═══
-    console.log('💬 7. Intake...');
+    // ═══ 6. INTAKE ═══
+    console.log('💬 6. Intake...');
     // Reset intake call counter to prevent stale state from previous runs
     page.__intakeCall = 0;
 
@@ -394,12 +344,29 @@ test.describe('DARER Journey', () => {
       console.log('✅ Intake complete');
     }
 
-    // ═══ 8. SHADOW REVEAL ═══
-    console.log('👤 8. Shadow Reveal...');
+    // ═══ 7. SHADOW REVEAL ═══
+    console.log('👤 7. Shadow Reveal...');
     await screen(page, "THE SHADOW'S TRUE NATURE", 30000);
     await page.waitForTimeout(3500); // wait for staggered card reveals + Dara dialog
     await btn(page, 'THE JOURNEY CONTINUES');
     console.log('✅ Shadow Reveal complete');
+
+    // ═══ 8. VALUES SCREEN ═══
+    console.log('💎 8. Values...');
+    await screen(page, 'WHY BECOME A DARER', 20000);
+    await btn(page, 'LET ME SHOW YOU');
+    await screen(page, 'WHAT MATTERS MOST', 20000);
+    await page.waitForTimeout(2000);
+    const vc2 = page.locator('button').filter({ hasText: /friendship|belonging|trust|speak|challenge|respect/i });
+    for (let i = 0; i < Math.min(3, await vc2.count()); i++) {
+      await vc2.nth(i).click({ force: true });
+      await page.waitForTimeout(500);
+    }
+    await btn(page, 'THESE MATTER TO ME');
+    // Values sealed confirmation screen → leads into DARER Strategy
+    await screen(page, 'VALUES SEALED', 20000);
+    await btn(page, 'SHOW ME HOW');
+    console.log('✅ Values complete');
 
     // ═══ 9. DARER STRATEGY ═══
     console.log('⚔️ 9. DARER Strategy...');
@@ -448,96 +415,144 @@ test.describe('DARER Journey', () => {
     await page.waitForTimeout(500);
     await btn(page, 'BEGIN TRAINING');
 
-    // A4: DECIDE phase — read-only screen, just click through
+    // A4: DECIDE phase — pick a value reason, click through
     console.log('  → Decide');
-    await screen(page, 'YOUR DECISION', 15000);
+    await screen(page, 'DECIDE', 15000);
+    // Pick at least one value
+    const decideValBtn = page.locator('button').filter({ hasText: /friendship|belong|speak|challenge|respect/i }).first();
+    await expect(decideValBtn).toBeVisible({ timeout: 10000 });
+    await decideValBtn.click();
     await btn(page, 'I DECIDE');
 
-    // A5: ALLOW phase — fill textarea, click through
-    console.log('  → Allow');
+    // A5: ALLOW phase — 6-field progressive form (fill each to unlock the next)
+    console.log('  → Allow: fearful thoughts');
     const allowTextarea = page.locator('textarea').first();
     await expect(allowTextarea).toBeVisible({ timeout: 10000 });
-    await allowTextarea.fill('My heart races and I worry people will judge me');
-    await btn(page, 'THE STORM IS HERE');
+    await allowTextarea.fill('They\'ll think I\'m weird. I\'ll embarrass myself.');
 
-    // A6: REHEARSE phase — mock responds instantly, click quick reply then advance
-    console.log('  → Rehearse');
-    await page.waitForTimeout(2000);  // let mock response render
-    const quickReply = page.locator('button').filter({ hasText: /I notice the Storm/i }).first();
-    await expect(quickReply).toBeVisible({ timeout: 10000 });
-    await quickReply.click();
-    await page.waitForTimeout(1000);
-    await btn(page, 'I\'M ALLOWING IT');
+    // Allow likelihood slider (appears after textarea filled)
+    console.log('  → Allow: likelihood');
+    await page.waitForTimeout(500);
+    const likelihoodSlider = page.locator('input[type="range"]').first();
+    await expect(likelihoodSlider).toBeVisible({ timeout: 10000 });
+    await likelihoodSlider.focus();
+    // Use keyboard arrow keys to adjust the slider (triggers real input events)
+    // Default is 50, press left 10 times to get to ~40
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('ArrowLeft');
+    }
+    await page.waitForTimeout(800);
 
-    // A7: RISE sub-step 0 (WHEN) — select a time option
-    console.log('  → Rise: when');
+    // Allow severity slider (appears after likelihood set)
+    console.log('  → Allow: severity');
+    await page.waitForTimeout(500);
+    const severitySlider = page.locator('input[type="range"]').last();
+    await expect(severitySlider).toBeVisible({ timeout: 10000 });
+    await severitySlider.focus();
+    // Default is 5, move to confirm the value is set (press right once then left once to trigger events)
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    await page.waitForTimeout(800);
+
+    // Can handle buttons
+    console.log('  → Allow: can handle');
+    await page.waitForTimeout(500);
+    const canHandleBtn = page.locator('button').filter({ hasText: /Yes.*I'd get through it/i }).first();
+    await expect(canHandleBtn).toBeVisible({ timeout: 10000 });
+    await canHandleBtn.click();
+
+    // Fear showing buttons
+    console.log('  → Allow: fear showing');
+    const fearShowingBtn = page.locator('button').filter({ hasText: /A little.*faint whisper/i }).first();
+    await expect(fearShowingBtn).toBeVisible({ timeout: 10000 });
+    await fearShowingBtn.click();
+
+    // Physical sensations (multi-select tags)
+    console.log('  → Allow: physical sensations');
+    const sensationBtn = page.locator('button').filter({ hasText: /Racing heart/i }).first();
+    await expect(sensationBtn).toBeVisible({ timeout: 10000 });
+    await sensationBtn.click();
+
+    // Continue button (enabled when all 6 fields complete)
+    await btn(page, "I'M ALLOWING IT", 10000);
+
+    // A7: RISE sub-step 0 (WHEN + WHERE combined) — select when, fill where, click LOCK IT IN
+    console.log('  → Rise: when + where');
     const whenOption = page.locator('button').filter({ hasText: /Today.*soon/i }).first();
     await expect(whenOption).toBeVisible({ timeout: 10000 });
     await whenOption.click();
 
-    // A8: RISE sub-step 1 (WHERE) — fill location input, click NEXT
+    // Fill WHERE input (placeholder changed to "coffee shop" pattern)
     console.log('  → Rise: where');
     const whereInput = page.locator('input[placeholder*="coffee shop"]').first();
     await expect(whereInput).toBeVisible({ timeout: 10000 });
     await whereInput.fill('the campus library');
-    await btn(page, 'NEXT', 10000);
-
-    // A9: RISE sub-step 2 (SCHEDULE DATE/TIME) — pick datetime, click LOCK IT IN
-    console.log('  → Rise: schedule');
-    const dateInput = page.locator('input[type="datetime-local"]').first();
-    await expect(dateInput).toBeVisible({ timeout: 10000 });
-    // Set to 1 hour from now
-    const soon = new Date(Date.now() + 3600000);
-    const dateStr = soon.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
-    await dateInput.fill(dateStr);
     await btn(page, 'LOCK IT IN', 10000);
-    // Dismiss alarm suggestion if shown
-    const alarmDismiss = page.locator('button').filter({ hasText: /already set a reminder/i }).first();
-    if (await alarmDismiss.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await alarmDismiss.click();
-      await page.waitForTimeout(500);
-    }
 
-    // A10: RISE sub-step 3 (ARMORY) — select any armory option (tool or "trust strategy")
+    // A8: RISE sub-step 1 (ARMORY) — select "trust the strategy alone" (skips practice, goes to SUDs)
     console.log('  → Rise: armory');
-    // Could be "Paced Breathing" or "I'll trust the strategy alone"
-    const armoryOption = page.locator('button').filter({ hasText: /Paced Breathing|trust the strategy/i }).first();
+    const armoryOption = page.locator('button').filter({ hasText: /trust the strategy/i }).first();
     await expect(armoryOption).toBeVisible({ timeout: 10000 });
     await armoryOption.click();
-    await page.waitForTimeout(1500);
 
-    // A11: RISE sub-step 4 (SUDs Before) — select a SUDs rating, click I'M GOING IN
+    // A9: RISE sub-step 3 (SUDs Before) — use 0-100 range slider
     console.log('  → Rise: SUDs before');
-    // Wait for the SUDs screen to appear
     await screen(page, 'STORM INTENSITY', 15000);
     await page.waitForTimeout(500);
-    // Get the button with accessible name "5"
-    const sudsBtn = page.getByRole('button', { name: '5' });
-    await expect(sudsBtn).toBeVisible({ timeout: 10000 });
-    await sudsBtn.click();
+    const sudsBeforeSlider = page.locator('input[type="range"]').first();
+    await expect(sudsBeforeSlider).toBeVisible({ timeout: 10000 });
+    // Default is 0, press right 50 times to get to ~50
+    await sudsBeforeSlider.focus();
+    for (let i = 0; i < 50; i++) { await page.keyboard.press('ArrowRight'); }
     await page.waitForTimeout(500);
-    await btn(page, 'I\'M GOING IN', 10000);
+    await btn(page, "LET'S GO", 10000);
 
-    // A12: WAITING phase — click "I DID IT!" to simulate completing the exposure
-    console.log('  → Waiting (exposure done)');
-    await page.waitForTimeout(3000);  // brief pause to simulate doing the exposure IRL
-    await btn(page, '✅ I DID IT!', 15000);
+    // A11: ENGAGE sub-step 0 — choose "ENGAGE RIGHT AWAY" (skip Dara chat)
+    console.log('  → Engage: outcome');
+    const engageRightAway = page.locator('button').filter({ hasText: /ENGAGE RIGHT AWAY/i }).first();
+    await expect(engageRightAway).toBeVisible({ timeout: 10000 });
+    await engageRightAway.click();
+    // Outcome selection appears
+    const outcomeBtn = page.locator('button').filter({ hasText: /I did it.*stayed all the way/i }).first();
+    await expect(outcomeBtn).toBeVisible({ timeout: 10000 });
+    await outcomeBtn.click();
+    await btn(page, 'CONTINUE', 10000);
 
-    // A13: ENGAGE phase — fill textarea, select SUDs after, advance
-    console.log('  → Engage: report back');
-    const engageTextarea = page.locator('textarea').first();
-    await expect(engageTextarea).toBeVisible({ timeout: 10000 });
-    await engageTextarea.fill('It went well, not as scary as I thought');
-    const sudsAfterBtn = page.getByRole('button', { name: '3' });
-    await expect(sudsAfterBtn).toBeVisible({ timeout: 10000 });
-    await sudsAfterBtn.click();
+    // A13: ENGAGE sub-step 2 (SUDs After) — use 0-100 range slider
+    console.log('  → Engage: SUDs after');
+    await screen(page, 'STORM INTENSITY', 15000);
     await page.waitForTimeout(500);
-    await btn(page, 'NEXT: REPEAT', 10000);
+    const sudsAfterSlider = page.locator('input[type="range"]').first();
+    await expect(sudsAfterSlider).toBeVisible({ timeout: 10000 });
+    // Default is 0, press right 30 times to get to ~30
+    await sudsAfterSlider.focus();
+    for (let i = 0; i < 30; i++) { await page.keyboard.press('ArrowRight'); }
+    await page.waitForTimeout(500);
+    await page.waitForTimeout(800);
+    await btn(page, 'CONTINUE', 10000);
 
-    // A14: DEBRIEF phase — click FORGE YOUR PATH to complete tutorial
-    console.log('  → Debrief');
+    // A14: ENGAGE sub-step 3 (Reflection Q1) — answer "No, they didn't happen at all" (skips Q2/Q3)
+    console.log('  → Engage: reflection');
+    const noHappenBtn = page.locator('button').filter({ hasText: /No, they didn't happen at all/i }).first();
+    await expect(noHappenBtn).toBeVisible({ timeout: 10000 });
+    await noHappenBtn.click();
+    await btn(page, 'CONTINUE', 10000);
+
+    // A15: ENGAGE sub-step 4 (Free text) — fill and continue
+    console.log('  → Engage: free text');
+    const freeText = page.locator('textarea').first();
+    await expect(freeText).toBeVisible({ timeout: 10000 });
+    await freeText.fill('It wasn\'t as bad as I feared');
+    await btn(page, 'SEE WHAT THE SHADOW DID', 10000);
+
+    // A16: ENGAGE sub-step 5 (SUDs comparison + "FIRST BATTLE COMPLETE")
+    console.log('  → Engage: battle complete');
     await screen(page, 'FIRST BATTLE COMPLETE', 15000);
-    await btn(page, 'FORGE YOUR PATH', 15000);
+    await btn(page, 'THE POWER OF REPEAT', 15000);
+
+    // A17: ENGAGE sub-step 6 (REPEAT preview) — click to finish tutorial
+    console.log('  → Debrief: repeat preview');
+    await btn(page, 'GOT IT — ON TO THE PATH', 15000);
     console.log('✅ Tutorial complete');
 
     // ═══ 12. EXPOSURE SORT ═══

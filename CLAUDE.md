@@ -252,27 +252,43 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 
 ### Pending / Next Steps
 - **Fix remaining Values test** — intake auto-transition timing with typewriter/TTS sync delay.
-- **BossBattle prep/visual smoke test** — navigate to a boss on the map, enter prep phase, validate DARER steps layout.
+- **BossBattle prep/visual smoke test** — navigate to a boss on the map, enter prep phase, validate DARER steps layout. New engage flow has sequential reveals (I AM READY TO REPORT → outcome → SHOW ME THE LOOT → loot upload) — tests must account for this multi-step flow.
+- **TutorialBattle coach chat voice test** — verify VoiceInputBar appears and AI replies auto-speak in TutorialBattle engage sub-step 0.5.
+- **Loot upload test** — BossBattle engage sub-step 0.5 has image picker + textarea; E2E tests need to handle file upload or skip image selection.
 - **IntakeScreen real-AI visual test** — run intake chat with real AI responses, validate chat UI, typewriter bubbles, TTS.
 - **Visual regression baseline** — store approved screenshots as baselines to detect layout regressions.
 
-### Session: 2026-05-01 — Engagement Overhaul, Voice Consistency, Bottom Nav Fix
+### Session: 2026-05-01 (test update) — E2E Test Synced with App Changes
+
+- **`test/darer-full-onboarding.spec.js`** — updated to match current app state:
+  - **Decide phase** — now requires selecting at least one value card before proceeding (was read-only). Button: "I DECIDE → NEXT: ALLOW". Screen text "YOUR DECISION" → "DECIDE" phase label.
+  - **Allow phase** — replaced single textarea with 6-field progressive form: fearful thoughts textarea → likelihood slider (0-100%) → severity slider (0-10) → can-handle buttons → fear-showing buttons → physical sensation tags (multi-select). Button: "I'M ALLOWING IT → NEXT: RISE".
+  - **Rehearse phase** — eliminated (merged into Allow phase).
+  - **RISE sub-steps** — WHEN+WHERE combined on one screen, "LOCK IT IN →" button requires both fields. Armory shows dynamic `hero.armory` tools. Practice prompt with YES/SKIP.
+  - **SUDs before/after** — 1-10 button grid → 0-100 range slider. Set via `page.evaluate()` with native setter + input/change events.
+  - **Engage sub-step 0** — "ENGAGE RIGHT AWAY" (skip Dara chat) or "TALK TO DARA FIRST" (voice chat). Outcome selection → CONTINUE.
+  - **Engage sub-steps 1-6** — outcome → SUDs slider (0-100) → reflection Q1-Q3 (conditional skip) → free text → SUDs comparison ("FIRST BATTLE COMPLETE") → REPEAT preview → "GOT IT — ON TO THE PATH →".
+- **`CLAUDE.md`** — testing agent docs updated with 2026-05-01 changes and testing impact summary.
+
+### Session: 2026-05-01 (evening) — Engagement Overhaul, Voice Consistency, Bottom Nav Fix, TutorialBattle Parity
 
 - **`src/screens/BossBattle.jsx`**:
-  - **Engage sub-step 0 redesign** — sequential reveal flow: Dara's message → "I AM READY TO REPORT" → 3 outcome options appear → "SHOW ME THE LOOT" → proof upload area
-  - **Engage sub-step 0.5 (Loot)** — new proof upload with image picker (base64) + text input for meaningful moments
-  - **Decide voice encouragement** — auto-speaks motivational interviewing message when prepStep === 0 (empathy + self-efficacy + anchor framing)
-  - **DebriefFreeText component** — extracted sub-step 3 with auto-TTS + VoiceInputBar for spoken reflection
-  - **Fixed `heroName` not defined** → changed to `hero.name` in post-battle Dara speech
+  - **Engage sub-step 0 redesign** — sequential reveal flow: Dara's message → "I AM READY TO REPORT" button → 3 outcome options appear → user selects → "SHOW ME THE LOOT" button → sub-step 0.5 (proof upload area with image + text)
+  - **Engage sub-step 0.5 (Loot)** — new proof upload with image picker (base64 via FileReader) + text input for meaningful moments. No validation required to proceed (CONTINUE always enabled).
+  - **Decide voice encouragement** — auto-speaks motivational interviewing message when prepStep === 0 (empathy + self-efficacy + anchor framing). Uses `decideSpoken` ref to prevent re-speaking on re-renders.
+  - **DebriefFreeText component** — extracted sub-step 3 with auto-TTS (Dara speaks the question on mount) + VoiceInputBar for spoken reflection + textarea fallback.
+  - **Fixed `heroName` not defined** → changed to `hero.name` in post-battle Dara speech (line ~1209)
   - **battleVoiceMode default** → `false` → `true` so Dara auto-speaks in battle phase
+  - **RISE sub-step 0 validation** — WHERE field now required: `disabled={!exposureWhen || !exposureWhere.trim()}`
   - **Q3 text simplified** — "Even though it was difficult — did you get through it?" → "Did you get through it?"
   - **Bottom nav fix** — `position: fixed, left: 50%, translateX(-50%), width: 100%` → `left: 0, right: 0, maxWidth: 480, margin: 0 auto` (prevents overflow on wide screens)
 
 - **`src/screens/TutorialBattle.jsx`**:
-  - **SUDs before/after** — replaced 1-10 button grid with 0-100 range slider (matches BossBattle)
-  - **Rise dialog** — "The rehearsal is done. You've felt the Storm..." → "You're ready. The Storm may strike..." (removed incorrect rehearsal reference)
-  - **Progress bar** — 4 steps → 5 steps (D, A, R, E, R) with clickable navigation
-  - **Voice/TTS** — added `useCloudVoice` hook, auto-speak AI replies, VoiceInputBar in coach chat (sub-step 0.5)
+  - **SUDs before/after** — replaced 1-10 button grid with 0-100 range slider (matches BossBattle). Default `sudsBefore`/`sudsAfter` from `null` → `0`.
+  - **Rise dialog** — "The rehearsal is done. You've felt the Storm..." → "You're ready. The Storm may strike, but you've already decided what matters." (removed incorrect rehearsal reference)
+  - **Progress bar** — 4 steps → 5 steps (D, A, R, E, R) with clickable navigation. "repeat" phase added but engage (index 3) is non-clickable as final step.
+  - **Voice/TTS** — added `useCloudVoice` hook, auto-speak AI replies in coach chat, VoiceInputBar in coach chat (sub-step 0.5) when `voice.supported`, textarea fallback otherwise.
+  - **RISE sub-step 0 validation** — WHERE field now required (same as BossBattle)
   - **Q3 text simplified** — same as BossBattle
 
 - **`src/components/PracticeSession.jsx`**:
@@ -289,6 +305,47 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 
 - **`src/screens/ValuesScreen.jsx`** — intro lore tightened from ~95 to ~55 words, 8→3 paragraphs
 
-- **`test/ai-tester.js`** — exposure activity library saved as memory docs (4 files covering Heimberg Protocol, DCS study, SMU/BU/MGH protocols)
-
 - Build verified: `npx vite build` passes cleanly (1.17s)
+
+### Testing Impact Summary (2026-05-01 changes)
+
+**Selectors that changed — tests must update:**
+
+| Feature | Old | New |
+|---------|-----|-----|
+| BossBattle Engage start | outcome buttons visible immediately | Click `📋 I AM READY TO REPORT` first |
+| BossBattle Engage proceed | `setEngageSubStep(1)` on outcome click | Select outcome → click `🎒 SHOW ME THE LOOT` |
+| BossBattle new sub-step | none | `engageSubStep === 0.5` = loot upload (image + text) |
+| SUDs (both battles) | 1-10 button grid, values 1-10 | Range slider 0-100 |
+| SUDs defaults | `null` | `0` |
+| TutorialBattle coach chat | textarea + SEND button always visible | VoiceInputBar when supported, textarea+SEND fallback |
+| RISE WHEN+WHERE | only WHEN required | Both WHEN and WHERE required |
+| Q3 reflection text | "Even though it was difficult — did you get through it?" | "Did you get through it?" |
+| Bottom nav position | `left: 50%, translateX(-50%)` | `left: 0, right: 0, maxWidth: 480, margin: 0 auto` |
+
+**Voice behavior changes:**
+- BossBattle: `battleVoiceMode` defaults to `true` → Dara auto-speaks on battle mount
+- BossBattle engage sub-step 3: DebriefFreeText auto-speaks question on mount
+- TutorialBattle: AI coach chat replies auto-speak via `voice.speak()`
+- All use browser `speechSynthesis` (not cloud TTS)
+
+### Session: 2026-05-01 (late night) — AI Smoke Test Fixes (12/12 passing)
+
+**`test/ai-smoke.spec.js`** — fixed remaining Values card selection test failure (now 12/12 passing):
+- **Intake mock detection** — changed from `sys.includes('Soul Companion')` (also matched Shadow Lore) → `sys.includes("5 to 10 minutes") || sys.includes("the hero's name is")` (unique to intake prompt)
+- **Intake flow simplified** — removed manual intake chat interaction (fill input + click send). Mock returns shadow summary on every intake call → auto-transitions directly to ShadowReveal. Test now: click "I'M READY, DARA" → wait for ShadowReveal → navigate to Values
+- **`force: true`** added to send button click in case overlay interferes (kept for robustness)
+- **Screenshot** — changed to `fullPage: true` to capture full values grid
+- **Send button selector** — uses `hasText: '→'` with `.last()` to get the intake send button (not modal's SEND)
+
+**Results**: 12/12 tests passing (7 smoke + 5 content quality)
+
+### Session: 2026-05-02 — AI Test Flakiness Fixes (12/12 stable)
+
+**`test/ai-smoke.spec.js`** — fixed flaky AI visual assertions that passed sometimes and failed on re-run:
+- **GameIntro assertion** — AI flagged "STEP 1/11" (overall onboarding progress) vs "5 dots" (carousel slides within GameIntro) as inconsistent. Added context explaining the two counters serve different purposes.
+- **Meet Dara assertion** — AI flagged "TestHero" (test signup name) as unedited placeholder text. Added context that "TestHero" is expected test data, not a placeholder.
+- **Values card assertion** — AI kept failing because `fullPage: true` screenshots got cropped in the AI's viewport view. Removed `fullPage: true`, simplified assertion to only check visible elements (header, cards grid, subtitle). Removed references to "THESE MATTER TO ME" button (intentionally hidden until 2+ values selected by design) and "Select at least 2 values" text (off-screen on mobile).
+- **Values timeout** — extended test timeout to 180s (from default 120s) since this test has the longest navigation path.
+
+**Results**: 12/12 tests passing consistently across 3 consecutive full-suite runs.
