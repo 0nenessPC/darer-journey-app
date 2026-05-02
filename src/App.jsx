@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { loadProgress, NDA_VERSION } from "./utils/supabase";
 import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
-import { C, SYS, DEFAULT_ARMORY, ONBOARDING, FONT_LINK } from "./constants/gameData";
+import { C, SYS, DEFAULT_ARMORY, ONBOARDING, DM_SANS_FONT } from "./constants/gameData";
 import { PixelText, HPBar, TypingDots, DialogBox, OnboardingProgress } from "./components/shared.jsx";
 import BossBattle from "./screens/BossBattle.jsx";
 import TutorialBattle from "./screens/TutorialBattle.jsx";
@@ -119,22 +119,21 @@ export default function DARERQuest() {
   }, [hero.darerId, setHero, setShadowText, setQuest, setOnboardingState, setScreen]);
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'DM Sans', sans-serif", position: "relative" }}>
+    <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: DM_SANS_FONT, position: "relative" }}>
       {/* Global back button — shown on all screens except login and map */}
       {!["login", "map", "battle", "bank"].includes(screen) && screenHistory.length > 0 && (
-        <button onClick={goBack} style={{
+        <button onClick={goBack} aria-label="Go back" style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 8, zIndex: 100,
           background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
           backdropFilter: "blur(4px)",
         }}>
-          <PixelText size={7} color={C.grayLt}>? BACK</PixelText>
+          <PixelText size={7} color={C.subtleText}>? BACK</PixelText>
         </button>
       )}
       {screen === "login" && !authReady && (
         <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.mapBg }}>
-          <link href={FONT_LINK} rel="stylesheet" />
           <PixelText size={10} color={C.goldMd}>Checking for existing hero...</PixelText>
         </div>
       )}
@@ -149,13 +148,13 @@ export default function DARERQuest() {
         />
       )}
       {isAuthenticated && screen !== "login" && screen !== "nda" && (
-        <button onClick={handleLogout} style={{
+        <button onClick={handleLogout} aria-label="Log out" style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 8, zIndex: 100,
           background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           backdropFilter: "blur(4px)",
         }}>
-          <PixelText size={7} color={C.grayLt}>LOGOUT</PixelText>
+          <PixelText size={7} color={C.subtleText}>LOGOUT</PixelText>
         </button>
       )}
       {/* Feedback button — floating bottom-right on all authenticated screens */}

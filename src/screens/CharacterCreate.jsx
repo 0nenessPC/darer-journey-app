@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 
 export default function CharacterCreate({ onComplete, onFastForward, initialName, darerId, obState, setOBState }) {
@@ -63,7 +63,6 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
   // {step === "cards" && ...} JSX block below.
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: step === "reveal" ? "flex-start" : "center", alignItems: "center", padding: step === "reveal" ? "16px 24px 0" : "0 24px", background: C.mapBg, textAlign: "center", overflowY: step === "reveal" ? "auto" : "hidden" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* STEP 1: NAME */}
       {step === "name" && (
@@ -111,7 +110,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
 
           {nameConfirmed && (
             <div style={{ marginTop: 20, animation: "fadeIn 0.5s ease-out" }}>
-              <div style={{ padding: 16, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
+              <div style={{ padding: C.padLg, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
                 <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
                   {name.trim() || darerId}. A name the Shadow{"\n"}will learn to fear.{"\n"}{"\n"}
                   Welcome to the DARER family.{"\n"}{"\n"}
@@ -155,7 +154,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
             SOUL COMPANION OF THE DARER ORDER
           </PixelText>
 
-          <div style={{ padding: 16, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
+          <div style={{ padding: C.padLg, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 6, marginBottom: 16 }}>
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
               Every DARER is assigned a Soul{"\n"}Companion — someone who knows the{"\n"}Shadow's tricks and how to{"\n"}unravel them.{"\n"}{"\n"}
               Dara has walked beside hundreds{"\n"}of DARERs before you. She knows{"\n"}the path. She knows the fear.{"\n"}And she knows it can be beaten.{"\n"}{"\n"}
@@ -289,7 +288,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
             {ACT_VALUES.filter(v => coreValues.includes(v.id)).map((v, i) => (
               <div key={v.id} style={{
-                padding: 16, background: "C.cardBg",
+                padding: C.padLg, background: "C.cardBg",
                 border: `2px solid ${C.goldMd}60`, borderRadius: 6,
                 textAlign: "center",
                 animation: `fadeIn 0.5s ease-out ${i * 0.2}s both`,
@@ -410,7 +409,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
           {/* Tooltip explanation */}
           {showTooltip && (
             <div style={{
-              marginTop: 8, padding: 12, background: "C.cardBg",
+              marginTop: 8, padding: C.padMd, background: "C.cardBg",
               border: `2px solid ${showTooltip === "strength" ? C.goldMd + "60" : C.plumMd + "60"}`,
               borderRadius: 6, animation: "fadeIn 0.2s ease-out",
             }}>

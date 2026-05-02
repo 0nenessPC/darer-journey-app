@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
 // --- EXPOSURE HIERARCHY SORT (AI generates personalized battles, user swipes) ---
 export default function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {
@@ -174,7 +174,6 @@ No other text.`,
     if (accepted.length === 0 && exposures.length > 0) {
       return (
         <div style={{ minHeight: "100vh", background: C.mapBg, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-          <link href={FONT_LINK} rel="stylesheet" />
           <PixelText size={12} color={C.bossRed} style={{ display: "block", marginBottom: 4 }}>THE FORGE IS COLD</PixelText>
           <DialogBox speaker="DARA">
             <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -192,9 +191,8 @@ No other text.`,
     }));
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "32px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
         <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>PATH FORGED</PixelText>
-        <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>
+        <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 16 }}>
           {finalBosses.length} battles accepted · {rejected.length} passed
         </PixelText>
 
@@ -220,9 +218,9 @@ No other text.`,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <PixelText size={7} color={levelColor(b.level)}>{b.name}</PixelText>
-                  <PixelText size={5} color={C.grayLt}>{levelLabel(b.level)}</PixelText>
+                  <PixelText size={5} color={C.subtleText}>{levelLabel(b.level)}</PixelText>
                 </div>
-                <PixelText size={6} color={C.grayLt}>{b.desc}</PixelText>
+                <PixelText size={6} color={C.subtleText}>{b.desc}</PixelText>
               </div>
             </div>
           ))}
@@ -254,13 +252,12 @@ No other text.`,
   // === MAIN: Loading / Card Sort ===
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "40px 24px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {loading ? (
         <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-out" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔨</div>
           <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>FORGING YOUR BATTLES</PixelText>
-          <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
+          <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
         </div>
       ) : exposures.length === 0 ? (
         <div style={{ textAlign: "center" }}>
@@ -277,7 +274,7 @@ No other text.`,
       ) : card ? (
         <div style={{ width: "100%", maxWidth: 340, textAlign: "center" }}>
           <PixelText size={9} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>FORGE YOUR PATH</PixelText>
-          <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 14 }}>
+          <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 14 }}>
             Could you try this? Swipe right to accept, left to pass.
           </PixelText>
 
@@ -328,7 +325,7 @@ No other text.`,
             )}
 
             <PixelText size={11} color={C.cream} style={{ display: "block", marginBottom: 10 }}>{card.name}</PixelText>
-            <PixelText size={8} color={C.grayLt} style={{ display: "block", lineHeight: 1.7 }}>{card.activity}</PixelText>
+            <PixelText size={8} color={C.subtleText} style={{ display: "block", lineHeight: 1.7 }}>{card.activity}</PixelText>
 
             {/* Swipe indicators */}
             {dragX > 20 && <div style={{ position: "absolute", top: 12, right: 12 }}><PixelText size={9} color={C.hpGreen}>ACCEPT ✓</PixelText></div>}
@@ -338,7 +335,7 @@ No other text.`,
           {/* Labels + count */}
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginBottom: 10 }}>
             <PixelText size={7} color={C.bossRed}>← PASS</PixelText>
-            <PixelText size={8} color={C.grayLt}>{currentCard + 1} / {exposures.length}</PixelText>
+            <PixelText size={8} color={C.subtleText}>{currentCard + 1} / {exposures.length}</PixelText>
             <PixelText size={7} color={C.hpGreen}>ACCEPT →</PixelText>
           </div>
 

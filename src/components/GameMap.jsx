@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar } from '../components/shared';
 import SwipeableBoss from './SwipeableBoss';
 export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onLadder, onBank, focusedBoss, setFocusedBoss, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
@@ -50,7 +50,6 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       {/* Hero status bar */}
       <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{
@@ -98,7 +97,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       )}
 
       {/* Focused Boss Card */}
-      <div style={{ padding: 16 }}>
+      <div style={{ padding: C.padLg }}>
         {!boss ? (
           // No bosses at all
           <div style={{ textAlign: "center", padding: "40px 16px" }}>
@@ -197,7 +196,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
             <div style={{ width: 3, height: 20, background: C.mutedBorder }} />
           </div>
           <div style={{
-            padding: 16, background: C.goalGold + "15", border: `3px solid ${C.goalGold}`,
+            padding: C.padLg, background: C.goalGold + "15", border: `3px solid ${C.goalGold}`,
             borderRadius: 6, textAlign: "center",
           }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🏰</div>
@@ -222,7 +221,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
           }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
             <PixelText size={11} color={C.amber} style={{ display: "block", marginBottom: 8 }}>HIGH DIFFICULTY WARNING</PixelText>
-            <div style={{ padding: 12, background: "C.inputBg", borderRadius: 6, marginBottom: 16 }}>
+            <div style={{ padding: C.padMd, background: "C.inputBg", borderRadius: 6, marginBottom: 16 }}>
               <PixelText size={9} color={C.cream}>{pendingBoss.name}</PixelText>
               <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingBoss.desc}</PixelText></div>
               <div style={{ marginTop: 6 }}>
@@ -242,7 +241,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       )}
 
       {/* Bottom nav — 4 tabs — positioned relative to the app container */}
-      <div style={{
+      <div role="navigation" aria-label="Main navigation" style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
       }}>
@@ -252,13 +251,13 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
           { icon: "🏆", label: "LADDER", active: false, onClick: onLadder },
           { icon: "🛡", label: "HERO", active: false, onClick: onViewProfile },
         ].map(t => (
-          <button key={t.label} onClick={t.onClick} style={{
+          <button key={t.label} onClick={t.onClick} aria-current={t.active ? "page" : undefined} aria-label={`${t.label} tab`} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
             background: t.active ? C.charcoal + "80" : "transparent", display: "flex",
             flexDirection: "column", alignItems: "center", gap: 2,
           }}>
             <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
+            <PixelText size={6} color={t.active ? C.goldMd : C.subtleText}>{t.label}</PixelText>
           </button>
         ))}
       </div>

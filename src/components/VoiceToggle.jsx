@@ -40,6 +40,8 @@ export default function VoiceToggle({
       {/* Mic button */}
       <button
         onClick={onToggleMic}
+        aria-pressed={isActive}
+        aria-label={isActive ? 'Stop recording' : 'Start voice input'}
         style={{
           width: btnSize,
           height: btnSize,
@@ -66,6 +68,8 @@ export default function VoiceToggle({
       {onSpeak && (
         <button
           onClick={isSpeaking ? onStopSpeak : () => onSpeak()}
+          aria-pressed={isSpeaking}
+          aria-label={isSpeaking ? 'Stop speaking' : 'Speak aloud'}
           style={{
             width: btnSize,
             height: btnSize,
@@ -147,6 +151,8 @@ export function VoiceInputBar({
       {supported && (
         <button
           onClick={handleMicToggle}
+          aria-pressed={isListening}
+          aria-label={isListening ? 'Stop recording' : 'Start voice input'}
           style={{
             width: 40,
             height: 40,

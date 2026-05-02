@@ -9,7 +9,7 @@ export function PixelBtn({ children, onClick, color = C.plum, textColor = C.crea
   return (
     <button onClick={onClick} disabled={disabled} style={{
       fontFamily: PIXEL_FONT, fontSize: 10, padding: "12px 20px",
-      background: disabled ? C.grayLt : color, color: disabled ? C.gray : textColor,
+      background: disabled ? C.grayLt : color, color: disabled ? C.charcoal : textColor,
       border: `3px solid ${disabled ? C.gray : (color === C.plum ? C.mutedBorder : C.goldBtnShadow)}`,
       borderRadius: 4, cursor: disabled ? "default" : "pointer",
       boxShadow: disabled ? "none" : `0 4px 0 ${color === C.plum ? C.plumBtnShadow : C.goldBtnShadow}`,
@@ -22,8 +22,8 @@ export function HPBar({ current, max, width = "100%", height = 12, label }) {
   const pct = Math.max(0, (current / max) * 100);
   const color = pct > 50 ? C.hpGreen : pct > 25 ? C.amber : C.hpRed;
   return (
-    <div style={{ width }}>
-      {label && <PixelText size={8} color={C.grayLt}>{label}</PixelText>}
+    <div style={{ width }} role="progressbar" aria-valuenow={current} aria-valuemin={0} aria-valuemax={max} aria-label={label || "Health"}>
+      {label && <PixelText size={8} color={C.subtleText}>{label}</PixelText>}
       <div style={{ height, background: C.cardBg, borderRadius: 2, border: `2px solid ${C.mutedBorder}`, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: color, transition: "width 0.6s ease", imageRendering: "pixelated" }} />
       </div>
@@ -45,7 +45,7 @@ export function TypingDots() {
 
 export function DialogBox({ speaker, text, typing, children }) {
   return (
-    <div style={{
+    <div role="region" aria-label={speaker ? `Message from ${speaker}` : "Message"} style={{
       background: C.cardBg, border: `3px solid ${C.mutedBorder}`, borderRadius: 6,
       padding: "12px 14px", marginBottom: 10,
     }}>
@@ -75,7 +75,7 @@ export function OnboardingProgress({ screen }) {
   if (idx === -1) return null;
   const pct = ((idx + 1) / ONBOARDING.length) * 100;
   return (
-    <div style={{
+    <div role="navigation" aria-label="DARER phase navigation" style={{
       position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
       background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`,
       padding: "8px 12px 6px",
@@ -84,8 +84,8 @@ export function OnboardingProgress({ screen }) {
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
       }}>
-        <PixelText size={7} color={C.goldMd}>STEP {idx + 1}/{ONBOARDING.length}</PixelText>
-        <PixelText size={7} color={C.grayLt}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
+        <PixelText size={7} color={C.goldMd} aria-current="step">STEP {idx + 1}/{ONBOARDING.length}</PixelText>
+        <PixelText size={7} color={C.subtleText}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
       </div>
       <div style={{ height: 4, background: C.mapBg, borderRadius: 2, border: `1px solid ${C.mutedBorder}`, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: C.plumMd, transition: "width 0.3s ease" }} />

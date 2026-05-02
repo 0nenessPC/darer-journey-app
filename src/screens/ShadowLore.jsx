@@ -1,8 +1,6 @@
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
 function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, setOBState }) {
   const step = obState?.step ?? initialStep;
   const setStep = (v) => setOBState({ step: typeof v === 'function' ? v(step) : v });
@@ -11,7 +9,6 @@ function ShadowLore({ heroName, onPsychoed, onReady, initialStep = 0, obState, s
       height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center",
       alignItems: "center", padding: "0 28px", background: C.mapBg, textAlign: "center",
     }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* STEP 0 — Dara: meeting + F.E.A.R. reveal (combined) */}
       {step === 0 && (

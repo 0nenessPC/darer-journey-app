@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
@@ -200,7 +200,7 @@ Always keep the exposure small, actionable, and specific.`;
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <PixelText size={12} color={C.teal}>Dara's Suggestion</PixelText>
-            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.grayLt, fontSize: 18 }}>✕</button>
+            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.subtleText, fontSize: 18 }}>✕</button>
           </div>
 
           {/* Generated card preview */}
@@ -239,7 +239,7 @@ Always keep the exposure small, actionable, and specific.`;
                 width: "100%", padding: "12px 20px",
                 background: "transparent", border: `2px solid ${C.grayLt}`,
                 borderRadius: 6, cursor: "pointer",
-                color: C.grayLt, fontSize: 9, fontFamily: PIXEL_FONT,
+                color: C.subtleText, fontSize: 9, fontFamily: PIXEL_FONT,
               }}
             >
               ✏️ Edit or write my own
@@ -274,11 +274,11 @@ Always keep the exposure small, actionable, and specific.`;
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <PixelText size={9} color={C.teal}>🤖 Ask Dara</PixelText>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.grayLt, fontSize: 16 }}>✕</button>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.subtleText, fontSize: 16 }}>✕</button>
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: C.padLg }}>
           {messages.map((m, i) => (
             <div key={i} style={{
               marginBottom: 12,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { C, FONT_LINK } from '../constants/gameData';
+import { C } from '../constants/gameData';
 import { PixelText, PixelBtn } from './shared.jsx';
 
 export default class ErrorBoundary extends React.Component {
@@ -24,7 +24,6 @@ export default class ErrorBoundary extends React.Component {
           display: "flex", flexDirection: "column", alignItems: "center",
           justifyContent: "center", padding: "32px 24px", textAlign: "center",
         }}>
-          <link href={FONT_LINK} rel="stylesheet" />
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
           <PixelText size={12} color={C.bossRed} style={{ display: "block", marginBottom: 8 }}>
             SOMETHING WENT WRONG
@@ -35,7 +34,7 @@ export default class ErrorBoundary extends React.Component {
           </PixelText>
           {this.state.error && (
             <div style={{
-              marginBottom: 20, padding: 12, background: C.cardBg,
+              marginBottom: 20, padding: C.padMd, background: C.cardBg,
               border: `1px solid ${C.bossRed}40`, borderRadius: 6,
               maxWidth: 400,
             }}>

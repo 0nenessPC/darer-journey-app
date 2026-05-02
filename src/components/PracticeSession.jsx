@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { C, PIXEL_FONT, FONT_LINK } from "../constants/gameData";
+import { C, PIXEL_FONT } from "../constants/gameData";
 import { PixelText, PixelBtn } from "../components/shared";
 
 // Soft tone generator using Web Audio API
@@ -172,8 +172,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     ];
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <div style={{ fontSize: 56, marginBottom: 16 }}>{tool?.icon}</div>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>{tool?.icon}</div>
         <PixelText size={12} color={C.cream} style={{ display: "block", marginBottom: 8 }}>{tool?.name}</PixelText>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 24, lineHeight: 1.6 }}>{tool?.description}</PixelText>
 
@@ -195,7 +194,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
           </div>
         )}
 
-        <div style={{ padding: 12, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 24 }}>
+        <div style={{ padding: C.padMd, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 24 }}>
           <PixelText size={7} color={C.grayLt}>
             {isBreathing
               ? `Follow the rhythm for ${breathDuration >= 60 ? `${breathDuration / 60} min` : `${breathDuration}s`}. You can pause at any time.`
@@ -213,8 +212,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
   if (phase === "done") {
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <div style={{ fontSize: 56, marginBottom: 16 }}>✨</div>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>✨</div>
         <PixelText size={12} color={C.hpGreen} style={{ display: "block", marginBottom: 8 }}>PRACTICE COMPLETE!</PixelText>
         <PixelText size={8} color={C.cream} style={{ display: "block", marginBottom: 24 }}>The Storm grows weaker with each practice.</PixelText>
         <PixelBtn onClick={onComplete} color={C.gold} textColor={C.charcoal} style={{ width: "100%" }}>CONTINUE</PixelBtn>
@@ -233,8 +231,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     if (paused) {
       return (
         <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-          <link href={FONT_LINK} rel="stylesheet" />
-          <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
+                    <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
             <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
           </button>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⏸</div>
@@ -252,8 +249,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
 
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
+                <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>{breathLabels[breathPhase]} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} / {Math.floor(breathDuration / 60)}:{String(breathDuration % 60).padStart(2, "0")}</PixelText>
@@ -294,8 +290,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     const gs = gSteps[step] || gSteps[gSteps.length - 1];
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
+                <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <div style={{ width: 80, height: 80, borderRadius: "50%", background: C.teal + "15", border: `3px solid ${C.teal}40`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
@@ -327,12 +322,11 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     const as = aSteps[step] || aSteps[aSteps.length - 1];
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
+                <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <div style={{ fontSize: 40, marginBottom: 16 }}>🛡️</div>
-        <div style={{ padding: 16, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
+        <div style={{ padding: C.padLg, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
           <PixelText size={9} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>{as.text}</PixelText>
         </div>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>{as.sub}</PixelText>
@@ -360,12 +354,11 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
     const vs = vSteps[step] || vSteps[vSteps.length - 1];
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
+                <button onClick={onQuit} style={{ position: "absolute", top: 16, left: 16, background: "none", border: "none", cursor: "pointer" }}>
           <PixelText size={7} color={C.grayLt}>← Quit</PixelText>
         </button>
         <div style={{ fontSize: 40, marginBottom: 16 }}>💎</div>
-        <div style={{ padding: 16, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
+        <div style={{ padding: C.padLg, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 6, marginBottom: 16 }}>
           <PixelText size={9} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>{vs.text}</PixelText>
         </div>
         <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>{vs.sub}</PixelText>
@@ -385,8 +378,7 @@ export default function PracticeSession({ tool, onComplete, onQuit }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
-      <PixelText size={10} color={C.grayLt}>Practice session</PixelText>
+            <PixelText size={10} color={C.grayLt}>Practice session</PixelText>
       <PixelBtn onClick={onComplete} color={C.gold} textColor={C.charcoal} style={{ marginTop: 16 }}>CONTINUE</PixelBtn>
     </div>
   );

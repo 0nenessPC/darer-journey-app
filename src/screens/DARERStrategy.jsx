@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, PIXEL_FONT, FONT_LINK } from "../constants/gameData";
+import { C, PIXEL_FONT } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared";
 import { parseShadowSection } from "../utils/parseShadow.js";
 
@@ -174,7 +174,6 @@ export default function DARERStrategy({ heroName, shadowText, heroValues, onCont
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "24px 20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", overflowY: "auto" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       <div key={step} style={{ animation: "fadeIn 0.5s ease-out", maxWidth: 380, width: "100%" }}>
         {slides[step].render()}
       </div>

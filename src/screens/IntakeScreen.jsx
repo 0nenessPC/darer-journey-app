@@ -6,8 +6,6 @@ import { VoiceInputBar } from "../components/VoiceToggle";
 import { C, SYS } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
 function IntakeScreen({ heroName, hero, quest, onComplete }) {
   const heroContext = buildHeroContext(hero, quest, "");
   const { messages, typing, sendMessage, init, error, errorType } = useAIChat(SYS.intake, heroContext);
@@ -56,8 +54,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
-      <link href={FONT_LINK} rel="stylesheet" />
-      <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `2px solid ${C.mutedBorder}` }}>
+            <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `2px solid ${C.mutedBorder}` }}>
         <div style={{ width: 32, height: 32, borderRadius: 4, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧚</div>
         <div>
           <PixelText size={9} color={C.goldMd}>DARA</PixelText>
@@ -74,7 +71,7 @@ function IntakeScreen({ heroName, hero, quest, onComplete }) {
           {muted ? "🔇" : "🔊"}
         </button>
       </div>
-      <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+      <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: C.padLg }}>
         {messages.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
             {m.role === "user" ? (

@@ -2,7 +2,7 @@
 export const C = {
   plum: "#7B4B6A", plumLt: "#F5EBE8", plumMd: "#C89DB2",
   gold: "#D4A050", goldLt: "#FAF0E0", goldMd: "#E8C87A",
-  cream: "#F5EDE8", charcoal: "#3D2E3A", gray: "#7A6B75", grayLt: "#B8A8B2",
+  cream: "#F5EDE8", charcoal: "#3D2E3A", gray: "#7A6B75", grayLt: "#B8A8B2", subtleText: "#D0C0CA",
   rose: "#D4A59A", roseLt: "#F5EBE8",
   amber: "#C48A5A", amberLt: "#FAF0E0",
   white: "#FFFFFF", red: "#C45A5A", redLt: "#FAE8E8",
@@ -47,7 +47,7 @@ export const C = {
 };
 
 export const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
-export const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
+export const DM_SANS_FONT = "'DM Sans', sans-serif";
 
 // ============ SYSTEM PROMPTS ============
 export const SYS = {

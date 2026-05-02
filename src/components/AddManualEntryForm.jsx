@@ -108,8 +108,8 @@ function AddManualEntryForm({ onClose, onSubmit }) {
             style={{ width: "100%", accentColor: C.teal }}
           />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <PixelText size={6} color={C.grayLt}>1 — Easy</PixelText>
-            <PixelText size={6} color={C.grayLt}>10 — Extreme</PixelText>
+            <PixelText size={6} color={C.subtleText}>1 — Easy</PixelText>
+            <PixelText size={6} color={C.subtleText}>10 — Extreme</PixelText>
           </div>
         </div>
 

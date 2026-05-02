@@ -3,7 +3,6 @@ import { supabase } from "../utils/supabase";
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn } from "../components/shared.jsx";
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
 const PIXEL_FONT = "'Press Start 2P', monospace";
 
 function LoginScreen({ onLogin }) {
@@ -36,7 +35,6 @@ function LoginScreen({ onLogin }) {
   };
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px", background: C.mapBg }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <PixelText size={28} color={C.goldMd}>D.A.R.E.R.</PixelText>
         <div style={{ marginTop: 8 }}><PixelText size={8} color={C.plumMd}>DARE TO FEAR. DARE TO ACT.</PixelText></div>
@@ -45,19 +43,19 @@ function LoginScreen({ onLogin }) {
         <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
           {["login","signup"].map(m => (
             <button key={m} onClick={() => { setMode(m); setErr(""); }} style={{
-              flex: 1, padding: 8, border: `2px solid ${C.mutedBorder}`, borderRadius: 3,
+              flex: 1, padding: C.padSm, border: `2px solid ${C.mutedBorder}`, borderRadius: 3,
               background: mode === m ? C.plum : "transparent", cursor: "pointer",
               fontFamily: PIXEL_FONT, fontSize: 8, color: mode === m ? C.cream : C.grayLt,
             }}>{m === "login" ? "LOG IN" : "NEW GAME"}</button>
           ))}
         </div>
         <div style={{ marginBottom: 12 }}>
-          <PixelText size={8} color={C.grayLt}>EMAIL</PixelText>
+          <PixelText size={8} color={C.subtleText}>EMAIL</PixelText>
           <input value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key==="Enter" && handle()}
             style={{ width: "100%", padding: 10, marginTop: 4, background: C.mapBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 3, color: C.cream, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <PixelText size={8} color={C.grayLt}>PASSWORD</PixelText>
+          <PixelText size={8} color={C.subtleText}>PASSWORD</PixelText>
           <input type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key==="Enter" && handle()}
             style={{ width: "100%", padding: 10, marginTop: 4, background: C.mapBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 3, color: C.cream, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
         </div>

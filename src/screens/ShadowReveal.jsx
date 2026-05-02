@@ -3,8 +3,6 @@ import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared.jsx";
 import { parseShadowSection } from "../utils/parseShadow.js";
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
 function ShadowReveal({ heroName, shadowText, onContinue }) {
   const [revealed, setRevealed] = useState(0);
   const speechStartedRef = useRef(false);
@@ -65,7 +63,6 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
       minHeight: "100vh", background: C.mapBg, padding: "20px 20px 32px",
       overflowY: "auto",
     }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* Title */}
       <div style={{ textAlign: "center", marginBottom: 24, animation: "fadeIn 0.6s ease-out" }}>
@@ -73,7 +70,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
         <PixelText size={12} color={C.bossRed} style={{ display: "block", marginBottom: 6 }}>
           THE SHADOW'S TRUE NATURE
         </PixelText>
-        <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>
+        <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>
           {heroName}, for the first time, you see your enemy clearly.
         </PixelText>
       </div>
@@ -81,7 +78,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
       {/* Reveal cards */}
       {sections.map((s, i) => (
         <div key={s.title} style={{
-          marginBottom: 12, padding: 16,
+          marginBottom: 12, padding: C.padLg,
           background: C.cardBg,
           border: `2px solid ${revealed > i ? s.border + "80" : C.mutedBorder}`,
           borderRadius: 6,
@@ -114,7 +111,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
               { label: "F.E.A.R.", detail: "The storm becomes overwhelming. Your body and mind scream: GET OUT.", icon: "😨", color: C.fearRed, isFear: true },
               { label: "YOU ESCAPE", detail: grip ? (grip.length > 60 ? grip.slice(0, 60) + "..." : grip) : "Avoidance and safety behaviors", icon: "🏃", color: C.plumMd },
               { label: "BRIEF RELIEF", detail: "The fear fades — but only for now", icon: "😮‍💨", color: C.hpGreen },
-              { label: "SHADOW GROWS", detail: "Next time it's harder. The territory expands. The storm gets stronger.", icon: "👤", color: C.grayLt },
+              { label: "SHADOW GROWS", detail: "Next time it's harder. The territory expands. The storm gets stronger.", icon: "👤", color: C.subtleText },
             ].map((node, i, arr) => (
               <div key={i} style={{ display: "flex", alignItems: "stretch", animation: `fadeIn 0.4s ease-out ${0.3 + i * 0.2}s both` }}>
                 {/* Left: icon + connector */}

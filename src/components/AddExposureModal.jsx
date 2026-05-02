@@ -49,7 +49,7 @@ function AddExposureModal({ onClose, onManualEntry, onAskDara }) {
             <span style={{ fontSize: 28 }}>✏️</span>
             <div>
               <PixelText size={10} color={C.cream} style={{ display: "block" }}>Write it myself</PixelText>
-              <PixelText size={7} color={C.grayLt}>Type in your own exposure</PixelText>
+              <PixelText size={7} color={C.subtleText}>Type in your own exposure</PixelText>
             </div>
           </button>
 
@@ -66,7 +66,7 @@ function AddExposureModal({ onClose, onManualEntry, onAskDara }) {
             <span style={{ fontSize: 28 }}>🤖</span>
             <div>
               <PixelText size={10} color={C.cream} style={{ display: "block" }}>Ask Dara to help</PixelText>
-              <PixelText size={7} color={C.grayLt}>Dara guides you through it</PixelText>
+              <PixelText size={7} color={C.subtleText}>Dara guides you through it</PixelText>
             </div>
           </button>
         </div>

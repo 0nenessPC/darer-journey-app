@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { C, FONT_LINK } from "../constants/gameData";
+import { C } from "../constants/gameData";
 import { PixelText, PixelBtn, DialogBox } from "../components/shared";
 
 export default function JourneyMapPreview({ heroName, onContinue, obState = {}, setOBState }) {
@@ -71,7 +71,6 @@ export default function JourneyMapPreview({ heroName, onContinue, obState = {}, 
 
   return (
     <div style={{ height: "100vh", background: C.mapBg, overflow: "hidden", position: "relative" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* Scrolling map */}
       <div style={{ position: "absolute", inset: 0, transform: `translateY(-${scrollPos}px)` }}>

@@ -322,21 +322,20 @@ No other text.`,
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
-      <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-      {/* Boss header */}
+            {/* Boss header */}
       <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", background: phase === "battle" ? C.bossRed + "15" : phase === "repeat" ? C.hpGreen + "10" : C.cardBg }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <PixelText size={7} color={phase === "battle" ? C.bossRed : phase === "repeat" ? C.hpGreen : C.goldMd}>
             {phase === "prep" ? "⚔ PREPARING FOR BATTLE" : phase === "battle" ? "🔥 BATTLE IN PROGRESS" : phase === "log" ? "📋 BATTLE LOG" : phase === "repeat" ? "🔁 REPEAT THE EXPOSURE" : "🎉 BATTLE COMPLETE"}
           </PixelText>
-          <PixelText size={7} color={C.grayLt}>LV.{boss.level || boss.difficulty}</PixelText>
+          <PixelText size={7} color={C.subtleText}>LV.{boss.level || boss.difficulty}</PixelText>
         </div>
         <PixelText size={10} color={C.cream}>{boss.name}</PixelText>
-        <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{boss.desc}</PixelText></div>
+        <div style={{ marginTop: 4 }}><PixelText size={7} color={C.subtleText}>{boss.desc}</PixelText></div>
       </div>
 
       {/* D.A.R.E.R. progress bar — always visible, clickable to navigate */}
-      <div style={{ padding: "8px 16px 0", background: C.cardBg }}>
+      <div role="navigation" aria-label="DARER phase navigation" style={{ padding: "8px 16px 0", background: C.cardBg }}>
         <div style={{ display: "flex", gap: 4 }}>
           {(() => {
             const currentStepIndex = phase === "repeat" ? 4 : phase === "result" ? 4 : phase === "battle" ? 3 : prepStep;
@@ -351,6 +350,7 @@ No other text.`,
                     else if (i === 3 && phase !== "battle") { setPhase("battle"); }
                     else if (i === 4) { setPhase(phase === "result" ? "result" : "repeat"); }
                   }}
+                  aria-current={isCurrent ? "step" : undefined}
                   style={{
                     flex: 1, padding: "6px 4px", textAlign: "center", borderRadius: 4, cursor: canClick ? "pointer" : "default",
                     background: i < currentStepIndex ? vs.color + "20" : isCurrent ? vs.color + "10" : C.cardBg,
@@ -358,7 +358,7 @@ No other text.`,
                     opacity: canClick ? 1 : 0.4,
                   }}>
                   <PixelText size={10} color={vs.color}>{vs.letter}</PixelText>
-                  <div><PixelText size={5} color={C.grayLt}>{vs.title}</PixelText></div>
+                  <div><PixelText size={5} color={C.subtleText}>{vs.title}</PixelText></div>
                 </button>
               );
             });
@@ -379,7 +379,7 @@ No other text.`,
                   <span style={{ fontSize: 28 }}>{vs.icon}</span>
                   <div>
                     <PixelText size={10} color={vs.color} style={{ display: "block" }}>{vs.title}</PixelText>
-                    <PixelText size={6} color={C.grayLt}>{vs.subtitle}</PixelText>
+                    <PixelText size={6} color={C.subtleText}>{vs.subtitle}</PixelText>
                   </div>
                 </div>
 
@@ -457,7 +457,7 @@ No other text.`,
                   <span style={{ fontSize: 28 }}>{vs.icon}</span>
                   <div>
                     <PixelText size={10} color={vs.color} style={{ display: "block" }}>{vs.title}</PixelText>
-                    <PixelText size={6} color={C.grayLt}>{vs.subtitle}</PixelText>
+                    <PixelText size={6} color={C.subtleText}>{vs.subtitle}</PixelText>
                   </div>
                 </div>
 
@@ -603,7 +603,7 @@ No other text.`,
                               pointerEvents: "none",
                             }}>
                               <span style={{ fontSize: 18, filter: "grayscale(1)" }}>{tool.icon}</span>
-                              <PixelText size={7} color={C.grayLt}>{tool.name} 🔒</PixelText>
+                              <PixelText size={7} color={C.subtleText}>{tool.name} 🔒</PixelText>
                             </div>
                           ))}
                         </div>
@@ -652,19 +652,19 @@ No other text.`,
                       </PixelText>
                     </DialogBox>
                     <div style={{ margin: "12px 0" }}>
-                      <PixelText size={7} color={C.grayLt}>STORM INTENSITY (before):</PixelText>
-                      <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
+                      <PixelText size={7} color={C.subtleText}>STORM INTENSITY (before):</PixelText>
+                      <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
                       {(() => {
                         const pct = suds.before;
                         const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
                         return (
                         <div>
                           <input type="range" min="0" max="100" value={pct} onChange={e => setSuds(s => ({...s, before: +e.target.value}))}
-                            style={{ width: "100%", accentColor: color }} />
+                            aria-label="Distress level before exposure" style={{ width: "100%", accentColor: color }} />
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Calm</PixelText>
                             <PixelText size={8} color={color}>{pct}</PixelText>
-                            <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Intense</PixelText>
                           </div>
                         </div>
                         );
@@ -675,7 +675,7 @@ No other text.`,
                     </PixelBtn>
                     {riseSubStep > 0 && (
                       <button onClick={() => setRiseSubStep(riseSubStep - 1)} style={{ marginTop: 10, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
-                        <PixelText size={6} color={C.grayLt}>← Back</PixelText>
+                        <PixelText size={6} color={C.subtleText}>← Back</PixelText>
                       </button>
                     )}
                   </div>
@@ -690,7 +690,7 @@ No other text.`,
                   <span style={{ fontSize: 28 }}>{vs.icon}</span>
                   <div>
                     <PixelText size={10} color={vs.color} style={{ display: "block" }}>{vs.title}</PixelText>
-                    <PixelText size={6} color={C.grayLt}>{vs.subtitle}</PixelText>
+                    <PixelText size={6} color={C.subtleText}>{vs.subtitle}</PixelText>
                   </div>
                 </div>
 
@@ -706,7 +706,7 @@ No other text.`,
                   <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 4 }}>
                     WHAT DOES THE SHADOW WHISPER?
                   </PixelText>
-                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8, fontStyle: "italic" }}>
+                  <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8, fontStyle: "italic" }}>
                     What are your fearful thoughts?
                   </PixelText>
                   <textarea
@@ -736,11 +736,11 @@ No other text.`,
                       return (
                         <div>
                           <input type="range" min="0" max="100" value={pct} onChange={e => setAllowLikelihood(+e.target.value)}
-                            style={{ width: "100%", accentColor: color }} />
+                            aria-label="How likely do you think this fear is" style={{ width: "100%", accentColor: color }} />
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <PixelText size={6} color={C.grayLt}>Won't happen</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Won't happen</PixelText>
                             <PixelText size={9} color={color}>{pct}%</PixelText>
-                            <PixelText size={6} color={C.grayLt}>Certain</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Certain</PixelText>
                           </div>
                         </div>
                       );
@@ -760,11 +760,11 @@ No other text.`,
                       return (
                         <div>
                           <input type="range" min="0" max="10" value={sev} onChange={e => setAllowSeverity(+e.target.value)}
-                            style={{ width: "100%", accentColor: color }} />
+                            aria-label="How severe would it feel" style={{ width: "100%", accentColor: color }} />
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <PixelText size={6} color={C.grayLt}>Mild</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Mild</PixelText>
                             <PixelText size={9} color={color}>{sev} / 10</PixelText>
-                            <PixelText size={6} color={C.grayLt}>Devastating</PixelText>
+                            <PixelText size={6} color={C.subtleText}>Devastating</PixelText>
                           </div>
                         </div>
                       );
@@ -840,7 +840,7 @@ No other text.`,
                       onChange={e => setAllowCustomSensation(e.target.value)}
                       placeholder="Or describe another sensation..."
                       style={{
-                        width: "100%", padding: 8, marginTop: 8,
+                        width: "100%", padding: C.padSm, marginTop: 8,
                         background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                         borderRadius: 4, color: C.cream, fontSize: 11,
                         fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
@@ -873,7 +873,7 @@ No other text.`,
                   <span style={{ fontSize: 28 }}>{vs.icon}</span>
                   <div>
                     <PixelText size={10} color={vs.color} style={{ display: "block" }}>{vs.title}</PixelText>
-                    <PixelText size={6} color={C.grayLt}>{vs.subtitle}</PixelText>
+                    <PixelText size={6} color={C.subtleText}>{vs.subtitle}</PixelText>
                   </div>
                 </div>
 
@@ -993,7 +993,7 @@ No other text.`,
 
               {/* Image upload */}
               <label style={{
-                display: "block", width: "100%", padding: 16, marginTop: 14,
+                display: "block", width: "100%", padding: C.padLg, marginTop: 14,
                 border: `2px dashed ${C.mutedBorder}`, borderRadius: 6,
                 background: C.cardBg, textAlign: "center", cursor: "pointer",
                 boxSizing: "border-box",
@@ -1025,7 +1025,7 @@ No other text.`,
                 ) : (
                   <div>
                     <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-                    <PixelText size={7} color={C.grayLt}>Tap to upload a photo</PixelText>
+                    <PixelText size={7} color={C.subtleText}>Tap to upload a photo</PixelText>
                   </div>
                 )}
               </label>
@@ -1061,19 +1061,19 @@ No other text.`,
               </DialogBox>
 
               <div style={{ marginTop: 12 }}>
-                <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
-                <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
+                <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
+                <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
                 {(() => {
                   const pct = suds.after;
                   const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
                   return (
                   <div>
                     <input type="range" min="0" max="100" value={pct} onChange={e => setSuds(s => ({...s, after: +e.target.value}))}
-                      style={{ width: "100%", accentColor: color }} />
+                      aria-label="Distress level after exposure" style={{ width: "100%", accentColor: color }} />
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                      <PixelText size={6} color={C.subtleText}>Calm</PixelText>
                       <PixelText size={8} color={color}>{pct}</PixelText>
-                      <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                      <PixelText size={6} color={C.subtleText}>Intense</PixelText>
                     </div>
                   </div>
                   );
@@ -1178,7 +1178,7 @@ No other text.`,
                 <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
                 <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
                   <div>
-                    <PixelText size={7} color={C.grayLt}>BEFORE</PixelText>
+                    <PixelText size={7} color={C.subtleText}>BEFORE</PixelText>
                     <div style={{ fontSize: 28, margin: "4px 0" }}>
                       <PixelText size={20} color={C.bossRed}>{suds.before}</PixelText>
                     </div>
@@ -1188,7 +1188,7 @@ No other text.`,
                     <PixelText size={16} color={C.goldMd}>→</PixelText>
                   </div>
                   <div>
-                    <PixelText size={7} color={C.grayLt}>AFTER</PixelText>
+                    <PixelText size={7} color={C.subtleText}>AFTER</PixelText>
                     <div style={{ fontSize: 28, margin: "4px 0" }}>
                       <PixelText size={20} color={C.hpGreen}>{suds.after}</PixelText>
                     </div>
@@ -1234,7 +1234,7 @@ No other text.`,
             {/* Psychoeducation block */}
             <div style={{
               background: C.hpGreen + "10", border: `2px solid ${C.hpGreen}30`,
-              borderRadius: 6, padding: 16, marginBottom: 16, textAlign: "left",
+              borderRadius: 6, padding: C.padLg, marginBottom: 16, textAlign: "left",
             }}>
               <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 8, letterSpacing: 2 }}>WHY REPEAT?</PixelText>
               <PixelText size={7} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
@@ -1309,7 +1309,7 @@ No other text.`,
         <div style={{ padding: "12px 12px 64px", borderTop: "2px solid ${C.mutedBorder}" }}>
           {/* AI error notification */}
           {battleChat.error && (
-            <div style={{ marginBottom: 8, padding: 8, background: C.bossRed + "20", border: `1px solid ${C.bossRed}`, borderRadius: 4 }}>
+            <div style={{ marginBottom: 8, padding: C.padSm, background: C.bossRed + "20", border: `1px solid ${C.bossRed}`, borderRadius: 4 }}>
               <PixelText size={7} color={C.bossRed}>{battleChat.error}</PixelText>
               <button onClick={() => battleChat.reset()} style={{ background: "none", border: "none", color: C.teal, cursor: "pointer", marginLeft: 8, textDecoration: "underline" }}>
                 <PixelText size={7} color={C.teal}>Retry</PixelText>
@@ -1353,7 +1353,7 @@ No other text.`,
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
               <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }}
                 placeholder="Say anything to Dara..." disabled={battleChat.typing}
-                style={{ flex: 1, padding: 8, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
+                style={{ flex: 1, padding: C.padSm, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
               <PixelBtn onClick={() => { if (chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }} disabled={battleChat.typing || !chatInput.trim()}>→</PixelBtn>
             </div>
           )}

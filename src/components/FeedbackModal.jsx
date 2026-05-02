@@ -38,16 +38,16 @@ export default function FeedbackModal({ screen, hero, onClose }) {
       <div style={{
         position: "fixed", inset: 0, zIndex: 999,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: C.overlay, padding: 16,
+        background: C.overlay, padding: C.padLg,
       }}>
         <div style={{
           background: C.charcoal, border: `2px solid ${C.plum}`,
-          borderRadius: 12, padding: 24, maxWidth: 360, width: "100%",
+          borderRadius: 12, padding: C.padXl, maxWidth: 360, width: "100%",
           textAlign: "center",
         }}>
           <PixelText size={10} color={C.goldMd}>✦ Thank You ✦</PixelText>
           <br /><br />
-          <PixelText size={6} color={C.grayLt}>Your feedback helps strengthen the DARER Order.</PixelText>
+          <PixelText size={6} color={C.subtleText}>Your feedback helps strengthen the DARER Order.</PixelText>
           <br /><br />
           <button onClick={onClose} style={{
             background: C.plum, border: "none", borderRadius: 6,
@@ -64,7 +64,7 @@ export default function FeedbackModal({ screen, hero, onClose }) {
     <div style={{
       position: "fixed", inset: 0, zIndex: 999,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: "rgba(0,0,0,0.7)", padding: 16,
+      background: "rgba(0,0,0,0.7)", padding: C.padLg,
     }}>
       <div style={{
         background: C.charcoal, border: `2px solid ${C.plum}`,
@@ -78,7 +78,7 @@ export default function FeedbackModal({ screen, hero, onClose }) {
             <PixelText size={7} color={C.gray}>✕</PixelText>
           </button>
         </div>
-        <PixelText size={5} color={C.grayLt} style={{ marginBottom: 8, display: "block" }}>
+        <PixelText size={5} color={C.subtleText} style={{ marginBottom: 8, display: "block" }}>
           Screen: {screen}
         </PixelText>
         <textarea

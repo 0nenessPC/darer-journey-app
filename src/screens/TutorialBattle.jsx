@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAIChat, callAI } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
-import { C, PIXEL_FONT, FONT_LINK, SYS } from '../constants/gameData';
+import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
 import PracticeSession from '../components/PracticeSession';
 import { useCloudVoice } from '../hooks/useCloudVoice';
@@ -264,7 +264,7 @@ No other text.`,
       </div>
       <div>
         <PixelText size={9} color={active ? color : C.grayLt}>{title}</PixelText>
-        <div><PixelText size={6} color={C.grayLt}>{active ? "ACTIVE" : "—"}</PixelText></div>
+        <div><PixelText size={6} color={C.subtleText}>{active ? "ACTIVE" : "—"}</PixelText></div>
       </div>
     </div>
   );
@@ -298,7 +298,6 @@ No other text.`,
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, display: "flex", flexDirection: "column" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* Header */}
       {phase !== "intro" && phase !== "choose" && (
@@ -319,7 +318,7 @@ No other text.`,
           <div style={{ textAlign: "center", animation: "fadeIn 0.6s ease-out" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🏕</div>
             <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>TRAINING GROUNDS</PixelText>
-            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 20 }}>Practice the DARER Strategy � guided by Dara</PixelText>
+            <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 20 }}>Practice the DARER Strategy � guided by Dara</PixelText>
 
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.9 }}>
@@ -340,13 +339,13 @@ No other text.`,
           <div style={{ animation: "fadeIn 0.4s ease-out" }}>
             <div style={{ textAlign: "center", marginBottom: 16 }}>
               <PixelText size={10} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>CHOOSE YOUR FIRST BATTLE</PixelText>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>Pick the one that feels right</PixelText>
+              <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>Pick the one that feels right</PixelText>
             </div>
 
             {exposuresLoading ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>🔨 FORGING YOUR TRAINING</PixelText>
-                <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
+                <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>Dara is studying your Shadow profile...</PixelText>
               </div>
             ) : (
               <>
@@ -368,10 +367,10 @@ No other text.`,
                             {exp.text}
                           </PixelText>
                           <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                            <PixelText size={6} color={C.grayLt}>📍 {exp.where}</PixelText>
+                            <PixelText size={6} color={C.subtleText}>📍 {exp.where}</PixelText>
                           </div>
                           <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
-                            <PixelText size={6} color={C.grayLt}>⏱ {exp.time}</PixelText>
+                            <PixelText size={6} color={C.subtleText}>⏱ {exp.time}</PixelText>
                             <PixelText size={6} color={C.hpGreen}>SUDs {exp.suds}/10</PixelText>
                           </div>
                         </div>
@@ -389,7 +388,7 @@ No other text.`,
                   background: "transparent", border: "1px dashed ${C.mutedBorder}",
                   borderRadius: 4, cursor: "pointer",
                 }}>
-                  <PixelText size={6} color={C.grayLt}>🔄 Generate different training exposures</PixelText>
+                  <PixelText size={6} color={C.subtleText}>🔄 Generate different training exposures</PixelText>
                 </button>
               </>
             )}
@@ -478,7 +477,7 @@ No other text.`,
               <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 4 }}>
                 WHAT DOES THE SHADOW WHISPER?
               </PixelText>
-              <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8, fontStyle: "italic" }}>
+              <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8, fontStyle: "italic" }}>
                 What are your fearful thoughts?
               </PixelText>
               <textarea
@@ -510,9 +509,9 @@ No other text.`,
                       <input type="range" min="0" max="100" value={pct} onChange={e => setAllowLikelihood(+e.target.value)}
                         style={{ width: "100%", accentColor: color }} />
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.grayLt}>Won't happen</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Won't happen</PixelText>
                         <PixelText size={9} color={color}>{pct}%</PixelText>
-                        <PixelText size={6} color={C.grayLt}>Certain</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Certain</PixelText>
                       </div>
                     </div>
                   );
@@ -534,9 +533,9 @@ No other text.`,
                       <input type="range" min="0" max="10" value={sev} onChange={e => setAllowSeverity(+e.target.value)}
                         style={{ width: "100%", accentColor: color }} />
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.grayLt}>Mild</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Mild</PixelText>
                         <PixelText size={9} color={color}>{sev} / 10</PixelText>
-                        <PixelText size={6} color={C.grayLt}>Devastating</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Devastating</PixelText>
                       </div>
                     </div>
                   );
@@ -612,7 +611,7 @@ No other text.`,
                   onChange={e => setAllowCustomSensation(e.target.value)}
                   placeholder="Or describe another sensation..."
                   style={{
-                    width: "100%", padding: 8, marginTop: 8,
+                    width: "100%", padding: C.padSm, marginTop: 8,
                     background: C.cardBg, border: "2px solid ${C.mutedBorder}",
                     borderRadius: 4, color: C.cream, fontSize: 11,
                     fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
@@ -784,7 +783,7 @@ No other text.`,
                           pointerEvents: "none",
                         }}>
                           <span style={{ fontSize: 18, filter: "grayscale(1)" }}>{tool.icon}</span>
-                          <PixelText size={7} color={C.grayLt}>{tool.name} 🔒</PixelText>
+                          <PixelText size={7} color={C.subtleText}>{tool.name} 🔒</PixelText>
                         </div>
                       ))}
                     </div>
@@ -833,8 +832,8 @@ No other text.`,
                   </PixelText>
                 </DialogBox>
                 <div style={{ marginTop: 12 }}>
-                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
-                  <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
+                  <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (before)</PixelText>
+                  <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
                   {(() => {
                     const pct = sudsBefore;
                     const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
@@ -843,9 +842,9 @@ No other text.`,
                       <input type="range" min="0" max="100" value={pct} onChange={e => setSudsBefore(+e.target.value)}
                         style={{ width: "100%", accentColor: color }} />
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Calm</PixelText>
                         <PixelText size={8} color={color}>{pct}</PixelText>
-                        <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Intense</PixelText>
                       </div>
                     </div>
                     );
@@ -1025,8 +1024,8 @@ No other text.`,
                 </DialogBox>
 
                 <div style={{ marginTop: 12 }}>
-                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
-                  <PixelText size={6} color={C.grayLt} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
+                  <PixelText size={7} color={C.subtleText} style={{ display: "block", marginBottom: 8 }}>STORM INTENSITY (after)</PixelText>
+                  <PixelText size={6} color={C.subtleText} style={{ display: "block", marginBottom: 6, fontStyle: "italic" }}>How much distress do you feel right now?</PixelText>
                   {(() => {
                     const pct = sudsAfter;
                     const color = pct <= 33 ? C.hpGreen : pct <= 66 ? C.amber : C.bossRed;
@@ -1035,9 +1034,9 @@ No other text.`,
                       <input type="range" min="0" max="100" value={pct} onChange={e => setSudsAfter(+e.target.value)}
                         style={{ width: "100%", accentColor: color }} />
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <PixelText size={6} color={C.grayLt}>Calm</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Calm</PixelText>
                         <PixelText size={8} color={color}>{pct}</PixelText>
-                        <PixelText size={6} color={C.grayLt}>Intense</PixelText>
+                        <PixelText size={6} color={C.subtleText}>Intense</PixelText>
                       </div>
                     </div>
                     );
@@ -1159,7 +1158,7 @@ No other text.`,
                 <div style={{ textAlign: "center", marginBottom: 16 }}>
                   <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
                   <PixelText size={12} color={C.goldMd} style={{ display: "block" }}>FIRST BATTLE COMPLETE!</PixelText>
-                  <PixelText size={7} color={C.grayLt} style={{ display: "block", marginTop: 4 }}>+50 XP EARNED</PixelText>
+                  <PixelText size={7} color={C.subtleText} style={{ display: "block", marginTop: 4 }}>+50 XP EARNED</PixelText>
                 </div>
 
                 {/* SUDs comparison */}
@@ -1167,7 +1166,7 @@ No other text.`,
                   <PixelText size={8} color={C.goldMd} style={{ display: "block", marginBottom: 10 }}>THE SHADOW LIED</PixelText>
                   <div style={{ display: "flex", justifyContent: "space-around", textAlign: "center" }}>
                     <div>
-                      <PixelText size={7} color={C.grayLt}>BEFORE</PixelText>
+                      <PixelText size={7} color={C.subtleText}>BEFORE</PixelText>
                       <div style={{ fontSize: 28, margin: "4px 0" }}>
                         <PixelText size={20} color={C.bossRed}>{sudsBefore}</PixelText>
                       </div>
@@ -1177,7 +1176,7 @@ No other text.`,
                       <PixelText size={16} color={C.goldMd}>→</PixelText>
                     </div>
                     <div>
-                      <PixelText size={7} color={C.grayLt}>AFTER</PixelText>
+                      <PixelText size={7} color={C.subtleText}>AFTER</PixelText>
                       <div style={{ fontSize: 28, margin: "4px 0" }}>
                         <PixelText size={20} color={C.hpGreen}>{sudsAfter}</PixelText>
                       </div>
@@ -1220,7 +1219,7 @@ No other text.`,
                 {/* Psychoeducation block */}
                 <div style={{
                   background: C.hpGreen + "10", border: `2px solid ${C.hpGreen}30`,
-                  borderRadius: 6, padding: 16, marginBottom: 16, textAlign: "left",
+                  borderRadius: 6, padding: C.padLg, marginBottom: 16, textAlign: "left",
                 }}>
                   <PixelText size={7} color={C.hpGreen} style={{ display: "block", marginBottom: 8, letterSpacing: 2 }}>WHY REPEAT?</PixelText>
                   <PixelText size={7} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>

@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { C } from "../constants/gameData";
 import { PixelText, PixelBtn } from "../components/shared.jsx";
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
 function GameIntro({ onComplete, obState, setOBState }) {
   const slide = obState?.slide ?? 0;
   const setSlide = (v) => setOBState({ slide: typeof v === 'function' ? v(slide) : v });
@@ -21,7 +19,6 @@ function GameIntro({ onComplete, obState, setOBState }) {
       height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center",
       alignItems: "center", padding: "0 32px", background: C.mapBg, textAlign: "center",
     }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       <div style={{ marginBottom: 24, animation: "fadeIn 0.5s ease-out" }} key={slide}>
         <PixelText size={10} color={C.cream} style={{ display: "block", marginBottom: 16 }}>{cur.text}</PixelText>
         <PixelText size={8} color={C.goldMd} style={{ display: "block" }}>{cur.sub}</PixelText>
@@ -33,7 +30,7 @@ function GameIntro({ onComplete, obState, setOBState }) {
       <PixelBtn onClick={() => last ? onComplete() : setSlide(s => s + 1)} color={last ? C.gold : C.plum}>
         {last ? "BEGIN THE JOURNEY" : "NEXT"}
       </PixelBtn>
-      {slide > 0 && <button onClick={() => setSlide(s => s - 1)} style={{ background: "none", border: "none", marginTop: 12, cursor: "pointer" }}><PixelText size={7} color={C.grayLt}>BACK</PixelText></button>}
+      {slide > 0 && <button onClick={() => setSlide(s => s - 1)} style={{ background: "none", border: "none", marginTop: 12, cursor: "pointer" }}><PixelText size={7} color={C.subtleText}>BACK</PixelText></button>}
 
     </div>
   );

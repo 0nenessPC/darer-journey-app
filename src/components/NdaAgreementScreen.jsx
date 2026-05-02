@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { C, PIXEL_FONT } from "../constants/gameData";
 import { PixelText } from '../components/shared.jsx';
 
-const FONT_LINK = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
-
 const NDA_TEXT = `DARER ORDER — CONFIDENTIALITY AGREEMENT
 
 Last Updated: April 21, 2026
@@ -106,12 +104,11 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         padding: "32px 24px",
       }}>
-        <link href={FONT_LINK} rel="stylesheet" />
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
         <PixelText size={14} color={C.hpGreen} style={{ display: "block", marginBottom: 8, textAlign: "center" }}>
           AGREEMENT SIGNED
         </PixelText>
-        <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 24, textAlign: "center", lineHeight: 1.8 }}>
+        <PixelText size={8} color={C.subtleText} style={{ display: "block", marginBottom: 24, textAlign: "center", lineHeight: 1.8 }}>
           Welcome to the DARER Order, {heroName}.<br />Your journey begins now.
         </PixelText>
         <PixelText size={7} color={C.amber} style={{ marginTop: 16, animation: "fadeIn 1s ease-in-out" }}>
@@ -128,15 +125,14 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: "24px 20px",
     }}>
-      <link href={FONT_LINK} rel="stylesheet" />
-
+      
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 16 }}>
         <div style={{ fontSize: 36, marginBottom: 8 }}>📜</div>
         <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>
           CONFIDENTIALITY AGREEMENT
         </PixelText>
-        <PixelText size={7} color={C.grayLt} style={{ display: "block" }}>
+        <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>
           Please read and sign before entering the DARER Order
         </PixelText>
       </div>
@@ -217,7 +213,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             disabled={saving}
             style={{
               flex: 1, padding: "12px",
-              background: C.mutedBorder, color: C.grayLt,
+              background: C.mutedBorder, color: C.subtleText,
               border: "2px solid ${C.mutedBorder}", borderRadius: 4,
               fontFamily: PIXEL_FONT, fontSize: 9, cursor: "pointer",
               opacity: saving ? 0.5 : 1,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { C, PIXEL_FONT, FONT_LINK } from '../constants/gameData';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
 import PracticeSession from '../components/PracticeSession';
 export default function HeroProfile({ hero, setHero, quest, battleHistory = [], onBack, setScreen }) {
@@ -49,11 +49,10 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
     const unlocked = practiceMode.justUnlocked;
     return (
       <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
-        <link href={FONT_LINK} rel="stylesheet" />
         <div style={{ padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 56, marginBottom: 16, animation: "fearPulseScale 1.5s ease-in-out infinite" }}>{unlocked.icon}</div>
           <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>NEW ARMORY ITEM UNLOCKED!</PixelText>
-          <div style={{ padding: 16, background: C.cardBg, border: `3px solid ${C.goldMd}`, borderRadius: 6, marginBottom: 24 }}>
+          <div style={{ padding: C.padLg, background: C.cardBg, border: `3px solid ${C.goldMd}`, borderRadius: 6, marginBottom: 24 }}>
             <PixelText size={10} color={C.cream}>{unlocked.name}</PixelText>
             <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{unlocked.description}</PixelText></div>
           </div>
@@ -66,7 +65,6 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "16px 16px 100px" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", marginBottom: 16 }}>
         <PixelText size={8} color={C.grayLt}>← BACK TO MAP</PixelText>
       </button>
@@ -228,7 +226,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       ) : (
       /* === ARMORY VIEW === */
       <>
-      <div style={{ padding: 12, textAlign: "center" }}>
+      <div style={{ padding: C.padMd, textAlign: "center" }}>
         <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>Practice to unlock new tools</PixelText>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -242,7 +240,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
 
           return (
             <div key={item.id} style={{
-              padding: 16, borderRadius: 6,
+              padding: C.padLg, borderRadius: 6,
               background: isLocked ? C.lockedBg : C.cardBg,
               border: `3px solid ${isLocked ? C.grayBorder : C.plum + "80"}`,
               opacity: isLocked ? 0.55 : 1,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { C, FONT_LINK } from '../constants/gameData';
+import { C, DM_SANS_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, DialogBox } from '../components/shared';
 import { callAI } from '../utils/chat';
 import VoiceInputField from '../components/VoiceInputField';
@@ -143,7 +143,6 @@ export default function ValuesScreen({ heroName, onComplete }) {
       minHeight: "100vh", background: C.mapBg, padding: "20px 20px 32px",
       overflowY: "auto",
     }}>
-      <link href={FONT_LINK} rel="stylesheet" />
 
       {/* INTRO — Dara asks the question */}
       {step === "intro" && (
@@ -233,7 +232,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
                 width: "100%", padding: 10,
                 background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
                 borderRadius: 4, color: C.cream, fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: DM_SANS_FONT,
                 outline: "none", resize: "none", boxSizing: "border-box",
               }}
             />
@@ -334,7 +333,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
 
           {selectedCards.length > 0 && (
             <div style={{
-              padding: 16, background: C.goalGold + "10", border: `2px solid ${C.goalGold}40`,
+              padding: C.padLg, background: C.goalGold + "10", border: `2px solid ${C.goalGold}40`,
               borderRadius: 6, marginBottom: 12,
             }}>
               {selectedCards.map(v => (

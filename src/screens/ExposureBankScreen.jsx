@@ -1,5 +1,5 @@
 import React from 'react';
-import { C, FONT_LINK } from '../constants/gameData';
+import { C } from '../constants/gameData';
 import { PixelText, HPBar } from '../components/shared';
 import SwipeableBoss from '../components/SwipeableBoss';
 
@@ -110,7 +110,6 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
 
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
-      <link href={FONT_LINK} rel="stylesheet" />
       {/* Header */}
       <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{
@@ -125,7 +124,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         <PixelText size={7} color={C.grayLt}>{quest.bosses.length} total</PixelText>
       </div>
 
-      <div style={{ padding: 16 }}>
+      <div style={{ padding: C.padLg }}>
         {unfinishedBosses.length === 0 && defeatedBosses.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 16px" }}>
             <PixelText size={9} color={C.grayLt}>No exposures in your bank.</PixelText>

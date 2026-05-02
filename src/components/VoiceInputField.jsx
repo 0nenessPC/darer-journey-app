@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { C, PIXEL_FONT } from '../constants/gameData';
+import { C, PIXEL_FONT, DM_SANS_FONT } from '../constants/gameData';
 import { PixelText } from './shared';
 
 // Browser SpeechRecognition (webkit prefix for Chrome/Safari)
@@ -133,13 +133,13 @@ export default function VoiceInputField({
           rows={rows}
           style={{
             flex: 1,
-            padding: 12,
+            padding: C.padMd,
             background: C.cardBg,
             border: `2px solid ${isListening ? C.plum : C.mutedBorder}`,
             borderRadius: 4,
             color: C.cream,
             fontSize: 13,
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: DM_SANS_FONT,
             outline: 'none',
             resize: 'none',
             boxSizing: 'border-box',
