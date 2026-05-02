@@ -2,6 +2,7 @@ import React from 'react';
 import { C } from '../constants/gameData';
 import { PixelText, HPBar } from '../components/shared';
 import SwipeableBoss from '../components/SwipeableBoss';
+import BottomNav from '../components/BottomNav';
 
 export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocusedBoss, onBack, onAchieveBoss, onDeleteBoss }) {
   const unfinishedBosses = quest.bosses.filter(b => !b.defeated);
@@ -155,27 +156,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         )}
       </div>
 
-      {/* Bottom nav — 4 tabs, BANK active */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
-      }}>
-        {[
-          { icon: "🗺", label: "MAP", active: false, onClick: onBack },
-          { icon: "📚", label: "BANK", active: true, onClick: () => {} },
-          { icon: "🏆", label: "LADDER", active: false, onClick: () => {} },
-          { icon: "🛡", label: "HERO", active: false, onClick: () => {} },
-        ].map(t => (
-          <button key={t.label} onClick={t.onClick} style={{
-            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? C.cardBgAlt : "transparent", display: "flex",
-            flexDirection: "column", alignItems: "center", gap: 2,
-          }}>
-            <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
-          </button>
-        ))}
-      </div>
+      <BottomNav active="bank" onNav={(s) => { if (s === "map") onBack(); }} />
     </div>
   );
 }

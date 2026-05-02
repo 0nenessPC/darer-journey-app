@@ -1,5 +1,6 @@
 import { C } from "../constants/gameData";
 import { PixelText } from "./shared.jsx";
+import BottomNav from './BottomNav';
 
 function LadderScreen({ hero, quest, setScreen, onBack }) {
   const totalXp = (quest.bosses || []).filter(b => b.defeated).length * 100;
@@ -85,27 +86,7 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
         <PixelText size={6} color={C.subtleText}>Leaderboard coming soon — earn XP by defeating bosses!</PixelText>
       </div>
 
-      {/* Bottom nav */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
-      }}>
-        {[
-          { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
-          { icon: "📚", label: "BANK", active: false, onClick: () => setScreen("bank") },
-          { icon: "🏆", label: "LADDER", active: true },
-          { icon: "🛡", label: "HERO", active: false, onClick: () => setScreen("profile") },
-        ].map(t => (
-          <button key={t.label} onClick={t.onClick} style={{
-            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: "transparent", display: "flex",
-            flexDirection: "column", alignItems: "center", gap: 2,
-          }}>
-            <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
-          </button>
-        ))}
-      </div>
+      <BottomNav active="ladder" onNav={setScreen} />
     </div>
   );
 }

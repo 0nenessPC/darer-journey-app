@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
 import PracticeSession from '../components/PracticeSession';
+import BottomNav from './BottomNav';
 export default function HeroProfile({ hero, setHero, quest, battleHistory = [], onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   const [armoryView, setArmoryView] = useState(false);
@@ -311,27 +312,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       </>
       )}
 
-      {/* Bottom nav — 4 tabs, HERO active */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
-      }}>
-        {[
-          { icon: "🗺", label: "MAP", active: false, onClick: () => setScreen("map") },
-          { icon: "📚", label: "BANK", active: false, onClick: () => setScreen("bank") },
-          { icon: "🏆", label: "LADDER", active: false, onClick: () => setScreen("ladder") },
-          { icon: "🛡", label: "HERO", active: true },
-        ].map(t => (
-          <button key={t.label} onClick={t.onClick} style={{
-            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? C.cardBgAlt : "transparent", display: "flex",
-            flexDirection: "column", alignItems: "center", gap: 2,
-          }}>
-            <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <PixelText size={6} color={t.active ? C.goldMd : C.grayLt}>{t.label}</PixelText>
-          </button>
-        ))}
-      </div>
+      <BottomNav active="hero" onNav={setScreen} />
     </div>
   );
 }

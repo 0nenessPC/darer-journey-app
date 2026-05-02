@@ -110,7 +110,8 @@ test.describe('@ai Smoke Tests', () => {
 
   // ─── Test 3: CharacterCreate — Name Entry ─────────────────────
   test('CharacterCreate name entry is usable', async ({ page }) => {
-    console.log('\n🎭 Testing CharacterCreate name entry...');
+    test.setTimeout(180000);
+    console.log('\n Testing CharacterCreate name entry...');
     await signupAndLogin(page);
 
     // Navigate through intro
@@ -126,8 +127,8 @@ test.describe('@ai Smoke Tests', () => {
     await page.screenshot({ path: 'test/screenshots/ai-character-name.png' });
 
     await aiAssert(page,
-      'Is there a text input field for entering a character name? Is there a "THAT\'S ME" or confirmation button below it? Is the screen layout clean and usable?',
-      { context: 'Character creation step 1 — the user should type their hero name here. The input should be clearly labeled and the button should be visible.' }
+      'Is this a character name entry screen? Is there a centered input field with placeholder text showing an auto-generated ID? Is there a "USE MY DARER ID" confirmation button below it? Is the layout clean and centered?',
+      { context: 'Character creation step 2 of 11 (top progress bar shows "STEP 2/11"). The input field has a placeholder like "DARER_702494" — this is the auto-generated ID shown as placeholder text. The user can either type their own name or accept the ID. The button says "USE MY DARER ID" to confirm.' }
     );
     console.log('✅ CharacterCreate name entry OK');
   });

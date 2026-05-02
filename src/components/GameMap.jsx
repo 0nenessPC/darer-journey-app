@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar } from '../components/shared';
 import SwipeableBoss from './SwipeableBoss';
+import BottomNav from './BottomNav';
 export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onLadder, onBank, focusedBoss, setFocusedBoss, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
@@ -208,17 +209,8 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
 
       {/* High-SUDs Warning Dialog */}
       {pendingBoss && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 50,
-          background: C.overlay,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: 20,
-        }}>
-          <div style={{
-            width: "100%", maxWidth: 400, background: C.cardBg,
-            border: `3px solid ${C.amber}`, borderRadius: 8,
-            padding: 20, textAlign: "center",
-          }}>
+        <Modal open onClose={() => setPendingBoss(null)} variant="center" maxWidth={400} zIndex={50} backdropClose={false} borderColor={C.amber}>
+          <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
             <PixelText size={11} color={C.amber} style={{ display: "block", marginBottom: 8 }}>HIGH DIFFICULTY WARNING</PixelText>
             <div style={{ padding: C.padMd, background: "C.inputBg", borderRadius: 6, marginBottom: 16 }}>
@@ -237,30 +229,14 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
               <PixelBtn onClick={() => { setPendingBoss(null); onSelectBoss(pendingBoss); }} color={C.amber} textColor={C.charcoal} style={{ flex: 1 }}>I'M READY →</PixelBtn>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
-      {/* Bottom nav — 4 tabs — positioned relative to the app container */}
-      <div role="navigation" aria-label="Main navigation" style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        display: "flex", borderTop: `3px solid ${C.mutedBorder}`, background: C.cardBg,
-      }}>
-        {[
-          { icon: "🗺", label: "MAP", active: true, onClick: () => {} },
-          { icon: "📚", label: "BANK", active: false, onClick: onBank },
-          { icon: "🏆", label: "LADDER", active: false, onClick: onLadder },
-          { icon: "🛡", label: "HERO", active: false, onClick: onViewProfile },
-        ].map(t => (
-          <button key={t.label} onClick={t.onClick} aria-current={t.active ? "page" : undefined} aria-label={`${t.label} tab`} style={{
-            flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-            background: t.active ? C.charcoal + "80" : "transparent", display: "flex",
-            flexDirection: "column", alignItems: "center", gap: 2,
-          }}>
-            <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <PixelText size={6} color={t.active ? C.goldMd : C.subtleText}>{t.label}</PixelText>
-          </button>
-        ))}
-      </div>
+      <BottomNav active="map" onNav={(s) => {
+        if (s === "bank") onBank();
+        else if (s === "ladder") onLadder();
+        else if (s === "profile") onViewProfile();
+      }} />
     </div>
   );
 }

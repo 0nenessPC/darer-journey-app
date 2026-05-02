@@ -4,6 +4,7 @@ import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import { useCloudVoice } from '../hooks/useCloudVoice';
+import Modal from './Modal';
 
 function AskDaraTypewriterBubble({ text, muted, voice }) {
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -173,71 +174,50 @@ Always keep the exposure small, actionable, and specific.`;
   // Show review screen if we have a generated exposure
   if (generatedExposure) {
     return (
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, zIndex: 100,
-          background: "rgba(0,0,0,0.8)",
-          display: "flex", alignItems: "flex-end", justifyContent: "center",
-        }}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            width: "100%", maxWidth: 480, background: C.cardBg,
-            borderTop: `3px solid ${C.teal}`, borderRadius: "12px 12px 0 0",
-            padding: "24px 20px 32px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <PixelText size={12} color={C.teal}>Dara's Suggestion</PixelText>
-            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.subtleText, fontSize: 18 }}>✕</button>
-          </div>
-
-          {/* Generated card preview */}
-          <div style={{
-            padding: 14, background: C.teal + "15", border: `2px solid ${C.teal}`,
-            borderRadius: 6, marginBottom: 20,
-          }}>
-            <PixelText size={9} color={C.cream} style={{ display: "block", marginBottom: 6 }}>✏ {generatedExposure.name}</PixelText>
-            <PixelText size={7} color={C.grayLt}>{generatedExposure.desc}</PixelText>
-            <div style={{ marginTop: 8 }}>
-              <PixelText size={8} color={C.teal}>Anxiety level: LV.{generatedExposure.difficulty}</PixelText>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button
-              onClick={() => onSubmit({
-                name: generatedExposure.name,
-                desc: generatedExposure.desc,
-                difficulty: generatedExposure.difficulty,
-              })}
-              style={{
-                width: "100%", padding: "14px 20px",
-                background: C.teal, border: `3px solid ${C.teal}`,
-                borderRadius: 6, cursor: "pointer",
-                color: C.cream, fontSize: 10, fontFamily: PIXEL_FONT,
-                boxShadow: `0 4px 0 ${C.btnShadow}`,
-              }}
-            >
-              ✅ Add to My Journey
-            </button>
-            <button
-              onClick={onFallback}
-              style={{
-                width: "100%", padding: "12px 20px",
-                background: "transparent", border: `2px solid ${C.grayLt}`,
-                borderRadius: 6, cursor: "pointer",
-                color: C.subtleText, fontSize: 9, fontFamily: PIXEL_FONT,
-              }}
-            >
-              ✏️ Edit or write my own
-            </button>
+      <Modal open onClose={onClose} variant="bottom" title="Dara's Suggestion">
+        {/* Generated card preview */}
+        <div style={{
+          padding: 14, background: C.teal + "15", border: `2px solid ${C.teal}`,
+          borderRadius: 6, marginBottom: 20,
+        }}>
+          <PixelText size={9} color={C.cream} style={{ display: "block", marginBottom: 6 }}>✏ {generatedExposure.name}</PixelText>
+          <PixelText size={7} color={C.grayLt}>{generatedExposure.desc}</PixelText>
+          <div style={{ marginTop: 8 }}>
+            <PixelText size={8} color={C.teal}>Anxiety level: LV.{generatedExposure.difficulty}</PixelText>
           </div>
         </div>
-      </div>
+
+        {/* Action buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={() => onSubmit({
+              name: generatedExposure.name,
+              desc: generatedExposure.desc,
+              difficulty: generatedExposure.difficulty,
+            })}
+            style={{
+              width: "100%", padding: "14px 20px",
+              background: C.teal, border: `3px solid ${C.teal}`,
+              borderRadius: 6, cursor: "pointer",
+              color: C.cream, fontSize: 10, fontFamily: PIXEL_FONT,
+              boxShadow: `0 4px 0 ${C.btnShadow}`,
+            }}
+          >
+            ✅ Add to My Journey
+          </button>
+          <button
+            onClick={onFallback}
+            style={{
+              width: "100%", padding: "12px 20px",
+              background: "transparent", border: `2px solid ${C.grayLt}`,
+              borderRadius: 6, cursor: "pointer",
+              color: C.subtleText, fontSize: 9, fontFamily: PIXEL_FONT,
+            }}
+          >
+            ✏️ Edit or write my own
+          </button>
+        </div>
+      </Modal>
     );
   }
 

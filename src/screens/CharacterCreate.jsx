@@ -57,10 +57,6 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
     { id: "a35", word: "Trust", desc: "Being loyal, faithful, sincere, and reliable", icon: "🤝", dim: "openness" },
   ].sort(() => Math.random() - 0.5));
 
-  // --- Card sort removed (SKIP_CARD_SORT = true).
-  // To re-enable: restore deck/currentCard/claimed/dismissed/swipeDir state,
-  // handlers (handleClaim, handleDismiss, onTouch*, onMouse*), and the
-  // {step === "cards" && ...} JSX block below.
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: step === "reveal" ? "flex-start" : "center", alignItems: "center", padding: step === "reveal" ? "16px 24px 0" : "0 24px", background: C.mapBg, textAlign: "center", overflowY: step === "reveal" ? "auto" : "hidden" }}>
 
