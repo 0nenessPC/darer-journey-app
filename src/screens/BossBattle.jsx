@@ -6,6 +6,7 @@ import { saveArmoryPractice } from '../utils/supabase';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 import BottomNav from '../components/BottomNav';
+import BattleRewardScreen from '../components/BattleRewardScreen';
 import CelebrationOverlay from '../components/CelebrationOverlay';
 import DecidePhase from '../components/DARER/DecidePhase';
 import RepeatPhase from '../components/DARER/RepeatPhase';
@@ -110,10 +111,12 @@ export default function BossBattle({
 
   // Post-battle celebration state
   const [celebration, setCelebration] = useState(null);
+  const [showReward, setShowReward] = useState(false);
   const handleBattleResult = async (outcome, details) => {
     const result = await onVictory(outcome, details);
     if (result) {
       setCelebration(result);
+      setShowReward(true);
     }
   };
 
@@ -1248,11 +1251,26 @@ export default function BossBattle({
         zIndex={20}
       />
 
+      {/* Post-battle reward screen — Dara's cheerleader moment (on top of celebration) */}
+      {showReward && celebration && (
+        <BattleRewardScreen
+          outcome={celebration.outcome}
+          bossName={celebration.bossName || boss?.name || 'Unknown'}
+          heroName={hero.name}
+          xpBreakdown={celebration.xpBreakdown || []}
+          totalXP={celebration.xpEarned || 0}
+          coinsEarned={celebration.coinsEarned || 0}
+          sudsDrop={celebration.sudsDrop || 0}
+          evidenceCards={celebration.evidenceCards || []}
+          onDismiss={() => setShowReward(false)}
+        />
+      )}
+
       {/* Post-battle celebration overlay */}
       {celebration && (
         <CelebrationOverlay
           xpEarned={celebration.xpEarned || 0}
-          platinumEarned={celebration.platinumEarned || 0}
+          coinsEarned={celebration.coinsEarned || 0}
           diamondsEarned={celebration.diamondsEarned || 0}
           lootDrop={celebration.lootDrop}
           achievements={celebration.newAchievements || []}

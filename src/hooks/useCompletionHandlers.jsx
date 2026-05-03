@@ -133,11 +133,11 @@ export function useCompletionHandlers({
       const newHistory = [...prevHistory, battleRecord];
       setBattleHistory(newHistory);
 
-      // Earn Platinum: 5-15 based on boss level
+      // Earn Courage Coins: 5-15 based on boss level
       const bossLevel = activeBoss?.level || activeBoss?.difficulty || 1;
-      let platinumEarned = 0;
+      let coinsEarned = 0;
       if (outcome === 'victory' || outcome === 'partial') {
-        platinumEarned = bossLevel <= 3 ? 5 : bossLevel <= 6 ? 10 : 15;
+        coinsEarned = bossLevel <= 3 ? 5 : bossLevel <= 6 ? 10 : 15;
       }
       let diamondsEarned = 0;
       let verified = false;
@@ -237,7 +237,22 @@ export function useCompletionHandlers({
         xpEarned *= 2;
       }
       battleRecord.xpEarned = xpEarned;
-      battleRecord.platinumEarned = platinumEarned;
+
+      // Build XP breakdown for BattleRewardScreen
+      const sudsDelta = (suds?.before || 0) - (suds?.after || 0);
+      const sudsBonus = sudsDelta > 0 ? Math.floor(sudsDelta / 10) * 10 : 0;
+      const xpBreakdown = [];
+      if (outcome === 'victory') {
+        xpBreakdown.push({ label: 'Full Exposure', xp: 100 });
+        xpBreakdown.push({ label: 'SUDS Check-in', xp: 25 });
+        xpBreakdown.push({ label: 'Reflection', xp: 25 });
+      } else if (outcome === 'partial') {
+        xpBreakdown.push({ label: 'Partial Exposure', xp: 75 });
+      } else {
+        xpBreakdown.push({ label: 'Attempted', xp: 30 });
+      }
+      if (sudsBonus > 0) xpBreakdown.push({ label: 'SUDS Drop Bonus', xp: sudsBonus });
+      battleRecord.coinsEarned = coinsEarned;
       battleRecord.diamondsEarned = diamondsEarned;
       battleRecord.verified = verified;
       battleRecord.verificationMethod = verificationMethod;
@@ -252,7 +267,7 @@ export function useCompletionHandlers({
           defeatedCount,
           victoryCount,
           streakCount: streakUpdate.streakCount,
-          platinum: (hero.platinum || 0) + platinumEarned,
+          coins: (hero.courageCoins || 0) + coinsEarned,
           maxSudsDrop,
           lootCount,
           repeatCount,
@@ -338,7 +353,7 @@ export function useCompletionHandlers({
               resilience: Math.min(10, h.stats.resilience + (Math.random() > 0.5 ? 1 : 0)),
               openness: Math.min(10, h.stats.openness + (Math.random() > 0.5 ? 1 : 0)),
             },
-            platinum: (h.platinum || 0) + platinumEarned,
+            courageCoins: (h.courageCoins || 0) + coinsEarned,
             diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
             streakFreezes: streakUpdate.streakFreezes,
@@ -357,8 +372,8 @@ export function useCompletionHandlers({
             if (lootDrop.type === 'xp') {
               // Bonus XP from loot — applied on top of battle XP
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'platinum') {
-              updates.platinum = (updates.platinum || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'coins') {
+              updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
             } else if (lootDrop.type === 'streak_freeze') {
               updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
@@ -415,7 +430,7 @@ export function useCompletionHandlers({
         setQuest(newQuest);
         setHero((h) => {
           const updates = {
-            platinum: (h.platinum || 0) + platinumEarned,
+            courageCoins: (h.courageCoins || 0) + coinsEarned,
             diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
             streakFreezes: streakUpdate.streakFreezes,
@@ -429,8 +444,8 @@ export function useCompletionHandlers({
           if (lootDrop) {
             if (lootDrop.type === 'xp') {
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'platinum') {
-              updates.platinum = (updates.platinum || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'coins') {
+              updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
             } else if (lootDrop.type === 'streak_freeze') {
               updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
@@ -573,14 +588,16 @@ export function useCompletionHandlers({
         .filter((ch) => ch.completed)
         .reduce(
           (acc, ch) => ({
-            platinum: acc.platinum + (ch.reward?.platinum || 0),
+            coins: acc.coins + (ch.reward?.coins || 0),
             xp: acc.xp + (ch.reward?.xp || 0),
           }),
-          { platinum: 0, xp: 0 },
+          { coins: 0, xp: 0 },
         );
 
       return {
-        platinumEarned: platinumEarned + weeklyRewards.platinum,
+        outcome,
+        bossName: battleRecord.bossName,
+        coinsEarned: coinsEarned + weeklyRewards.coins,
         diamondsEarned,
         xpEarned: xpEarned + weeklyRewards.xp,
         playerLevel,
@@ -590,8 +607,9 @@ export function useCompletionHandlers({
         streakCount: streakUpdate.streakCount,
         hasLetter: true,
         sudsDrop: (suds?.before || 0) - (suds?.after || 0),
+        xpBreakdown,
         weeklyChallengeRewards:
-          weeklyRewards.platinum > 0 || weeklyRewards.xp > 0 ? weeklyRewards : null,
+          weeklyRewards.coins > 0 || weeklyRewards.xp > 0 ? weeklyRewards : null,
         evidenceCards: evidenceForBattle,
       };
     },
