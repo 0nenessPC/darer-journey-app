@@ -38,25 +38,33 @@ export function useAppState() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // --- Auto-save on screen/state changes ---
-  const lastSavedAt = useRef(0);
+  // --- Auto-save on screen/state changes (debounced, 500ms trailing) ---
+  const saveTimerRef = useRef(null);
+  const isSavingRef = useRef(false);
   useEffect(() => {
     if (!isAuthenticated) return;
     if (["login", "profile", "armory", "ladder", "bank"].includes(screen)) return;
-    const now = Date.now();
-    if (now - lastSavedAt.current < 2000) return;
-    lastSavedAt.current = now;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await saveProgress(user.id, {
-          screen, hero, quest,
-          shadow_text: shadowText,
-          onboarding_state: onboardingState,
-          battle_history: battleHistory,
-        });
+    // Clear previous pending save
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    // Schedule a new save after 500ms of no state changes
+    saveTimerRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return; // skip if already saving
+      isSavingRef.current = true;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await saveProgress(user.id, {
+            screen, hero, quest,
+            shadow_text: shadowText,
+            onboarding_state: onboardingState,
+            battle_history: battleHistory,
+          });
+        }
+      } finally {
+        isSavingRef.current = false;
       }
-    })();
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [screen, isAuthenticated, onboardingState, shadowText, hero, quest, battleHistory]);
 
   // --- Save on tab/browser close ---
@@ -84,7 +92,7 @@ export function useAppState() {
       window.removeEventListener("beforeunload", saveNow);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [isAuthenticated, screen, hero, quest, shadowText, onboardingState]);
+  }, [isAuthenticated, screen, hero, quest, shadowText, onboardingState, battleHistory]);
 
   // --- Navigation helpers ---
   const setScreen = useCallback((s) => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAIChat, callAI } from '../utils/chat';
+import { useAIChat, callAI, generateFollowUpExposures } from '../utils/chat';
+import { logger } from '../utils/logger';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
@@ -148,7 +149,7 @@ No other text.`,
           const allPrev = [...avoidTexts];
           const hasDupe = newExposures.some(ne => allPrev.some(p => p.toLowerCase().trim() === ne.text.toLowerCase().trim()));
           if (hasDupe) {
-            console.warn("AI returned duplicate exposures — falling back");
+            logger.warn("AI returned duplicate exposures — falling back");
             throw new Error("AI returned duplicates");
           }
           setTutorialExposures(newExposures);
@@ -205,50 +206,12 @@ No other text.`,
 
   // Generate repeat exposure variations based on outcome
   const generateRepeatOptions = async () => {
-    try {
-      const isComplete = engageOutcome === "full";
-      const currentText = chosenExposure?.text || "a micro-exposure";
-      const res = await callAI(
-        `You are a clinical psychologist designing ERP (Exposure Response Prevention) follow-up exercises. The user just completed their first micro-exposure.
-
-Current exposure: "${currentText}"
-User's outcome: ${isComplete ? "They completed it fully." : engageOutcome === "partial" ? "They went partway but didn't finish." : "They tried but couldn't push through."}
-User's "why": "${decideWhy}"
-
-Generate exactly 3 follow-up exposure variations in the same nature as the original but adjusted:
-- If they COMPLETED it: make them slightly harder (longer duration, more people, more visible, etc.)
-- If they DID NOT complete it: make them slightly easier or break into smaller steps
-- One of the three should be an "outside the box" creative variation that is still therapeutic — something unexpected but clinically sound
-
-CRITICAL: Every follow-up must be a true exposure — intentionally entering a feared social situation. DO NOT suggest grounding techniques, breathing exercises, mindfulness, journaling, or any internal coping strategy. Exposures are outward-facing social actions, not internal regulation techniques.
-
-Return ONLY a JSON array like: [{"text":"exposure description","icon":"emoji","tag":"normal|step-up|creative"}]
-No other text.`,
-        [{ role: "user", text: `Generate 3 follow-up exposures based on their outcome.` }]
-      );
-      const jsonMatch = res?.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= 2) {
-          setRepeatOptions(parsed.slice(0, 3).map((o, i) => ({
-            ...o,
-            icon: o.icon || "⚡",
-            tag: o.tag || (i === 2 ? "creative" : "normal"),
-          })));
-          return;
-        }
-      }
-      throw new Error("Parse failed");
-    } catch (e) {
-      console.error("Repeat option generation failed:", e);
-      // Fallback options
-      const currentText = chosenExposure?.text || "a micro-exposure";
-      setRepeatOptions([
-        { text: `Do "${currentText}" again, but one more time today`, icon: "🔁", tag: "normal" },
-        { text: `Do "${currentText}" with one more person than last time`, icon: "👥", tag: "step-up" },
-        { text: `Do "${currentText}" while maintaining eye contact and smiling — be the most confident version of yourself`, icon: "✨", tag: "creative" },
-      ]);
-    }
+    const opts = await generateFollowUpExposures({
+      currentText: chosenExposure?.text || "a micro-exposure",
+      outcome: engageOutcome,
+      why: decideWhy,
+    });
+    setRepeatOptions(opts);
   };
 
   const PhaseLabel = ({ letter, title, active, color }) => (
@@ -305,7 +268,7 @@ No other text.`,
 
       {/* Header */}
       {phase !== "intro" && phase !== "choose" && (
-        <div style={{ padding: "10px 16px", borderBottom: "2px solid ${C.mutedBorder}", background: C.cardBg }}>
+        <div style={{ padding: "10px 16px", borderBottom: `2px solid ${C.mutedBorder}`, background: C.cardBg }}>
           <PixelText size={7} color={C.goldMd}>🏕 TRAINING GROUNDS</PixelText>
           {chosenExposure && (
             <div style={{ marginTop: 4 }}>
@@ -389,7 +352,7 @@ No other text.`,
                 </PixelBtn>
                 <button onClick={() => generateTutorialExposures(prevExposureTexts)} style={{
                   width: "100%", marginTop: 8, padding: 10,
-                  background: "transparent", border: "1px dashed ${C.mutedBorder}",
+                  background: "transparent", border: `1px dashed ${C.mutedBorder}`,
                   borderRadius: 4, cursor: "pointer",
                 }}>
                   <PixelText size={6} color={C.subtleText}>🔄 Generate different training exposures</PixelText>
@@ -441,7 +404,7 @@ No other text.`,
               placeholder="Or type your own reason..."
               style={{
                 width: "100%", padding: 10, marginTop: 10,
-                background: C.cardBg, border: "2px solid ${C.mutedBorder}",
+                background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
                 borderRadius: 4, color: C.cream, fontSize: 12,
                 fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
               }}
@@ -838,7 +801,7 @@ No other text.`,
                     {repeatOptions.map((opt, i) => (
                       <div key={i} style={{
                         display: "block", width: "100%", marginBottom: 8, padding: "12px 14px",
-                        borderRadius: 4, border: "2px solid ${C.mutedBorder}",
+                        borderRadius: 4, border: `2px solid ${C.mutedBorder}`,
                         background: C.cardBg, textAlign: "left",
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>

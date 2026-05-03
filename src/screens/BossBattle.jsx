@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { useAIChat } from '../utils/chat';
+import { useAIChat, generateFollowUpExposures } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
@@ -24,9 +24,7 @@ function BattleTypewriterBubble({ text, muted, voice }) {
 
   // Track speaking state from hook
   useEffect(() => {
-    if (!voice?.isSpeaking) return;
-    if (voice.isSpeaking) setIsSpeaking(true);
-    else setIsSpeaking(false);
+    setIsSpeaking(!!voice?.isSpeaking);
   }, [voice?.isSpeaking]);
 
   return (
@@ -187,43 +185,12 @@ export default function BossBattle({ boss, quest, hero, onVictory, onRetreat, se
 
   // Generate follow-up exposure variations based on outcome
   const generateRepeatOptions = async () => {
-    try {
-      const isComplete = outcome === "victory";
-      const res = await callAI(
-        `You are a clinical psychologist designing ERP (Exposure Response Prevention) follow-up exercises. The user just completed a boss battle exposure.
-
-Current exposure: "${boss.name}" — ${boss.desc}
-User's outcome: ${isComplete ? "They completed it fully." : outcome === "partial" ? "They went partway but didn't finish." : "They tried but couldn't push through."}
-User's value: "${prepAnswers.value}"
-
-Generate exactly 3 follow-up exposure variations in the same nature as the original but adjusted:
-- If they COMPLETED it: make them slightly harder (longer duration, more people, more visible, etc.)
-- If they DID NOT complete it: make them slightly easier or break into smaller steps
-- One of the three should be an "outside the box" creative variation that is still therapeutic — something unexpected but clinically sound
-
-Return ONLY a JSON array like: [{"text":"exposure description","icon":"emoji","tag":"normal|step-up|creative"}]
-No other text.`,
-        [{ role: "user", text: `Generate 3 follow-up exposures based on their outcome.` }]
-      );
-      const jsonMatch = res?.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= 2) {
-          setRepeatOptions(parsed.slice(0, 3).map((o, i) => ({
-            ...o, icon: o.icon || "⚡", tag: o.tag || (i === 2 ? "creative" : "normal"),
-          })));
-          return;
-        }
-      }
-      throw new Error("Parse failed");
-    } catch (e) {
-      console.error("Repeat option generation failed:", e);
-      setRepeatOptions([
-        { text: `Do "${boss.desc}" again, but push yourself a bit further`, icon: "🔁", tag: "normal" },
-        { text: `Try a bigger version — more people, longer, or more visible`, icon: "⚡", tag: "step-up" },
-        { text: `Find a completely new way to challenge this same fear — be creative`, icon: "✨", tag: "creative" },
-      ]);
-    }
+    const opts = await generateFollowUpExposures({
+      currentText: `${boss.name} — ${boss.desc}`,
+      outcome,
+      why: prepAnswers.value,
+    });
+    setRepeatOptions(opts);
   };
 
   // Trigger repeat generation when user reaches the REPEAT step
@@ -262,10 +229,26 @@ No other text.`,
     return () => { voice.cancelSpeech(); };
   }, [phase]);
 
+  // Auto-append voice transcript to loot text when user finishes speaking on loot screen
+  useEffect(() => {
+    if (phase === "result" && engageSubStep === 0.5 && voice.transcript && !voice.isListening) {
+      setLootText(prev => prev ? prev + " " + voice.transcript : voice.transcript);
+      voice.resetTranscript();
+    }
+  }, [voice.transcript, voice.isListening, phase, engageSubStep]);
+
+  // Auto-append voice transcript to decide custom input when user finishes speaking
+  useEffect(() => {
+    if (phase === "prep" && prepStep === 0 && voice.transcript && !voice.isListening) {
+      setDecideCustom(prev => prev ? prev + " " + voice.transcript : voice.transcript);
+      voice.resetTranscript();
+    }
+  }, [voice.transcript, voice.isListening, phase, prepStep]);
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.mapBg }}>
             {/* Boss header */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", background: phase === "battle" ? C.bossRed + "15" : phase === "repeat" ? C.hpGreen + "10" : C.cardBg }}>
+      <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, background: phase === "battle" ? C.bossRed + "15" : phase === "repeat" ? C.hpGreen + "10" : C.cardBg }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <PixelText size={7} color={phase === "battle" ? C.bossRed : phase === "repeat" ? C.hpGreen : C.goldMd}>
             {phase === "prep" ? "⚔ PREPARING FOR BATTLE" : phase === "battle" ? "🔥 BATTLE IN PROGRESS" : phase === "log" ? "📋 BATTLE LOG" : phase === "repeat" ? "🔁 REPEAT THE EXPOSURE" : "🎉 BATTLE COMPLETE"}
@@ -340,6 +323,15 @@ No other text.`,
                       : (hero.coreValues && hero.coreValues.length)
                         ? hero.coreValues
                         : [];
+                    if (pickValues.length === 0) {
+                      return (
+                        <div style={{ padding: "12px 14px", background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 4, textAlign: "center" }}>
+                          <PixelText size={7} color={C.subtleText}>
+                            No values identified yet.{"\n"}Type your own "why" below.
+                          </PixelText>
+                        </div>
+                      );
+                    }
                     return pickValues.slice(0, 5).map(v => {
                       const valText = v.text || v.word || "";
                       const valIcon = v.icon || "💫";
@@ -363,18 +355,41 @@ No other text.`,
                   })()}
                 </div>
 
-                {/* Custom why input — separate from value picks */}
-                <input
-                  value={decideCustom}
-                  onChange={e => setDecideCustom(e.target.value)}
-                  placeholder="Or type your own reason..."
-                  style={{
-                    width: "100%", padding: 10, marginTop: 10,
-                    background: C.cardBg, border: "2px solid ${C.mutedBorder}",
-                    borderRadius: 4, color: C.cream, fontSize: 12,
-                    fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
-                  }}
-                />
+                {/* Custom why input + voice */}
+                <div style={{ marginTop: 10 }}>
+                  <input
+                    value={decideCustom}
+                    onChange={e => setDecideCustom(e.target.value)}
+                    placeholder="Or type your own reason..."
+                    style={{
+                      width: "100%", padding: 10,
+                      background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
+                      borderRadius: 4, color: C.cream, fontSize: 12,
+                      fontFamily: PIXEL_FONT, outline: "none", boxSizing: "border-box",
+                      WebkitUserSelect: "text", userSelect: "text",
+                      touchAction: "auto",
+                    }}
+                  />
+                  {voice.supported && (
+                    <button
+                      onClick={() => {
+                        if (voice.isListening) { voice.stopListening(); }
+                        else { voice.startListening(); }
+                      }}
+                      style={{
+                        alignSelf: "flex-end", padding: "6px 12px", marginTop: 6,
+                        background: voice.isListening ? C.plum : C.cardBg,
+                        border: `2px solid ${voice.isListening ? C.plumLt : C.teal + "60"}`,
+                        borderRadius: 4, cursor: "pointer",
+                        color: voice.isListening ? C.cream : C.grayLt,
+                        fontSize: 9, fontFamily: PIXEL_FONT,
+                        boxShadow: voice.isListening ? `0 0 8px ${C.plum}80` : "none",
+                      }}
+                    >
+                      {voice.isListening ? "⏹ STOP" : "🎤 SPEAK"}
+                    </button>
+                  )}
+                </div>
 
                 <PixelBtn
                   onClick={() => {
@@ -503,7 +518,7 @@ No other text.`,
               ) : (
                 <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
                   maxWidth: "82%", padding: "10px 12px", borderRadius: 4,
-                  background: C.plum, border: "2px solid ${C.mutedBorder}",
+                  background: C.plum, border: `2px solid ${C.mutedBorder}`,
                 }}>
                   <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap" }}>{m.text}</PixelText>
                 </VoiceMessageBubble>
@@ -631,20 +646,43 @@ No other text.`,
                 )}
               </label>
 
-              {/* Meaningful moment text */}
-              <textarea
-                value={lootText}
-                onChange={e => setLootText(e.target.value)}
-                placeholder="Share a meaningful moment — what did you notice, feel, or create?..."
-                rows={3}
-                style={{
-                  width: "100%", minHeight: 80, padding: 10, marginTop: 12,
-                  background: C.cardBg, border: "2px solid ${C.mutedBorder}",
-                  borderRadius: 4, color: C.cream, fontSize: 12,
-                  fontFamily: PIXEL_FONT, outline: "none", resize: "none",
-                  lineHeight: 1.6, boxSizing: "border-box",
-                }}
-              />
+              {/* Meaningful moment text + voice */}
+              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                <textarea
+                  value={lootText}
+                  onChange={e => setLootText(e.target.value)}
+                  placeholder="Share a meaningful moment — what did you notice, feel, or create?..."
+                  rows={3}
+                  style={{
+                    width: "100%", minHeight: 80, padding: 10,
+                    background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
+                    borderRadius: 4, color: C.cream, fontSize: 12,
+                    fontFamily: PIXEL_FONT, outline: "none", resize: "none",
+                    lineHeight: 1.6, boxSizing: "border-box",
+                    WebkitUserSelect: "text", userSelect: "text",
+                    touchAction: "auto",
+                  }}
+                />
+                {voice.supported && (
+                  <button
+                    onClick={() => {
+                      if (voice.isListening) { voice.stopListening(); }
+                      else { voice.startListening(); }
+                    }}
+                    style={{
+                      alignSelf: "flex-end", padding: "6px 12px",
+                      background: voice.isListening ? C.plum : C.cardBg,
+                      border: `2px solid ${voice.isListening ? C.plumLt : C.teal + "60"}`,
+                      borderRadius: 4, cursor: "pointer",
+                      color: voice.isListening ? C.cream : C.grayLt,
+                      fontSize: 9, fontFamily: PIXEL_FONT,
+                      boxShadow: voice.isListening ? `0 0 8px ${C.plum}80` : "none",
+                    }}
+                  >
+                    {voice.isListening ? "⏹ STOP" : "🎤 SPEAK"}
+                  </button>
+                )}
+              </div>
 
               <PixelBtn onClick={() => setEngageSubStep(1)} color={C.gold} textColor={C.charcoal} style={{ width: "100%", marginTop: 16 }}>
                 CONTINUE →
@@ -795,8 +833,8 @@ No other text.`,
               onClick={() => { setSelectedRepeat(""); setRepeatOptions([]); generateRepeatOptions(); }}
               style={{
                 width: "100%", padding: "10px 14px", marginTop: 4, marginBottom: 16,
-                background: "transparent", border: "1px dashed ${C.mutedBorder}",
-                borderRadius: 4, cursor: "pointer",
+                background: "transparent", border: `1px dashed ${C.mutedBorder}`,
+                borderRadius: 4, cursor: "pointer", boxSizing: "border-box",
               }}
             >
               <PixelText size={7} color={C.plumMd}>🎲 I FEEL LUCKY — show me something different</PixelText>
@@ -811,7 +849,7 @@ No other text.`,
 
       {/* === CONTROLS (battle phase only) === */}
       {phase === "battle" && (
-        <div style={{ padding: "12px 12px 64px", borderTop: "2px solid ${C.mutedBorder}" }}>
+        <div style={{ padding: "12px 12px 64px", borderTop: `2px solid ${C.mutedBorder}` }}>
           {/* AI error notification */}
           {battleChat.error && (
             <div style={{ marginBottom: 8, padding: C.padSm, background: C.bossRed + "20", border: `1px solid ${C.bossRed}`, borderRadius: 4 }}>
@@ -858,7 +896,7 @@ No other text.`,
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
               <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }}
                 placeholder="Say anything to Dara..." disabled={battleChat.typing}
-                style={{ flex: 1, padding: C.padSm, background: C.cardBg, border: "2px solid ${C.mutedBorder}", borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
+                style={{ flex: 1, padding: C.padSm, background: C.cardBg, border: `2px solid ${C.mutedBorder}`, borderRadius: 3, color: C.cream, fontSize: 12, outline: "none" }} />
               <PixelBtn onClick={() => { if (chatInput.trim()) { handleSend(battleChat); setChatInput(""); } }} disabled={battleChat.typing || !chatInput.trim()}>→</PixelBtn>
             </div>
           )}

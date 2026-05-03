@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { loadProgress, NDA_VERSION } from "./utils/supabase";
 import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
@@ -55,6 +55,25 @@ export default function DARERQuest() {
   const [pendingDeleteBoss, setPendingDeleteBoss] = useState(null);
   const [justAddedBossId, setJustAddedBossId] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+
+  // Memoized hero context for AI — avoids recomputing on every render
+  const heroContext = useMemo(
+    () => buildHeroContext(hero, quest, shadowText, battleHistory),
+    [hero, quest, shadowText, battleHistory]
+  );
+
+  // Shared boss creation helper
+  const createCustomBoss = useCallback((data) => {
+    const id = `custom_${Date.now()}`;
+    const newBoss = {
+      id, name: data.name, desc: data.desc, difficulty: data.difficulty,
+      defeated: false, hp: 100, maxHp: 100, isCustom: true,
+    };
+    setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
+    setJustAddedBossId(id);
+    setTimeout(() => setJustAddedBossId(null), 3000);
+    setAddMode(null);
+  }, []);
 
   // --- Boss management handlers ---
   const { handleDeleteBoss, confirmDeleteBoss, handleAchieveBoss } = useBossHandlers({
@@ -128,12 +147,12 @@ export default function DARERQuest() {
       {!["login", "map", "battle", "bank"].includes(screen) && screenHistory.length > 0 && (
         <button onClick={goBack} aria-label="Go back" style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, left: 8, zIndex: 100,
-          background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
+          background: `${C.cardBg}CC`, border: `1px solid ${C.mutedBorder}`,
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
           backdropFilter: "blur(4px)",
         }}>
-          <PixelText size={7} color={C.subtleText}>? BACK</PixelText>
+          <PixelText size={7} color={C.subtleText}>← BACK</PixelText>
         </button>
       )}
       {screen === "login" && !authReady && (
@@ -154,7 +173,7 @@ export default function DARERQuest() {
       {isAuthenticated && screen !== "login" && screen !== "nda" && (
         <button onClick={handleLogout} aria-label="Log out" style={{
           position: "absolute", top: ONBOARDING.some(s => s.key === screen) ? 68 : 12, right: 8, zIndex: 100,
-          background: `${C.cardBg}CC`, border: "1px solid ${C.mutedBorder}",
+          background: `${C.cardBg}CC`, border: `1px solid ${C.mutedBorder}`,
           borderRadius: 6, padding: "6px 12px", cursor: "pointer",
           backdropFilter: "blur(4px)",
         }}>
@@ -216,7 +235,7 @@ export default function DARERQuest() {
         setScreen("battle");
       }} onViewProfile={() => setScreen("profile")} onLadder={() => setScreen("ladder")} onBank={() => setScreen("bank")} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle key={activeBoss.id} boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} setActiveBoss={setActiveBoss} setScreen={setScreen} onBank={() => setScreen("bank")} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
-      {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} />}
+      {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} onNav={(s) => setScreen(s)} />}
       {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
       </Suspense>
@@ -241,24 +260,8 @@ export default function DARERQuest() {
       {addMode === "ask-dara" && (
         <AskDaraChat
           onClose={() => setAddMode(null)}
-          heroContext={buildHeroContext(hero, quest, shadowText, battleHistory)}
-          onSubmit={(data) => {
-            const id = `custom_${Date.now()}`;
-            const newBoss = {
-              id,
-              name: data.name,
-              desc: data.desc,
-              difficulty: data.difficulty,
-              defeated: false,
-              hp: 100,
-              maxHp: 100,
-              isCustom: true,
-            };
-            setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
-            setJustAddedBossId(id);
-            setTimeout(() => setJustAddedBossId(null), 3000);
-            setAddMode(null);
-          }}
+          heroContext={heroContext}
+          onSubmit={createCustomBoss}
           onFallback={() => setAddMode("manual")}
         />
       )}
@@ -267,23 +270,7 @@ export default function DARERQuest() {
       {addMode === "manual" && (
         <AddManualEntryForm
           onClose={() => setAddMode(null)}
-          onSubmit={(data) => {
-            const id = `custom_${Date.now()}`;
-            const newBoss = {
-              id,
-              name: data.name,
-              desc: data.desc,
-              difficulty: data.difficulty,
-              defeated: false,
-              hp: 100,
-              maxHp: 100,
-              isCustom: true,
-            };
-            setQuest(q => ({ ...q, bosses: [...q.bosses, newBoss] }));
-            setJustAddedBossId(id);
-            setTimeout(() => setJustAddedBossId(null), 3000);
-            setAddMode(null);
-          }}
+          onSubmit={createCustomBoss}
         />
       )}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { C, PIXEL_FONT } from '../constants/gameData';
+import { C, PIXEL_FONT, ONBOARDING } from '../constants/gameData';
 
 export function PixelText({ children, size = 10, color = C.cream, style = {} }) {
   return <span style={{ fontFamily: PIXEL_FONT, fontSize: size, color, lineHeight: 1.6, ...style }}>{children}</span>;
@@ -63,19 +63,6 @@ export function OnboardingProgress({ screen }) {
     { name: "SHADOW", color: C.bossRed, start: 3, end: 7 },
     { name: "STRATEGY", color: C.teal, start: 8, end: 9 },
     { name: "TRAINING", color: C.hpGreen, start: 10, end: 10 },
-  ];
-  const ONBOARDING = [
-    { key: "intro", label: "Story" },
-    { key: "character", label: "Hero" },
-    { key: "values", label: "Values" },
-    { key: "shadowLore", label: "Shadow Lore" },
-    { key: "psychoed", label: "Learn" },
-    { key: "shadowLorePost", label: "Shadow Lore" },
-    { key: "intake", label: "Intake" },
-    { key: "shadowReveal", label: "Reveal" },
-    { key: "darerStrategy", label: "DARER STRATEGY" },
-    { key: "armoryIntro", label: "Armory" },
-    { key: "tutorial", label: "Training" },
   ];
   const idx = ONBOARDING.findIndex(s => s.key === screen);
   if (idx === -1) return null;
