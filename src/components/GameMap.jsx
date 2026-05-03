@@ -3,12 +3,20 @@ import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar } from '../components/shared';
 import SwipeableBoss from './SwipeableBoss';
 import BottomNav from './BottomNav';
-export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onLadder, onBank, focusedBoss, setFocusedBoss, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
+import Modal from './Modal';
+import { getCurrentZone, JOURNEY_ZONES, getZonesVisited } from '../constants/mapZones';
+import { generateShadowForecast, generateWhisperFromDara } from '../utils/shadowForecast';
+export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onLadder, onBank, onAllies, focusedBoss, setFocusedBoss, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
   const nextBoss = quest.bosses.find(b => !b.defeated);
   const defeatedCount = quest.bosses.filter(b => b.defeated).length;
   const totalXp = defeatedCount * 100;
+  const zone = getCurrentZone(defeatedCount);
   const [pendingBoss, setPendingBoss] = useState(null);
   const [addPulse, setAddPulse] = useState(false);
+  const [dismissedWhisper, setDismissedWhisper] = useState(false);
+
+  // Generate whisper from Dara (re-engagement after 3+ days)
+  const whisper = generateWhisperFromDara(hero, battleHistory);
 
   // Sync focusedBoss to first undefeated only when there is NO focus set yet
   useEffect(() => {
@@ -62,10 +70,127 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
           <HPBar current={totalXp} max={quest.bosses.length * 100} height={8} />
         </div>
         <div style={{ textAlign: "right" }}>
-          <PixelText size={10} color={C.goldMd}>{totalXp} XP</PixelText>
-          <div><PixelText size={7} color={C.grayLt}>{activeCount}/{quest.bosses.length} BOSSES</PixelText></div>
+          <PixelText size={8} color={C.goldMd}>LV.{hero.playerLevel || 1}</PixelText>
+          <div><PixelText size={7} color={C.grayLt}>{hero.totalXP || 0} XP</PixelText></div>
+          <PixelText size={7} color={C.grayLt}>{activeCount}/{quest.bosses.length} BOSSES</PixelText>
+        </div>
+        {/* Streak counter */}
+        {(hero.streakCount || 0) > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4,
+            padding: '4px 8px', background: C.goldMd + '15', border: `1px solid ${C.goldMd}40`,
+            borderRadius: 4,
+          }}>
+            <span style={{ fontSize: 14 }}>🔥</span>
+            <PixelText size={9} color={C.goldMd}>{hero.streakCount}</PixelText>
+          </div>
+        )}
+        {hero.streakFreezes > 0 && (
+          <div style={{ marginLeft: 4 }}>
+            <PixelText size={7} color={C.teal}>❄️{hero.streakFreezes}</PixelText>
+          </div>
+        )}
+      </div>
+
+      {/* Zone banner — environmental progression */}
+      <div style={{
+        padding: "10px 16px",
+        background: zone.headerBg,
+        borderBottom: `2px solid ${zone.accent}40`,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+      }}>
+        <span style={{ fontSize: 20 }}>{zone.icon}</span>
+        <div style={{ flex: 1 }}>
+          <PixelText size={8} color={zone.accent} style={{ display: "block" }}>{zone.name}</PixelText>
+          <PixelText size={6} color={C.grayLt}>{zone.subtitle}</PixelText>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <PixelText size={7} color={C.grayLt}>{defeatedCount} defeated</PixelText>
         </div>
       </div>
+
+      {/* Living Map — environmental progression */}
+      <div style={{
+        padding: '12px 16px',
+        background: zone.headerBg,
+        borderBottom: `2px solid ${zone.accent}20`,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          {/* Lanterns — light up with progress (max 5) */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, filter: defeatedCount >= 1 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+              {defeatedCount >= 1 ? '🏮' : '🏮'}
+            </div>
+            <PixelText size={6} color={defeatedCount >= 1 ? zone.accent : C.grayLt}>1</PixelText>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, filter: defeatedCount >= 4 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+              {defeatedCount >= 4 ? '🏮' : '🏮'}
+            </div>
+            <PixelText size={6} color={defeatedCount >= 4 ? zone.accent : C.grayLt}>4</PixelText>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, filter: defeatedCount >= 8 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+              {defeatedCount >= 8 ? '🏮' : '🏮'}
+            </div>
+            <PixelText size={6} color={defeatedCount >= 8 ? zone.accent : C.grayLt}>8</PixelText>
+          </div>
+          {/* Flowers — bloom with progress */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, filter: defeatedCount >= 3 ? 'none' : 'grayscale(1) opacity(0.3)' }}>
+              {defeatedCount >= 3 ? '🌸' : '🥀'}
+            </div>
+            <PixelText size={6} color={defeatedCount >= 3 ? C.hpGreen : C.grayLt}>bloom</PixelText>
+          </div>
+          {/* Fog — lifts with progress */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, opacity: Math.max(0.3, 1 - defeatedCount * 0.05) }}>
+              🌫️
+            </div>
+            <PixelText size={6} color={defeatedCount >= 10 ? C.hpGreen : C.grayLt}>
+              {defeatedCount >= 10 ? 'cleared' : 'fog'}
+            </PixelText>
+          </div>
+        </div>
+        {/* Zone path progress */}
+        <div style={{ marginTop: 10, display: 'flex', gap: 4, justifyContent: 'center' }}>
+          {JOURNEY_ZONES.map((z, i) => {
+            const visited = defeatedCount >= z.minDefeated;
+            const isCurrent = zone.id === z.id;
+            return (
+              <div key={z.id} style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 14, opacity: visited ? 1 : 0.3 }}>{z.icon}</span>
+                {isCurrent && <div style={{ width: 6, height: 6, borderRadius: '50%', background: zone.accent, margin: '2px auto 0' }} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Whisper From Dara — re-engagement after 3+ days away */}
+      {whisper && !dismissedWhisper && (
+        <div style={{
+          margin: '12px 16px',
+          padding: C.padLg,
+          background: `linear-gradient(135deg, ${C.plum}20, ${C.goalGold}10)`,
+          border: `2px solid ${C.plum}60`,
+          borderRadius: 8,
+          animation: 'fadeIn 0.5s ease-out',
+        }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 24 }}>💬</span>
+            <PixelText size={8} color={C.plumMd} style={{ flex: 1, lineHeight: 1.8 }}>
+              {whisper}
+            </PixelText>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <PixelBtn onClick={() => setDismissedWhisper(true)} color={C.plum} style={{ flex: 1 }}>I'LL BE BACK SOON</PixelBtn>
+            <PixelBtn onClick={() => { setDismissedWhisper(true); if (nextBoss) onSelectBoss(nextBoss); }} color={C.gold} textColor={C.charcoal} style={{ flex: 1 }}>LET'S GO →</PixelBtn>
+          </div>
+        </div>
+      )}
 
       {/* Journey goal banner */}
       <div style={{ padding: "12px 16px", background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`, textAlign: "center" }}>
@@ -94,6 +219,30 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         >
           <span style={{ fontSize: 16 }}>➕</span>
           <PixelText size={9} color={C.teal}>ADD NEW EXPOSURE</PixelText>
+        </button>
+      )}
+
+      {/* Allies Wall button */}
+      {onAllies && (
+        <button
+          onClick={onAllies}
+          style={{
+            width: "100%",
+            padding: "8px 16px",
+            background: C.cardBg,
+            borderBottom: `2px solid ${C.mutedBorder}`,
+            borderLeft: "none",
+            borderRight: "none",
+            borderTop: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14 }}>🤝</span>
+          <PixelText size={8} color={C.goalGold}>ALLIES WALL — SEE OTHER DARERs</PixelText>
         </button>
       )}
 
@@ -191,18 +340,23 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
           </div>
         )}
 
-        {/* Goal castle */}
+        {/* Goal castle — zone-aware */}
         <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-            <div style={{ width: 3, height: 20, background: C.mutedBorder }} />
+            <div style={{ width: 3, height: 20, background: zone.accent + "40" }} />
           </div>
           <div style={{
-            padding: C.padLg, background: C.goalGold + "15", border: `3px solid ${C.goalGold}`,
-            borderRadius: 6, textAlign: "center",
+            padding: C.padLg,
+            background: `linear-gradient(180deg, ${zone.accent}10 0%, ${C.goalGold}15 100%)`,
+            border: `3px solid ${C.goalGold}`,
+            borderRadius: 6,
+            textAlign: "center",
           }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🏰</div>
             <PixelText size={10} color={C.goalGold}>{quest.goal.toUpperCase()}</PixelText>
-            <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>Defeat all bosses to reach your goal</PixelText></div>
+            <div style={{ marginTop: 4 }}>
+              <PixelText size={7} color={zone.accent}>{zone.desc}</PixelText>
+            </div>
           </div>
         </div>
       </div>
