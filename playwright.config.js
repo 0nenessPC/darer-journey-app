@@ -19,6 +19,12 @@ export default defineConfig({
     viewport: { width: 420, height: 860 },  // Mobile viewport
     headless: true,
   },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
+    stdout: 'pipe',
+  },
   projects: [
     {
       name: 'e2e',
