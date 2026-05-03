@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase, saveProgress, loadProgress, NDA_VERSION } from '../utils/supabase';
 import { useAuth } from './useAuth';
 import { useNavigation } from './useNavigation';
@@ -26,7 +26,9 @@ export function useAppState() {
       if (isSavingRef.current) return;
       isSavingRef.current = true;
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           await saveProgress(user.id, {
             screen: nav.screen,
@@ -41,16 +43,28 @@ export function useAppState() {
         isSavingRef.current = false;
       }
     }, 500);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nav.screen, auth.isAuthenticated, hero.onboardingState, hero.shadowText, hero.hero, hero.quest, hero.battleHistory]);
+  }, [
+    nav.screen,
+    auth.isAuthenticated,
+    hero.onboardingState,
+    hero.shadowText,
+    hero.hero,
+    hero.quest,
+    hero.battleHistory,
+  ]);
 
   // --- Save on tab/browser close ---
   useEffect(() => {
     if (!auth.isAuthenticated) return;
     const saveNow = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           await saveProgress(user.id, {
             screen: nav.screen,
@@ -75,11 +89,21 @@ export function useAppState() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isAuthenticated, nav.screen, hero.hero, hero.quest, hero.shadowText, hero.onboardingState, hero.battleHistory]);
+  }, [
+    auth.isAuthenticated,
+    nav.screen,
+    hero.hero,
+    hero.quest,
+    hero.shadowText,
+    hero.onboardingState,
+    hero.battleHistory,
+  ]);
 
   // --- Login handler — wires restoreProgress/newUser to sub-hooks ---
   const handleLogin = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const { checkNdaAgreed } = await import('../utils/supabase');
     const ndaAgreed = await checkNdaAgreed(user.id, NDA_VERSION);
@@ -99,7 +123,10 @@ export function useAppState() {
       nav.setScreen('map');
     } else if (progress?.onboarding_state?.exposureSort?.done) {
       nav.setScreen('map');
-    } else if (progress?.tutorial_complete || progress?.onboarding_state?.tutorial?.tutorialComplete) {
+    } else if (
+      progress?.tutorial_complete ||
+      progress?.onboarding_state?.tutorial?.tutorialComplete
+    ) {
       nav.setScreen('exposureSort');
     } else if (progress?.screen && progress.screen !== 'login') {
       nav.setScreen(progress.screen === 'mapPreview' ? 'shadowLore' : progress.screen);
@@ -109,32 +136,48 @@ export function useAppState() {
     auth.setIsAuthenticated(true);
   }, [auth, nav, hero]);
 
-  const handleNdaComplete = useCallback(async (participantName, ndaText) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-    const { saveNdaAgreement } = await import('../utils/supabase');
-    const result = await saveNdaAgreement(user.id, participantName, hero.hero.darerId || '', NDA_VERSION, ndaText);
-    if (!result) return false;
-    const progress = await loadProgress(user.id);
-    if (progress) hero.restoreProgress(progress);
-    else hero.newUser();
-    if (progress?.quest?.bosses?.length > 0) {
-      nav.setScreen('map');
-    } else if (progress?.onboarding_state?.exposureSort?.done) {
-      nav.setScreen('map');
-    } else if (progress?.tutorial_complete || progress?.onboarding_state?.tutorial?.tutorialComplete) {
-      nav.setScreen('exposureSort');
-    } else if (progress?.screen && progress.screen !== 'login') {
-      nav.setScreen(progress.screen === 'mapPreview' ? 'shadowLore' : progress.screen);
-    } else {
-      nav.setScreen('intro');
-    }
-    return true;
-  }, [auth, nav, hero]);
+  const handleNdaComplete = useCallback(
+    async (participantName, ndaText) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+      const { saveNdaAgreement } = await import('../utils/supabase');
+      const result = await saveNdaAgreement(
+        user.id,
+        participantName,
+        hero.hero.darerId || '',
+        NDA_VERSION,
+        ndaText,
+      );
+      if (!result) return false;
+      const progress = await loadProgress(user.id);
+      if (progress) hero.restoreProgress(progress);
+      else hero.newUser();
+      if (progress?.quest?.bosses?.length > 0) {
+        nav.setScreen('map');
+      } else if (progress?.onboarding_state?.exposureSort?.done) {
+        nav.setScreen('map');
+      } else if (
+        progress?.tutorial_complete ||
+        progress?.onboarding_state?.tutorial?.tutorialComplete
+      ) {
+        nav.setScreen('exposureSort');
+      } else if (progress?.screen && progress.screen !== 'login') {
+        nav.setScreen(progress.screen === 'mapPreview' ? 'shadowLore' : progress.screen);
+      } else {
+        nav.setScreen('intro');
+      }
+      return true;
+    },
+    [nav, hero],
+  );
 
   const handleLogout = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         await saveProgress(user.id, {
           screen: nav.screen,
@@ -153,22 +196,6 @@ export function useAppState() {
     nav.setScreenRaw('login');
     nav.setScreenHistory([]);
   }, [auth, nav, hero]);
-
-  // --- Restore from progress (used after login) ---
-  const _restoreFromProgress = useCallback((progress) => {
-    hero.restoreProgress(progress);
-    if (progress?.quest?.bosses?.length > 0) {
-      nav.setScreen('map');
-    } else if (progress?.onboarding_state?.exposureSort?.done) {
-      nav.setScreen('map');
-    } else if (progress?.tutorial_complete || progress?.onboarding_state?.tutorial?.tutorialComplete) {
-      nav.setScreen('exposureSort');
-    } else if (progress?.screen && progress.screen !== 'login') {
-      nav.setScreen(progress.screen === 'mapPreview' ? 'shadowLore' : progress.screen);
-    } else {
-      nav.setScreen('intro');
-    }
-  }, [hero, nav]);
 
   return {
     screen: nav.screen,
