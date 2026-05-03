@@ -11,7 +11,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [['list'], ['html', { open: 'never', outputFolder: 'test-results/html-report' }]],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -32,12 +32,17 @@ export default defineConfig({
     },
     {
       name: 'ai',
-      testMatch: /ai-.*\.spec\.js/,
+      testMatch: /(ai-.*|intake-real-ai)\.spec\.js/,
       use: {
         viewport: { width: 420, height: 860 },
         headless: true,
       },
       timeout: 120_000,  // AI analysis adds latency
+    },
+    {
+      name: 'visual',
+      testMatch: /visual-regression\.spec\.js/,
+      // No webServer needed — file comparison only
     },
   ],
 });
