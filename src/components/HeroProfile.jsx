@@ -1099,9 +1099,9 @@ export default function HeroProfile({
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: `2px solid ${C.mutedBorder}` }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 18 }}>⚪</span>
+                <span style={{ fontSize: 18 }}>🪙</span>
                 <PixelText size={9} color={C.cream}>
-                  {hero.platinum || 0} PT
+                  {hero.courageCoins || 0}
                 </PixelText>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

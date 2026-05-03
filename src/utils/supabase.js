@@ -126,7 +126,7 @@ export async function saveBattleRecord(userId, battle) {
     engage_free_text: battle.engageFreeText || null,
     repeat_choice: battle.repeatChoice || null,
     xp_earned: battle.xpEarned || 0,
-    platinum_earned: battle.platinumEarned || 0,
+    coins_earned: battle.coinsEarned || 0,
     diamonds_earned: battle.diamondsEarned || 0,
     verified: battle.verified || false,
     verification_method: battle.verificationMethod || null,

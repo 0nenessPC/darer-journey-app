@@ -146,7 +146,7 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
   const [purchasing, setPurchasing] = useState(null);
   const [justPurchased, setJustPurchased] = useState(null);
 
-  const platinum = hero.platinum || 0;
+  const coins = hero.courageCoins || 0;
   const diamonds = hero.diamonds || 0;
   const purchased = hero.purchasedItems || [];
   const functionalItems = purchased.filter((p) => p.repeatable && p.id !== undefined);
@@ -163,7 +163,7 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
     category === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter((i) => i.category === category);
 
   const handlePurchase = (item) => {
-    const balance = item.currencyType === 'diamond' ? diamonds : platinum;
+    const balance = item.currencyType === 'diamond' ? diamonds : coins;
     if (balance < item.price) return;
     if (!item.repeatable && purchased.some((p) => p.id === item.id)) return;
 
@@ -174,13 +174,18 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
         const updates = {
           purchasedItems: [
             ...(h.purchasedItems || []),
-            { id: item.id, date: new Date().toISOString(), repeatable: item.repeatable, currencyType: item.currencyType },
+            {
+              id: item.id,
+              date: new Date().toISOString(),
+              repeatable: item.repeatable,
+              currencyType: item.currencyType,
+            },
           ],
         };
         if (item.currencyType === 'diamond') {
           updates.diamonds = (h.diamonds || 0) - item.price;
         } else {
-          updates.platinum = (h.platinum || 0) - item.price;
+          updates.courageCoins = (h.courageCoins || 0) - item.price;
         }
         // Apply consumable items immediately
         if (item.effect === 'double_xp') {
@@ -226,9 +231,9 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           🛒 DARA'S SHOP
         </PixelText>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚪</span>
+          <span style={{ fontSize: 14 }}>🪙</span>
           <PixelText size={8} color={C.cream}>
-            {platinum}
+            {coins}
           </PixelText>
           <span style={{ fontSize: 14 }}>💎</span>
           <PixelText size={8} color="#60A5FA">
@@ -290,10 +295,10 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
       ) : (
         filtered.map((item) => {
           const owned = isOwned(item);
-          const balance = item.currencyType === 'diamond' ? diamonds : platinum;
+          const balance = item.currencyType === 'diamond' ? diamonds : coins;
           const canAfford = balance >= item.price;
           const buying = purchasing === item.id;
-          const currencyIcon = item.currencyType === 'diamond' ? '💎' : '⚪';
+          const currencyIcon = item.currencyType === 'diamond' ? '💎' : '🪙';
           const priceColor = item.currencyType === 'diamond' ? '#60A5FA' : C.goldMd;
 
           return (
@@ -346,7 +351,11 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
                     style={{
                       padding: '6px 12px',
                       borderRadius: 4,
-                      background: canAfford ? (item.currencyType === 'diamond' ? '#60A5FA' : C.goldMd) : C.charcoal,
+                      background: canAfford
+                        ? item.currencyType === 'diamond'
+                          ? '#60A5FA'
+                          : C.goldMd
+                        : C.charcoal,
                       border: 'none',
                       cursor: canAfford ? 'pointer' : 'default',
                       fontFamily: 'inherit',
@@ -377,7 +386,7 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           HOW TO EARN
         </PixelText>
         <PixelText size={7} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8 }}>
-          ⚪ Platinum — earned from any exposure{'\n'}
+          🪙 Courage Coins — earned from any exposure{'\n'}
           &nbsp;&nbsp;&nbsp;5-15 per battle (scales with difficulty){'\n'}
           {'\n'}
           💎 Diamonds — earned from verified exposures{'\n'}
