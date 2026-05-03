@@ -7,13 +7,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Save user progress to Supabase
 export async function saveProgress(userId, data) {
-  const { error } = await supabase
-    .from('user_progress')
-    .upsert({
+  const { error } = await supabase.from('user_progress').upsert(
+    {
       user_id: userId,
       ...data,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    },
+    { onConflict: 'user_id' },
+  );
   if (error) console.error('Save progress error:', error);
   return !error;
 }
@@ -34,10 +35,16 @@ export async function loadProgress(userId) {
 }
 
 // NDA Agreement version constant — bump this to re-prompt all users
-export const NDA_VERSION = "1.0";
+export const NDA_VERSION = '1.0';
 
 // Save a signed NDA agreement to Supabase (immutable record)
-export async function saveNdaAgreement(userId, participantName, darerId, version = NDA_VERSION, agreementText = "") {
+export async function saveNdaAgreement(
+  userId,
+  participantName,
+  darerId,
+  version = NDA_VERSION,
+  agreementText = '',
+) {
   const { data, error } = await supabase
     .from('nda_agreements')
     .insert({
@@ -77,9 +84,7 @@ export async function checkNdaAgreed(userId, version = NDA_VERSION) {
 
 // Save user feedback to Supabase
 export async function saveFeedback(userId, data) {
-  const { error } = await supabase
-    .from('user_feedback')
-    .insert({ user_id: userId, ...data });
+  const { error } = await supabase.from('user_feedback').insert({ user_id: userId, ...data });
   if (error) {
     console.error('Save feedback error:', error);
     return false;
@@ -121,6 +126,10 @@ export async function saveBattleRecord(userId, battle) {
     engage_free_text: battle.engageFreeText || null,
     repeat_choice: battle.repeatChoice || null,
     xp_earned: battle.xpEarned || 0,
+    platinum_earned: battle.platinumEarned || 0,
+    diamonds_earned: battle.diamondsEarned || 0,
+    verified: battle.verified || false,
+    verification_method: battle.verificationMethod || null,
     dara_letter: battle.daraLetter || null,
     is_tutorial: battle.isTutorial || false,
     battle_chat_message_count: (battle.battleMessages || []).length,

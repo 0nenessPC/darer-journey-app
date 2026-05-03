@@ -503,6 +503,8 @@ export default function BossBattle({
                     setExposureScheduledTime={flow.setExposureScheduledTime}
                     exposureWhere={flow.exposureWhere}
                     setExposureWhere={flow.setExposureWhere}
+                    exposureWhereCoords={flow.exposureWhereCoords}
+                    setExposureWhereCoords={flow.setExposureWhereCoords}
                     exposureArmory={flow.exposureArmory}
                     setExposureArmory={flow.setExposureArmory}
                     selectedArmoryTool={flow.selectedArmoryTool}
@@ -1083,6 +1085,7 @@ export default function BossBattle({
                 suds,
                 exposureWhen: flow.exposureWhen,
                 exposureWhere: flow.exposureWhere,
+                exposureWhereCoords: flow.exposureWhereCoords,
                 exposureArmory: flow.exposureArmory,
                 exposureScheduledTime: flow.exposureScheduledTime,
                 battleMessages: battleChat.messages,
@@ -1249,7 +1252,8 @@ export default function BossBattle({
       {celebration && (
         <CelebrationOverlay
           xpEarned={celebration.xpEarned || 0}
-          coinsEarned={celebration.coinsEarned || 0}
+          platinumEarned={celebration.platinumEarned || 0}
+          diamondsEarned={celebration.diamondsEarned || 0}
           lootDrop={celebration.lootDrop}
           achievements={celebration.newAchievements || []}
           playerLevel={celebration.playerLevel || 1}

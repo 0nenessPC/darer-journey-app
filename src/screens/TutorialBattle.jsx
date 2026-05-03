@@ -121,6 +121,8 @@ export default function TutorialBattle({
   const setExposureWhen = flow.setExposureWhen;
   const exposureWhere = flow.exposureWhere;
   const setExposureWhere = flow.setExposureWhere;
+  const exposureWhereCoords = flow.exposureWhereCoords;
+  const setExposureWhereCoords = flow.setExposureWhereCoords;
   const exposureArmory = flow.exposureArmory;
   const setExposureArmory = flow.setExposureArmory;
   const exposureScheduledTime = flow.exposureScheduledTime;
@@ -736,6 +738,8 @@ No other text.`,
               setExposureScheduledTime={setExposureScheduledTime}
               exposureWhere={exposureWhere}
               setExposureWhere={setExposureWhere}
+              exposureWhereCoords={exposureWhereCoords}
+              setExposureWhereCoords={setExposureWhereCoords}
               exposureArmory={exposureArmory}
               setExposureArmory={setExposureArmory}
               selectedArmoryTool={selectedArmoryTool}
@@ -1019,7 +1023,12 @@ No other text.`,
                       <img
                         src={lootImage}
                         alt="Battle proof"
-                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }}
+                        style={{
+                          width: '100%',
+                          maxHeight: 200,
+                          objectFit: 'cover',
+                          borderRadius: 6,
+                        }}
                       />
                       <button
                         onClick={(e) => {
@@ -1045,7 +1054,9 @@ No other text.`,
                   ) : (
                     <>
                       <div style={{ fontSize: 28, marginBottom: 8 }}>📸</div>
-                      <PixelText size={7} color={C.subtleText}>Tap to take a photo or choose from gallery</PixelText>
+                      <PixelText size={7} color={C.subtleText}>
+                        Tap to take a photo or choose from gallery
+                      </PixelText>
                     </>
                   )}
                   <input

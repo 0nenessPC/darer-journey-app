@@ -7,7 +7,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Complete 3 exposures this week',
     icon: '⚔️',
     check: ({ weeklyBattles }) => weeklyBattles >= 3,
-    reward: { coins: 5, xp: 200 },
+    reward: { platinum: 5, xp: 200 },
   },
   {
     id: 'wc_high_level',
@@ -15,7 +15,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Defeat a LV.5+ boss this week',
     icon: '🔥',
     check: ({ maxBossLevel }) => maxBossLevel >= 5,
-    reward: { coins: 3, xp: 150 },
+    reward: { platinum: 3, xp: 150 },
   },
   {
     id: 'wc_streak',
@@ -23,7 +23,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Battle on 4 different days this week',
     icon: '📅',
     check: ({ activeDays }) => activeDays >= 4,
-    reward: { coins: 4, xp: 200 },
+    reward: { platinum: 4, xp: 200 },
   },
   {
     id: 'wc_suds_master',
@@ -31,7 +31,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Reduce SUDS by 30+ in one battle',
     icon: '📉',
     check: ({ bestSudsDrop }) => bestSudsDrop >= 30,
-    reward: { coins: 3, xp: 100 },
+    reward: { platinum: 3, xp: 100 },
   },
   {
     id: 'wc_explorer',
@@ -39,7 +39,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Try 3 different exposure types this week',
     icon: '🗺️',
     check: ({ uniqueBossTypes }) => uniqueBossTypes >= 3,
-    reward: { coins: 4, xp: 150 },
+    reward: { platinum: 4, xp: 150 },
   },
   {
     id: 'wc_repeat',
@@ -47,7 +47,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Complete 2 repeat battles this week',
     icon: '🔄',
     check: ({ repeats }) => repeats >= 2,
-    reward: { coins: 3, xp: 100 },
+    reward: { platinum: 3, xp: 100 },
   },
   {
     id: 'wc_sharer',
@@ -55,7 +55,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Save 2 meaningful moments this week',
     icon: '📸',
     check: ({ lootSaved }) => lootSaved >= 2,
-    reward: { coins: 2, xp: 100 },
+    reward: { platinum: 2, xp: 100 },
   },
   {
     id: 'wc_speed',
@@ -63,7 +63,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Complete 5 exposures in one week',
     icon: '⚡',
     check: ({ weeklyBattles }) => weeklyBattles >= 5,
-    reward: { coins: 8, xp: 300 },
+    reward: { platinum: 8, xp: 300 },
   },
   {
     id: 'wc_perfect',
@@ -71,7 +71,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Win a battle with SUDS ending below 20',
     icon: '💪',
     check: ({ minSudsAfter }) => minSudsAfter <= 20,
-    reward: { coins: 5, xp: 200 },
+    reward: { platinum: 5, xp: 200 },
   },
   {
     id: 'wc_tutor',
@@ -79,7 +79,7 @@ export const WEEKLY_CHALLENGES = [
     desc: 'Use 3 different armory tools this week',
     icon: '🧰',
     check: ({ toolsUsed }) => toolsUsed >= 3,
-    reward: { coins: 3, xp: 150 },
+    reward: { platinum: 3, xp: 150 },
   },
 ];
 
@@ -99,7 +99,7 @@ export function getWeeklyChallenges(seed) {
   // Simple deterministic shuffle based on date string
   let hash = 0;
   for (let i = 0; i < weekSeed.length; i++) {
-    hash = ((hash << 5) - hash) + weekSeed.charCodeAt(i);
+    hash = (hash << 5) - hash + weekSeed.charCodeAt(i);
     hash |= 0;
   }
   const shuffled = [...WEEKLY_CHALLENGES].sort(() => 0.5 - Math.sin(hash++));
@@ -108,7 +108,7 @@ export function getWeeklyChallenges(seed) {
 
 /** Check which weekly challenges are completed */
 export function checkWeeklyChallenges(challenges, stats) {
-  return challenges.map(ch => ({
+  return challenges.map((ch) => ({
     ...ch,
     completed: ch.check(stats),
   }));

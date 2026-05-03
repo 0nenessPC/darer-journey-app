@@ -528,307 +528,302 @@ export default function HeroProfile({
       {activeTab === 'log' && (
         <>
           {quest.bosses.filter((b) => b.defeated).length === 0 ? (
-                <div style={{ padding: '40px 16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
-                  <PixelText size={9} color={C.grayLt}>
-                    No battles won yet.
+            <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+              <PixelText size={9} color={C.grayLt}>
+                No battles won yet.
+              </PixelText>
+              <div style={{ marginTop: 8 }}>
+                <PixelText size={7} color={C.grayLt}>
+                  Your journey awaits!
+                </PixelText>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
+                <PixelText size={8} color={C.grayLt}>
+                  {battleHistory.length} battle{battleHistory.length !== 1 ? 's' : ''} recorded
+                </PixelText>
+                <button
+                  onClick={() => setScreen('ladder')}
+                  style={{
+                    background: `${C.goalGold}20`,
+                    border: `2px solid ${C.goalGold}60`,
+                    borderRadius: 4,
+                    padding: '4px 10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <PixelText size={7} color={C.goalGold}>
+                    📸 WALL OF FAME
                   </PixelText>
-                  <div style={{ marginTop: 8 }}>
-                    <PixelText size={7} color={C.grayLt}>
-                      Your journey awaits!
-                    </PixelText>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <PixelText size={8} color={C.grayLt}>
-                      {battleHistory.length} battle{battleHistory.length !== 1 ? 's' : ''} recorded
-                    </PixelText>
-                    <button
-                      onClick={() => setScreen('ladder')}
-                      style={{
-                        background: `${C.goalGold}20`,
-                        border: `2px solid ${C.goalGold}60`,
-                        borderRadius: 4,
-                        padding: '4px 10px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <PixelText size={7} color={C.goalGold}>
-                        📸 WALL OF FAME
-                      </PixelText>
-                    </button>
-                  </div>
-                  {battleHistory
-                    .slice()
-                    .reverse()
-                    .map((battle, idx) => {
-                      const boss = quest.bosses.find((b) => b.id === battle.bossId);
-                      if (!boss) return null;
-                      return (
-                        <div key={battle.bossId || idx} style={{ marginBottom: 8 }}>
-                          <button
-                            onClick={() =>
-                              setExpandedBossId(
-                                expandedBossId === battle.bossId ? null : battle.bossId,
-                              )
-                            }
-                            style={{
-                              width: '100%',
-                              padding: 10,
-                              background: C.cardBg,
-                              border: `2px solid ${expandedBossId === battle.bossId ? C.hpGreen : C.hpGreen + '40'}`,
-                              borderRadius: 6,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <div style={{ textAlign: 'left' }}>
-                              <PixelText size={8} color={C.hpGreen}>
-                                ✓ {boss.name}
-                              </PixelText>
-                              <div>
-                                <PixelText size={6} color={C.grayLt}>
-                                  {boss.desc}
-                                </PixelText>
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <PixelText size={7} color={C.goldMd}>
-                                +{battle.xpEarned ?? 100} XP
-                              </PixelText>
-                              <PixelText size={8} color={C.grayLt}>
-                                {expandedBossId === battle.bossId ? '▲' : '▼'}
-                              </PixelText>
-                            </div>
-                          </button>
-                          {expandedBossId === battle.bossId && (
+                </button>
+              </div>
+              {battleHistory
+                .slice()
+                .reverse()
+                .map((battle, idx) => {
+                  const boss = quest.bosses.find((b) => b.id === battle.bossId);
+                  if (!boss) return null;
+                  return (
+                    <div key={battle.bossId || idx} style={{ marginBottom: 8 }}>
+                      <button
+                        onClick={() =>
+                          setExpandedBossId(expandedBossId === battle.bossId ? null : battle.bossId)
+                        }
+                        style={{
+                          width: '100%',
+                          padding: 10,
+                          background: C.cardBg,
+                          border: `2px solid ${expandedBossId === battle.bossId ? C.hpGreen : C.hpGreen + '40'}`,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ textAlign: 'left' }}>
+                          <PixelText size={8} color={C.hpGreen}>
+                            ✓ {boss.name}
+                          </PixelText>
+                          <div>
+                            <PixelText size={6} color={C.grayLt}>
+                              {boss.desc}
+                            </PixelText>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <PixelText size={7} color={C.goldMd}>
+                            +{battle.xpEarned ?? 100} XP
+                          </PixelText>
+                          <PixelText size={8} color={C.grayLt}>
+                            {expandedBossId === battle.bossId ? '▲' : '▼'}
+                          </PixelText>
+                        </div>
+                      </button>
+                      {expandedBossId === battle.bossId && (
+                        <div
+                          style={{
+                            marginTop: 4,
+                            padding: 10,
+                            background: C.cardBg,
+                            border: `1px solid ${C.hpGreen}30`,
+                            borderRadius: 4,
+                          }}
+                        >
+                          <div style={{ textAlign: 'center', marginBottom: 6 }}>
+                            <PixelText
+                              size={9}
+                              color={
+                                battle.outcome === 'victory'
+                                  ? C.hpGreen
+                                  : battle.outcome === 'partial'
+                                    ? C.amber
+                                    : C.bossRed
+                              }
+                            >
+                              {battle.outcome === 'victory'
+                                ? 'VICTORY'
+                                : battle.outcome === 'partial'
+                                  ? 'PARTIAL'
+                                  : 'DEFEATED'}
+                            </PixelText>
+                          </div>
+                          {battle.suds && battle.suds.before !== undefined && (
                             <div
                               style={{
-                                marginTop: 4,
-                                padding: 10,
-                                background: C.cardBg,
-                                border: `1px solid ${C.hpGreen}30`,
+                                display: 'flex',
+                                justifyContent: 'space-around',
+                                marginBottom: 6,
+                                padding: 6,
+                                background: C.warmDark,
                                 borderRadius: 4,
                               }}
                             >
-                              <div style={{ textAlign: 'center', marginBottom: 6 }}>
-                                <PixelText
-                                  size={9}
-                                  color={
-                                    battle.outcome === 'victory'
-                                      ? C.hpGreen
-                                      : battle.outcome === 'partial'
-                                        ? C.amber
-                                        : C.bossRed
-                                  }
-                                >
-                                  {battle.outcome === 'victory'
-                                    ? 'VICTORY'
-                                    : battle.outcome === 'partial'
-                                      ? 'PARTIAL'
-                                      : 'DEFEATED'}
+                              <div style={{ textAlign: 'center' }}>
+                                <PixelText size={9} color={C.bossRed}>
+                                  {battle.suds.before}
                                 </PixelText>
-                              </div>
-                              {battle.suds && battle.suds.before !== undefined && (
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-around',
-                                    marginBottom: 6,
-                                    padding: 6,
-                                    background: C.warmDark,
-                                    borderRadius: 4,
-                                  }}
-                                >
-                                  <div style={{ textAlign: 'center' }}>
-                                    <PixelText size={9} color={C.bossRed}>
-                                      {battle.suds.before}
-                                    </PixelText>
-                                    <div>
-                                      <PixelText size={6} color={C.grayLt}>
-                                        BEFORE
-                                      </PixelText>
-                                    </div>
-                                  </div>
-                                  <div style={{ textAlign: 'center' }}>
-                                    <PixelText size={9} color={C.amber}>
-                                      {battle.suds.during ?? battle.suds.peak}
-                                    </PixelText>
-                                    <div>
-                                      <PixelText size={6} color={C.grayLt}>
-                                        PEAK
-                                      </PixelText>
-                                    </div>
-                                  </div>
-                                  <div style={{ textAlign: 'center' }}>
-                                    <PixelText size={9} color={C.hpGreen}>
-                                      {battle.suds.after}
-                                    </PixelText>
-                                    <div>
-                                      <PixelText size={6} color={C.grayLt}>
-                                        AFTER
-                                      </PixelText>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {battle.date && (
-                                <div style={{ marginBottom: 4 }}>
+                                <div>
                                   <PixelText size={6} color={C.grayLt}>
-                                    Completed:{' '}
-                                    {new Date(battle.date).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
+                                    BEFORE
                                   </PixelText>
                                 </div>
-                              )}
-                              {battle.prepAnswers?.value && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <PixelText size={6} color={C.goldMd}>
-                                    Value:
-                                  </PixelText>
-                                  <PixelText size={6} color={C.cream}>
-                                    {' '}
-                                    {battle.prepAnswers.value}
-                                  </PixelText>
-                                </div>
-                              )}
-                              {battle.exposureArmory && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <PixelText size={6} color={C.goldMd}>
-                                    Tool:
-                                  </PixelText>
-                                  <PixelText size={6} color={C.cream}>
-                                    {' '}
-                                    {battle.exposureArmory}
+                              </div>
+                              <div style={{ textAlign: 'center' }}>
+                                <PixelText size={9} color={C.amber}>
+                                  {battle.suds.during ?? battle.suds.peak}
+                                </PixelText>
+                                <div>
+                                  <PixelText size={6} color={C.grayLt}>
+                                    PEAK
                                   </PixelText>
                                 </div>
-                              )}
-                              {battle.exposureWhen && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <PixelText size={6} color={C.goldMd}>
-                                    When:
-                                  </PixelText>
-                                  <PixelText size={6} color={C.cream}>
-                                    {' '}
-                                    {battle.exposureWhen}
-                                  </PixelText>
-                                </div>
-                              )}
-                              {battle.exposureWhere && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <PixelText size={6} color={C.goldMd}>
-                                    Where:
-                                  </PixelText>
-                                  <PixelText size={6} color={C.cream}>
-                                    {' '}
-                                    {battle.exposureWhere}
+                              </div>
+                              <div style={{ textAlign: 'center' }}>
+                                <PixelText size={9} color={C.hpGreen}>
+                                  {battle.suds.after}
+                                </PixelText>
+                                <div>
+                                  <PixelText size={6} color={C.grayLt}>
+                                    AFTER
                                   </PixelText>
                                 </div>
-                              )}
-                              {battle.exposureScheduledTime && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <PixelText size={6} color={C.goldMd}>
-                                    Scheduled:
-                                  </PixelText>
-                                  <PixelText size={6} color={C.cream}>
-                                    {' '}
-                                    {new Date(battle.exposureScheduledTime).toLocaleString(
-                                      'en-US',
-                                      {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                      },
-                                    )}
-                                  </PixelText>
-                                </div>
-                              )}
-                              {battle.battleMessages?.length > 0 && (
-                                <details style={{ marginTop: 6 }}>
-                                  <summary style={{ cursor: 'pointer', marginBottom: 4 }}>
-                                    <PixelText size={6} color={C.teal}>
-                                      Battle chat ({battle.battleMessages.length} messages)
-                                    </PixelText>
-                                  </summary>
-                                  <div
-                                    style={{
-                                      maxHeight: 150,
-                                      overflowY: 'auto',
-                                      padding: 6,
-                                      background: C.deepDark,
-                                      borderRadius: 4,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    {battle.battleMessages.map((m, mi) => (
-                                      <div key={mi} style={{ marginBottom: 3 }}>
-                                        <PixelText
-                                          size={6}
-                                          color={m.role === 'assistant' ? C.rose : C.cream}
-                                        >
-                                          {m.role === 'assistant' ? 'Dara: ' : 'You: '}
-                                          {m.text}
-                                        </PixelText>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </details>
-                              )}
-                              {battle.victoryMessages?.length > 0 && (
-                                <details style={{ marginTop: 6 }}>
-                                  <summary style={{ cursor: 'pointer', marginBottom: 4 }}>
-                                    <PixelText size={6} color={C.teal}>
-                                      Victory reflection ({battle.victoryMessages.length} messages)
-                                    </PixelText>
-                                  </summary>
-                                  <div
-                                    style={{
-                                      maxHeight: 150,
-                                      overflowY: 'auto',
-                                      padding: 6,
-                                      background: C.deepDark,
-                                      borderRadius: 4,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    {battle.victoryMessages.map((m, mi) => (
-                                      <div key={mi} style={{ marginBottom: 3 }}>
-                                        <PixelText
-                                          size={6}
-                                          color={m.role === 'assistant' ? C.rose : C.cream}
-                                        >
-                                          {m.role === 'assistant' ? 'Dara: ' : 'You: '}
-                                          {m.text}
-                                        </PixelText>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </details>
-                              )}
+                              </div>
                             </div>
                           )}
+                          {battle.date && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.grayLt}>
+                                Completed:{' '}
+                                {new Date(battle.date).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.prepAnswers?.value && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.goldMd}>
+                                Value:
+                              </PixelText>
+                              <PixelText size={6} color={C.cream}>
+                                {' '}
+                                {battle.prepAnswers.value}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.exposureArmory && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.goldMd}>
+                                Tool:
+                              </PixelText>
+                              <PixelText size={6} color={C.cream}>
+                                {' '}
+                                {battle.exposureArmory}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.exposureWhen && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.goldMd}>
+                                When:
+                              </PixelText>
+                              <PixelText size={6} color={C.cream}>
+                                {' '}
+                                {battle.exposureWhen}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.exposureWhere && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.goldMd}>
+                                Where:
+                              </PixelText>
+                              <PixelText size={6} color={C.cream}>
+                                {' '}
+                                {battle.exposureWhere}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.exposureScheduledTime && (
+                            <div style={{ marginBottom: 4 }}>
+                              <PixelText size={6} color={C.goldMd}>
+                                Scheduled:
+                              </PixelText>
+                              <PixelText size={6} color={C.cream}>
+                                {' '}
+                                {new Date(battle.exposureScheduledTime).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </PixelText>
+                            </div>
+                          )}
+                          {battle.battleMessages?.length > 0 && (
+                            <details style={{ marginTop: 6 }}>
+                              <summary style={{ cursor: 'pointer', marginBottom: 4 }}>
+                                <PixelText size={6} color={C.teal}>
+                                  Battle chat ({battle.battleMessages.length} messages)
+                                </PixelText>
+                              </summary>
+                              <div
+                                style={{
+                                  maxHeight: 150,
+                                  overflowY: 'auto',
+                                  padding: 6,
+                                  background: C.deepDark,
+                                  borderRadius: 4,
+                                  marginTop: 4,
+                                }}
+                              >
+                                {battle.battleMessages.map((m, mi) => (
+                                  <div key={mi} style={{ marginBottom: 3 }}>
+                                    <PixelText
+                                      size={6}
+                                      color={m.role === 'assistant' ? C.rose : C.cream}
+                                    >
+                                      {m.role === 'assistant' ? 'Dara: ' : 'You: '}
+                                      {m.text}
+                                    </PixelText>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
+                          {battle.victoryMessages?.length > 0 && (
+                            <details style={{ marginTop: 6 }}>
+                              <summary style={{ cursor: 'pointer', marginBottom: 4 }}>
+                                <PixelText size={6} color={C.teal}>
+                                  Victory reflection ({battle.victoryMessages.length} messages)
+                                </PixelText>
+                              </summary>
+                              <div
+                                style={{
+                                  maxHeight: 150,
+                                  overflowY: 'auto',
+                                  padding: 6,
+                                  background: C.deepDark,
+                                  borderRadius: 4,
+                                  marginTop: 4,
+                                }}
+                              >
+                                {battle.victoryMessages.map((m, mi) => (
+                                  <div key={mi} style={{ marginBottom: 3 }}>
+                                    <PixelText
+                                      size={6}
+                                      color={m.role === 'assistant' ? C.rose : C.cream}
+                                    >
+                                      {m.role === 'assistant' ? 'Dara: ' : 'You: '}
+                                      {m.text}
+                                    </PixelText>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
                         </div>
-                      );
-                    })}
-                </>
-              )}
+                      )}
+                    </div>
+                  );
+                })}
+            </>
+          )}
         </>
       )}
 
@@ -1102,19 +1097,19 @@ export default function HeroProfile({
           </PixelBtn>
 
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: `2px solid ${C.mutedBorder}` }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                marginBottom: 8,
-              }}
-            >
-              <span style={{ fontSize: 18 }}>🪙</span>
-              <PixelText size={9} color={C.goldMd}>
-                {hero.courageCoins || 0} COINS
-              </PixelText>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 18 }}>⚪</span>
+                <PixelText size={9} color={C.cream}>
+                  {hero.platinum || 0} PT
+                </PixelText>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 18 }}>💎</span>
+                <PixelText size={9} color="#60A5FA">
+                  {hero.diamonds || 0} DM
+                </PixelText>
+              </div>
             </div>
             <PixelBtn
               onClick={() => setScreen('shop')}

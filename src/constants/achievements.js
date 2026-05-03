@@ -103,22 +103,22 @@ export const ACHIEVEMENTS = [
     check: ({ nightBattles }) => nightBattles >= 1,
   },
 
-  // Courage Coins
+  // Platinum
   {
-    id: 'coins_10',
+    id: 'platinum_10',
     name: 'Saver',
-    icon: '🪙',
-    desc: 'Accumulate 10 Courage Coins',
+    icon: '⚪',
+    desc: 'Accumulate 10 Platinum',
     category: 'collection',
-    check: ({ coins }) => coins >= 10,
+    check: ({ platinum }) => platinum >= 10,
   },
   {
-    id: 'coins_50',
+    id: 'platinum_50',
     name: 'Treasury',
     icon: '💰',
-    desc: 'Accumulate 50 Courage Coins',
+    desc: 'Accumulate 50 Platinum',
     category: 'collection',
-    check: ({ coins }) => coins >= 50,
+    check: ({ platinum }) => platinum >= 50,
   },
 
   // SUDS reduction
@@ -259,5 +259,5 @@ export function checkAchievements(ctx, previouslyUnlocked = []) {
 
 /** Get achievement data by ID */
 export function getAchievement(id) {
-  return ACHIEVEMENTS.find(a => a.id === id);
+  return ACHIEVEMENTS.find((a) => a.id === id);
 }

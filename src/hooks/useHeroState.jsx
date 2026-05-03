@@ -10,6 +10,14 @@ export function useHeroState() {
     stats: { courage: 5, resilience: 5, openness: 5 },
     traits: [],
     armory: JSON.parse(JSON.stringify(DEFAULT_ARMORY)),
+    platinum: 0,
+    diamonds: 0,
+    purchasedItems: [],
+    streakCount: 0,
+    lastActiveDate: null,
+    streakFreezes: 0,
+    totalXP: 0,
+    playerLevel: 1,
   });
   const [quest, setQuest] = useState({ bosses: [], goal: '' });
   const [battleHistory, setBattleHistory] = useState([]);
@@ -20,6 +28,16 @@ export function useHeroState() {
 
   const restoreProgress = useCallback((progress) => {
     const loadedHero = progress.hero || {};
+
+    // Migration: courageCoins → platinum
+    if (loadedHero.courageCoins !== undefined && loadedHero.platinum === undefined) {
+      loadedHero.platinum = loadedHero.courageCoins;
+      delete loadedHero.courageCoins;
+    }
+    if (loadedHero.diamonds === undefined) {
+      loadedHero.diamonds = 0;
+    }
+
     const migratedArmory = loadedHero.armory
       ? loadedHero.armory.map((item, i) => {
           const def = DEFAULT_ARMORY[i];
@@ -37,6 +55,29 @@ export function useHeroState() {
     if (progress.onboarding_state) setOnboardingState(progress.onboarding_state);
   }, []);
 
+  /** Check if user should see a welcome-back letter (2+ days away) */
+  const checkWelcomeBack = useCallback((hero, battleHistory) => {
+    const lastActive = hero.lastActiveDate || hero.lastLoginDate;
+    if (!lastActive) return null;
+    const daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
+    if (daysSince < 2) return null;
+
+    const lastBattle = battleHistory[battleHistory.length - 1];
+    const totalDefeated = (battleHistory || []).filter(b => b.outcome === 'victory' || b.outcome === 'partial').filter((b, i, arr) => arr.findIndex(x => x.bossId === b.bossId) === i).length;
+    const bestSudsDrop = Math.max(
+      ...(battleHistory || []).map(b => (b.suds?.before || 0) - (b.suds?.after || 0)).concat([0])
+    );
+    const streakCount = hero.streakCount || 0;
+
+    return {
+      daysSinceLastActive: daysSince,
+      lastBossName: lastBattle?.bossName || '',
+      totalDefeated,
+      bestSudsDrop,
+      streakCount,
+    };
+  }, []);
+
   const newUser = useCallback(() => {
     const id = 'DARER_' + Math.floor(100000 + Math.random() * 900000);
     setHero((h) => ({ ...h, darerId: id, name: id }));
@@ -50,22 +91,33 @@ export function useHeroState() {
     }));
   }, []);
 
-  const getOBState = useCallback((screenKey, defaults = {}) => ({
-    ...defaults,
-    ...onboardingState[screenKey],
-  }), [onboardingState]);
+  const getOBState = useCallback(
+    (screenKey, defaults = {}) => ({
+      ...defaults,
+      ...onboardingState[screenKey],
+    }),
+    [onboardingState],
+  );
 
   return {
-    hero, setHero,
-    quest, setQuest,
-    battleHistory, setBattleHistory,
-    activeBoss, setActiveBoss,
-    focusedBoss, setFocusedBoss,
-    shadowText, setShadowText,
-    onboardingState, setOnboardingState,
+    hero,
+    setHero,
+    quest,
+    setQuest,
+    battleHistory,
+    setBattleHistory,
+    activeBoss,
+    setActiveBoss,
+    focusedBoss,
+    setFocusedBoss,
+    shadowText,
+    setShadowText,
+    onboardingState,
+    setOnboardingState,
     restoreProgress,
     newUser,
     setOBState,
     getOBState,
+    checkWelcomeBack,
   };
 }

@@ -16,7 +16,7 @@ const RARITY_COLORS = {
   legendary: C.fearRed,
 };
 
-function CoinAnimation({ amount, onDone }) {
+function PlatinumAnimation({ amount, onDone }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     if (amount === 0) {
@@ -37,12 +37,44 @@ function CoinAnimation({ amount, onDone }) {
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>🪙</div>
-      <PixelText size={14} color={C.goldMd} style={{ display: 'block' }}>
-        +{display} COINS
+      <div style={{ fontSize: 48, marginBottom: 12 }}>⚪</div>
+      <PixelText size={14} color={C.cream} style={{ display: 'block' }}>
+        +{display} PLATINUM
       </PixelText>
       <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginTop: 4 }}>
-        COURAGE COINS EARNED
+        PLATINUM EARNED
+      </PixelText>
+    </div>
+  );
+}
+
+function DiamondAnimation({ amount, onDone }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (amount === 0) {
+      onDone();
+      return;
+    }
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplay(i);
+      if (i >= amount) {
+        clearInterval(interval);
+        setTimeout(onDone, 400);
+      }
+    }, 80);
+    return () => clearInterval(interval);
+  }, [amount, onDone]);
+
+  return (
+    <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
+      <div style={{ fontSize: 48, marginBottom: 12, filter: 'drop-shadow(0 0 8px #60A5FA)' }}>💎</div>
+      <PixelText size={14} color="#60A5FA" style={{ display: 'block' }}>
+        +{display} DIAMONDS
+      </PixelText>
+      <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginTop: 4 }}>
+        VERIFIED EXPOSURE REWARD
       </PixelText>
     </div>
   );
@@ -326,7 +358,11 @@ function EvidenceCardView({ card, onDone }) {
             key={i}
             size={6}
             color={line.startsWith('Evidence') ? card.color : C.grayLt}
-            style={{ display: 'block', lineHeight: 1.7, fontStyle: line.startsWith('Evidence') ? 'italic' : 'normal' }}
+            style={{
+              display: 'block',
+              lineHeight: 1.7,
+              fontStyle: line.startsWith('Evidence') ? 'italic' : 'normal',
+            }}
           >
             {line}
           </PixelText>
@@ -349,7 +385,7 @@ function EvidenceCardView({ card, onDone }) {
 
 function WeeklyRewardsAnimation({ rewards, onDone }) {
   const parts = [];
-  if (rewards.coins > 0) parts.push(`+${rewards.coins} 🪙`);
+  if (rewards.platinum > 0) parts.push(`+${rewards.platinum} ⚪`);
   if (rewards.xp > 0) parts.push(`+${rewards.xp} XP`);
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
@@ -387,7 +423,8 @@ function WeeklyRewardsAnimation({ rewards, onDone }) {
 
 export default function CelebrationOverlay({
   xpEarned = 0,
-  coinsEarned = 0,
+  platinumEarned = 0,
+  diamondsEarned = 0,
   lootDrop = null,
   achievements = [],
   playerLevel = 1,
@@ -404,14 +441,15 @@ export default function CelebrationOverlay({
   // Build the sequence of celebration phases
   const sequence = [];
   if (xpEarned > 0) sequence.push({ type: 'xp', value: xpEarned });
-  if (coinsEarned > 0) sequence.push({ type: 'coins', value: coinsEarned });
+  if (platinumEarned > 0) sequence.push({ type: 'platinum', value: platinumEarned });
+  if (diamondsEarned > 0) sequence.push({ type: 'diamonds', value: diamondsEarned });
   if (lootDrop) sequence.push({ type: 'loot', value: lootDrop });
   if (achievements.length > 0) sequence.push({ type: 'achievements', value: achievements });
   sequence.push({ type: 'level', value: { level: playerLevel, prevLevel } });
   if (streakCount > 0) sequence.push({ type: 'streak', value: streakCount });
   if (
     weeklyChallengeRewards &&
-    (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)
+    (weeklyChallengeRewards.platinum > 0 || weeklyChallengeRewards.xp > 0)
   ) {
     sequence.push({ type: 'weeklyRewards', value: weeklyChallengeRewards });
   }
@@ -433,7 +471,7 @@ export default function CelebrationOverlay({
   useEffect(() => {
     phaseRef.current = 0;
     setPhase(0);
-  }, [xpEarned, coinsEarned, lootDrop, achievements, evidenceCards]);
+  }, [xpEarned, platinumEarned, diamondsEarned, lootDrop, achievements, evidenceCards]);
 
   if (sequence.length === 0) {
     onDismiss();
@@ -476,7 +514,8 @@ export default function CelebrationOverlay({
         }}
       >
         {current.type === 'xp' && <XPAnimation xp={current.value} onDone={advance} />}
-        {current.type === 'coins' && <CoinAnimation amount={current.value} onDone={advance} />}
+        {current.type === 'platinum' && <PlatinumAnimation amount={current.value} onDone={advance} />}
+        {current.type === 'diamonds' && <DiamondAnimation amount={current.value} onDone={advance} />}
         {current.type === 'loot' && <LootAnimation loot={current.value} onDone={advance} />}
         {current.type === 'achievements' && (
           <AchievementPopup achievements={current.value} onDone={advance} />

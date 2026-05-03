@@ -503,7 +503,7 @@ export default function CouragePath({ hero, quest, battleHistory, onBack, setScr
                     </PixelText>
                   ) : (
                     <PixelText size={6} color={C.goldMd}>
-                      +{ch.reward.coins}🪙
+                      +{ch.reward.platinum}⚪
                     </PixelText>
                   )}
                 </div>

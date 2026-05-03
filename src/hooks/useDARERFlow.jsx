@@ -28,6 +28,7 @@ export function useDARERFlow({ obState = {} } = {}) {
   const [riseSubStep, setRiseSubStep] = useState(obState.riseSubStep ?? 0);
   const [exposureWhen, setExposureWhen] = useState(obState.exposureWhen || '');
   const [exposureWhere, setExposureWhere] = useState(obState.exposureWhere || '');
+  const [exposureWhereCoords, setExposureWhereCoords] = useState(null);
   const [exposureArmory, setExposureArmory] = useState(obState.exposureArmory || '');
   const [exposureScheduledTime, setExposureScheduledTime] = useState(
     obState.exposureScheduledTime || '',
@@ -61,6 +62,7 @@ export function useDARERFlow({ obState = {} } = {}) {
     setRiseSubStep(0);
     setExposureWhen('');
     setExposureWhere('');
+    setExposureWhereCoords(null);
     setExposureArmory('');
     setExposureScheduledTime('');
     setSelectedArmoryTool(null);
@@ -100,6 +102,8 @@ export function useDARERFlow({ obState = {} } = {}) {
     setExposureWhen,
     exposureWhere,
     setExposureWhere,
+    exposureWhereCoords,
+    setExposureWhereCoords,
     exposureArmory,
     setExposureArmory,
     exposureScheduledTime,

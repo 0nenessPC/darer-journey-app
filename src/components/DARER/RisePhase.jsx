@@ -13,16 +13,26 @@ import SUDSSlider from './SUDSSlider';
  * 3. SUDS before
  */
 export default function RisePhase({
-  riseSubStep, setRiseSubStep,
-  exposureWhen, setExposureWhen,
-  exposureScheduledTime, setExposureScheduledTime,
-  exposureWhere, setExposureWhere,
-  exposureArmory, setExposureArmory,
-  selectedArmoryTool, setSelectedArmoryTool,
+  riseSubStep,
+  setRiseSubStep,
+  exposureWhen,
+  setExposureWhen,
+  exposureScheduledTime,
+  setExposureScheduledTime,
+  exposureWhere,
+  setExposureWhere,
+  exposureWhereCoords,
+  setExposureWhereCoords,
+  exposureArmory,
+  setExposureArmory,
+  selectedArmoryTool,
+  setSelectedArmoryTool,
   hero,
-  sudsValue, setSudsValue,
+  sudsValue,
+  setSudsValue,
   onNext,
-  showBackButton, onBack,
+  showBackButton,
+  onBack,
   calendarParams,
   onPracticeComplete,
 }) {
@@ -34,55 +44,79 @@ export default function RisePhase({
     const desc = encodeURIComponent(calendarParams.desc);
     const location = encodeURIComponent(exposureWhere || '');
     const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const endStr = new Date(dt.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const endStr =
+      new Date(dt.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&location=${location}&dates=${startStr}/${endStr}`;
   };
 
   return (
-    <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+    <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
       {/* Sub-step 0: WHEN + TIME + WHERE */}
       {riseSubStep === 0 && (
         <div>
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              Before you step into the arena —{"\n"}tell me when and where you'll{"\n"}face this battle.
+            <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+              Before you step into the arena —{'\n'}tell me when and where you'll{'\n'}face this
+              battle.
             </PixelText>
           </DialogBox>
 
           {/* WHEN */}
           <div style={{ marginTop: 14 }}>
-            <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>📅 WHEN</PixelText>
+            <PixelText size={7} color={C.goldMd} style={{ display: 'block', marginBottom: 8 }}>
+              📅 WHEN
+            </PixelText>
             {[
               "Today — as soon as I'm ready",
-              "Later today — within a few hours",
+              'Later today — within a few hours',
               "Tomorrow — I'll plan it in",
-              "Within the next 3 days",
+              'Within the next 3 days',
               "This week — I'll pick a day",
-            ].map(opt => (
-              <button key={opt} onClick={() => setExposureWhen(opt)} style={{
-                display: "block", width: "100%", marginBottom: 6, padding: "10px 14px",
-                borderRadius: 4, border: `2px solid ${exposureWhen === opt ? C.teal : C.mutedBorder}`,
-                background: exposureWhen === opt ? C.teal + "20" : C.cardBg,
-                cursor: "pointer", textAlign: "left",
-              }}>
-                <PixelText size={7} color={exposureWhen === opt ? C.teal : C.grayLt}>{opt}</PixelText>
+            ].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setExposureWhen(opt)}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginBottom: 6,
+                  padding: '10px 14px',
+                  borderRadius: 4,
+                  border: `2px solid ${exposureWhen === opt ? C.teal : C.mutedBorder}`,
+                  background: exposureWhen === opt ? C.teal + '20' : C.cardBg,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <PixelText size={7} color={exposureWhen === opt ? C.teal : C.grayLt}>
+                  {opt}
+                </PixelText>
               </button>
             ))}
           </div>
 
           {/* TIME */}
           {exposureWhen && (
-            <div style={{ marginTop: 16, animation: "fadeIn 0.3s ease-out" }}>
-              <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>⏰ WHAT TIME</PixelText>
+            <div style={{ marginTop: 16, animation: 'fadeIn 0.3s ease-out' }}>
+              <PixelText size={7} color={C.goldMd} style={{ display: 'block', marginBottom: 8 }}>
+                ⏰ WHAT TIME
+              </PixelText>
               <input
                 type="time"
                 value={exposureScheduledTime}
-                onChange={e => setExposureScheduledTime(e.target.value)}
+                onChange={(e) => setExposureScheduledTime(e.target.value)}
                 style={{
-                  width: "100%", padding: "10px 14px",
-                  borderRadius: 4, border: `2px solid ${C.mutedBorder}`, background: C.cardBg,
-                  color: C.cream, fontFamily: "inherit", fontSize: 16, outline: "none",
-                  boxSizing: "border-box", colorScheme: "dark",
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: 4,
+                  border: `2px solid ${C.mutedBorder}`,
+                  background: C.cardBg,
+                  color: C.cream,
+                  fontFamily: 'inherit',
+                  fontSize: 16,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  colorScheme: 'dark',
                 }}
               />
             </div>
@@ -90,42 +124,89 @@ export default function RisePhase({
 
           {/* WHERE */}
           <div style={{ marginTop: 16 }}>
-            <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 8 }}>📍 WHERE</PixelText>
+            <PixelText size={7} color={C.goldMd} style={{ display: 'block', marginBottom: 8 }}>
+              📍 WHERE
+            </PixelText>
             <button
-              onClick={() => window.open("https://maps.google.com", "_blank")}
+              onClick={() => window.open('https://maps.google.com', '_blank')}
               style={{
-                width: "100%", padding: "8px 12px", marginBottom: 8,
-                background: "transparent", border: `1px dashed ${C.mutedBorder}`,
-                borderRadius: 4, cursor: "pointer",
+                width: '100%',
+                padding: '8px 12px',
+                marginBottom: 8,
+                background: 'transparent',
+                border: `1px dashed ${C.mutedBorder}`,
+                borderRadius: 4,
+                cursor: 'pointer',
               }}
             >
-              <PixelText size={6} color={C.plumMd}>🗺️ Open Google Maps to find your location →</PixelText>
+              <PixelText size={6} color={C.plumMd}>
+                🗺️ Open Google Maps to find your location →
+              </PixelText>
             </button>
             <input
               type="text"
               placeholder="e.g. the coffee shop on Main St..."
               value={exposureWhere}
-              onChange={e => setExposureWhere(e.target.value)}
+              onChange={(e) => setExposureWhere(e.target.value)}
               style={{
-                display: "block", width: "100%", padding: "10px 14px",
-                borderRadius: 4, border: `2px solid ${C.mutedBorder}`, background: C.cardBg,
-                color: C.cream, fontFamily: "inherit", fontSize: 13, outline: "none",
-                boxSizing: "border-box",
+                display: 'block',
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 4,
+                border: `2px solid ${C.mutedBorder}`,
+                background: C.cardBg,
+                color: C.cream,
+                fontFamily: 'inherit',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box',
               }}
             />
+            <button
+              onClick={async () => {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    setExposureWhereCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    setExposureWhere('My current location (GPS pinned)');
+                  },
+                  () => {},
+                  { enableHighAccuracy: false, timeout: 10000 },
+                );
+              }}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                marginTop: 6,
+                background: exposureWhereCoords ? C.teal + '20' : 'transparent',
+                border: `1px dashed ${exposureWhereCoords ? C.teal : C.mutedBorder}`,
+                borderRadius: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <PixelText size={6} color={exposureWhereCoords ? C.teal : C.plumMd}>
+                {exposureWhereCoords ? '✅ Location pinned for diamond verification' : '📍 Pin my current location (earn 💎)'}
+              </PixelText>
+            </button>
           </div>
 
           {/* CALENDAR REMINDER — after WHEN + TIME + WHERE */}
-          {(exposureWhen && exposureScheduledTime) && (
-            <div style={{ marginTop: 16, animation: "fadeIn 0.3s ease-out" }}>
+          {exposureWhen && exposureScheduledTime && (
+            <div style={{ marginTop: 16, animation: 'fadeIn 0.3s ease-out' }}>
               <button
                 onClick={() => window.open(buildCalendarUrl(), '_blank')}
                 style={{
-                  width: "100%", padding: "10px 14px",
-                  background: C.teal, border: "none", borderRadius: 4, cursor: "pointer",
+                  width: '100%',
+                  padding: '10px 14px',
+                  background: C.teal,
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer',
                 }}
               >
-                <PixelText size={7} color={C.charcoal}>📱 SET CALENDAR REMINDER →</PixelText>
+                <PixelText size={7} color={C.charcoal}>
+                  📱 SET CALENDAR REMINDER →
+                </PixelText>
               </button>
             </div>
           )}
@@ -133,8 +214,9 @@ export default function RisePhase({
           <PixelBtn
             onClick={() => setRiseSubStep(1)}
             disabled={!exposureWhen || !exposureWhere.trim()}
-            color={C.gold} textColor={C.charcoal}
-            style={{ width: "100%", marginTop: 16 }}
+            color={C.gold}
+            textColor={C.charcoal}
+            style={{ width: '100%', marginTop: 16 }}
           >
             LOCK IT IN →
           </PixelBtn>
@@ -145,45 +227,100 @@ export default function RisePhase({
       {riseSubStep === 1 && (
         <div>
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              You've locked in your time and{"\n"}battlefield.{"\n"}{"\n"}
-              Before you go — which tool{"\n"}from the Armory will you carry?{"\n"}Choose the one that steadies you.
+            <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+              You've locked in your time and{'\n'}battlefield.{'\n'}
+              {'\n'}
+              Before you go — which tool{'\n'}from the Armory will you carry?{'\n'}Choose the one
+              that steadies you.
             </PixelText>
           </DialogBox>
           <div style={{ marginTop: 14 }}>
-            {(hero.armory || []).filter(t => t.unlocked).map(tool => (
-              <button key={tool.id} onClick={() => { setExposureArmory(tool.name); setSelectedArmoryTool(tool); setRiseSubStep(2); }} style={{
-                display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                borderRadius: 4, border: `2px solid ${exposureArmory === tool.name ? C.teal : C.mutedBorder}`,
-                background: exposureArmory === tool.name ? C.teal + "20" : C.cardBg,
-                cursor: "pointer", textAlign: "left",
-              }}>
-                <span style={{ fontSize: 18 }}>{tool.icon}</span>
-                <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>{tool.name}</PixelText>
-              </button>
-            ))}
-            <button onClick={() => { setExposureArmory("I'll trust the strategy alone"); setSelectedArmoryTool(null); setRiseSubStep(3); }} style={{
-              display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-              borderRadius: 4, border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : C.mutedBorder}`,
-              background: exposureArmory === "I'll trust the strategy alone" ? C.teal + "20" : C.cardBg,
-              cursor: "pointer", textAlign: "left",
-            }}>
+            {(hero.armory || [])
+              .filter((t) => t.unlocked)
+              .map((tool) => (
+                <button
+                  key={tool.id}
+                  onClick={() => {
+                    setExposureArmory(tool.name);
+                    setSelectedArmoryTool(tool);
+                    setRiseSubStep(2);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    width: '100%',
+                    marginBottom: 6,
+                    padding: '10px 14px',
+                    borderRadius: 4,
+                    border: `2px solid ${exposureArmory === tool.name ? C.teal : C.mutedBorder}`,
+                    background: exposureArmory === tool.name ? C.teal + '20' : C.cardBg,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>{tool.icon}</span>
+                  <PixelText size={7} color={exposureArmory === tool.name ? C.teal : C.grayLt}>
+                    {tool.name}
+                  </PixelText>
+                </button>
+              ))}
+            <button
+              onClick={() => {
+                setExposureArmory("I'll trust the strategy alone");
+                setSelectedArmoryTool(null);
+                setRiseSubStep(3);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                width: '100%',
+                marginBottom: 6,
+                padding: '10px 14px',
+                borderRadius: 4,
+                border: `2px solid ${exposureArmory === "I'll trust the strategy alone" ? C.teal : C.mutedBorder}`,
+                background:
+                  exposureArmory === "I'll trust the strategy alone" ? C.teal + '20' : C.cardBg,
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
               <span style={{ fontSize: 18 }}>🗡️</span>
-              <PixelText size={7} color={exposureArmory === "I'll trust the strategy alone" ? C.teal : C.grayLt}>I'll trust the strategy alone</PixelText>
+              <PixelText
+                size={7}
+                color={exposureArmory === "I'll trust the strategy alone" ? C.teal : C.grayLt}
+              >
+                I'll trust the strategy alone
+              </PixelText>
             </button>
             {/* Locked tools preview */}
-            {(hero.armory || []).filter(t => !t.unlocked).length > 0 && (
+            {(hero.armory || []).filter((t) => !t.unlocked).length > 0 && (
               <div style={{ marginTop: 12, opacity: 0.5 }}>
-                {(hero.armory || []).filter(t => !t.unlocked).map(tool => (
-                  <div key={tool.id} style={{
-                    display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 6, padding: "10px 14px",
-                    borderRadius: 4, border: `2px solid ${C.mutedBorder}40`, background: C.cardBg,
-                    pointerEvents: "none",
-                  }}>
-                    <span style={{ fontSize: 18, filter: "grayscale(1)" }}>{tool.icon}</span>
-                    <PixelText size={7} color={C.subtleText}>{tool.name} 🔒</PixelText>
-                  </div>
-                ))}
+                {(hero.armory || [])
+                  .filter((t) => !t.unlocked)
+                  .map((tool) => (
+                    <div
+                      key={tool.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        width: '100%',
+                        marginBottom: 6,
+                        padding: '10px 14px',
+                        borderRadius: 4,
+                        border: `2px solid ${C.mutedBorder}40`,
+                        background: C.cardBg,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: 18, filter: 'grayscale(1)' }}>{tool.icon}</span>
+                      <PixelText size={7} color={C.subtleText}>
+                        {tool.name} 🔒
+                      </PixelText>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -194,16 +331,28 @@ export default function RisePhase({
       {riseSubStep === 2 && selectedArmoryTool && (
         <div>
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              You've chosen your anchor.{"\n"}{"\n"}
-              Want to practice this skill{"\n"}right now before the real{"\n"}battle? Just a few rounds{"\n"}to warm up.
+            <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+              You've chosen your anchor.{'\n'}
+              {'\n'}
+              Want to practice this skill{'\n'}right now before the real{'\n'}battle? Just a few
+              rounds{'\n'}to warm up.
             </PixelText>
           </DialogBox>
 
-          <PixelBtn onClick={() => setRiseSubStep(2.5)} color={C.teal} textColor={C.cream} style={{ width: "100%", marginTop: 16 }}>
+          <PixelBtn
+            onClick={() => setRiseSubStep(2.5)}
+            color={C.teal}
+            textColor={C.cream}
+            style={{ width: '100%', marginTop: 16 }}
+          >
             YES — PRACTICE NOW →
           </PixelBtn>
-          <PixelBtn onClick={() => setRiseSubStep(3)} color={C.plum} textColor={C.cream} style={{ width: "100%", marginTop: 8 }}>
+          <PixelBtn
+            onClick={() => setRiseSubStep(3)}
+            color={C.plum}
+            textColor={C.cream}
+            style={{ width: '100%', marginTop: 8 }}
+          >
             SKIP — I'M READY
           </PixelBtn>
         </div>
@@ -230,13 +379,17 @@ export default function RisePhase({
       {riseSubStep === 3 && (
         <div>
           <DialogBox speaker="DARA">
-            <PixelText size={8} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
-              You're armed and ready.{"\n"}{"\n"}
-              One last thing before you{"\n"}step through — how intense is{"\n"}the Storm right now? Rate it{"\n"}honestly. There's no wrong answer.
+            <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+              You're armed and ready.{'\n'}
+              {'\n'}
+              One last thing before you{'\n'}step through — how intense is{'\n'}the Storm right now?
+              Rate it{'\n'}honestly. There's no wrong answer.
             </PixelText>
           </DialogBox>
-          <div style={{ margin: "12px 0" }}>
-            <PixelText size={7} color={C.subtleText}>STORM INTENSITY (before):</PixelText>
+          <div style={{ margin: '12px 0' }}>
+            <PixelText size={7} color={C.subtleText}>
+              STORM INTENSITY (before):
+            </PixelText>
             <SUDSSlider
               value={sudsValue}
               onChange={setSudsValue}
@@ -245,12 +398,30 @@ export default function RisePhase({
               ariaLabel="Distress level before exposure"
             />
           </div>
-          <PixelBtn onClick={onNext} color={C.gold} textColor={C.charcoal} style={{ width: "100%" }}>
+          <PixelBtn
+            onClick={onNext}
+            color={C.gold}
+            textColor={C.charcoal}
+            style={{ width: '100%' }}
+          >
             LET'S GO →
           </PixelBtn>
           {showBackButton && (
-            <button onClick={onBack} style={{ marginTop: 10, background: "none", border: "none", cursor: "pointer", display: "block", width: "100%", textAlign: "center" }}>
-              <PixelText size={6} color={C.subtleText}>← Back</PixelText>
+            <button
+              onClick={onBack}
+              style={{
+                marginTop: 10,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'block',
+                width: '100%',
+                textAlign: 'center',
+              }}
+            >
+              <PixelText size={6} color={C.subtleText}>
+                ← Back
+              </PixelText>
             </button>
           )}
         </div>

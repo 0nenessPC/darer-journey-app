@@ -8,6 +8,7 @@ import { battleXP, calcTotalXP, getPlayerLevel, xpToNextLevel } from '../utils/x
 import { generatePostBattleLetter } from '../constants/daraLetters';
 import { getMasteryLevel } from '../utils/mastery';
 import { generateEvidenceCards } from '../utils/evidenceCards';
+import { verifyGPS, diamondReward } from '../utils/verification';
 
 /**
  * useCompletionHandlers — manages completion callbacks for character creation,
@@ -73,6 +74,7 @@ export function useCompletionHandlers({
         suds,
         exposureWhen,
         exposureWhere,
+        exposureWhereCoords,
         exposureArmory,
         exposureScheduledTime,
         battleMessages,
@@ -131,13 +133,30 @@ export function useCompletionHandlers({
       const newHistory = [...prevHistory, battleRecord];
       setBattleHistory(newHistory);
 
-      // Earn Courage Coins: 1-3 based on difficulty + outcome
+      // Earn Platinum: 5-15 based on boss level
       const bossLevel = activeBoss?.level || activeBoss?.difficulty || 1;
-      let coinsEarned = 0;
-      if (outcome === 'victory') {
-        coinsEarned = bossLevel >= 7 ? 3 : bossLevel >= 4 ? 2 : 1;
-      } else if (outcome === 'partial') {
-        coinsEarned = 1; // partial still earns 1 coin
+      let platinumEarned = 0;
+      if (outcome === 'victory' || outcome === 'partial') {
+        platinumEarned = bossLevel <= 3 ? 5 : bossLevel <= 6 ? 10 : 15;
+      }
+      let diamondsEarned = 0;
+      let verified = false;
+      let verificationMethod = null;
+
+      // Verify exposure for diamond reward (GPS or photo)
+      if (exposureWhereCoords) {
+        const gpsResult = await verifyGPS(exposureWhereCoords);
+        if (gpsResult.verified) {
+          verified = true;
+          verificationMethod = gpsResult.method;
+          diamondsEarned = diamondReward(bossLevel);
+        }
+      }
+      // Photo upload also counts as verification
+      if (!verified && lootImage) {
+        verified = true;
+        verificationMethod = 'photo';
+        diamondsEarned = diamondReward(bossLevel);
       }
 
       // Record activity for streak tracking
@@ -218,6 +237,10 @@ export function useCompletionHandlers({
         xpEarned *= 2;
       }
       battleRecord.xpEarned = xpEarned;
+      battleRecord.platinumEarned = platinumEarned;
+      battleRecord.diamondsEarned = diamondsEarned;
+      battleRecord.verified = verified;
+      battleRecord.verificationMethod = verificationMethod;
 
       // Recalculate total XP and level from full history
       const totalXP = calcTotalXP(newHistory, quest.bosses);
@@ -229,7 +252,7 @@ export function useCompletionHandlers({
           defeatedCount,
           victoryCount,
           streakCount: streakUpdate.streakCount,
-          coins: (hero.courageCoins || 0) + coinsEarned,
+          platinum: (hero.platinum || 0) + platinumEarned,
           maxSudsDrop,
           lootCount,
           repeatCount,
@@ -315,7 +338,8 @@ export function useCompletionHandlers({
               resilience: Math.min(10, h.stats.resilience + (Math.random() > 0.5 ? 1 : 0)),
               openness: Math.min(10, h.stats.openness + (Math.random() > 0.5 ? 1 : 0)),
             },
-            courageCoins: (h.courageCoins || 0) + coinsEarned,
+            platinum: (h.platinum || 0) + platinumEarned,
+            diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
             streakFreezes: streakUpdate.streakFreezes,
             lastActiveDate: streakUpdate.lastActiveDate,
@@ -333,8 +357,8 @@ export function useCompletionHandlers({
             if (lootDrop.type === 'xp') {
               // Bonus XP from loot — applied on top of battle XP
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'coins') {
-              updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'platinum') {
+              updates.platinum = (updates.platinum || 0) + lootDrop.value;
             } else if (lootDrop.type === 'streak_freeze') {
               updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
@@ -391,7 +415,8 @@ export function useCompletionHandlers({
         setQuest(newQuest);
         setHero((h) => {
           const updates = {
-            courageCoins: (h.courageCoins || 0) + coinsEarned,
+            platinum: (h.platinum || 0) + platinumEarned,
+            diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
             streakFreezes: streakUpdate.streakFreezes,
             lastActiveDate: streakUpdate.lastActiveDate,
@@ -404,8 +429,8 @@ export function useCompletionHandlers({
           if (lootDrop) {
             if (lootDrop.type === 'xp') {
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'coins') {
-              updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'platinum') {
+              updates.platinum = (updates.platinum || 0) + lootDrop.value;
             } else if (lootDrop.type === 'streak_freeze') {
               updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
@@ -548,14 +573,15 @@ export function useCompletionHandlers({
         .filter((ch) => ch.completed)
         .reduce(
           (acc, ch) => ({
-            coins: acc.coins + (ch.reward?.coins || 0),
+            platinum: acc.platinum + (ch.reward?.platinum || 0),
             xp: acc.xp + (ch.reward?.xp || 0),
           }),
-          { coins: 0, xp: 0 },
+          { platinum: 0, xp: 0 },
         );
 
       return {
-        coinsEarned: coinsEarned + weeklyRewards.coins,
+        platinumEarned: platinumEarned + weeklyRewards.platinum,
+        diamondsEarned,
         xpEarned: xpEarned + weeklyRewards.xp,
         playerLevel,
         prevLevel: hero.playerLevel || 1,
@@ -565,7 +591,7 @@ export function useCompletionHandlers({
         hasLetter: true,
         sudsDrop: (suds?.before || 0) - (suds?.after || 0),
         weeklyChallengeRewards:
-          weeklyRewards.coins > 0 || weeklyRewards.xp > 0 ? weeklyRewards : null,
+          weeklyRewards.platinum > 0 || weeklyRewards.xp > 0 ? weeklyRewards : null,
         evidenceCards: evidenceForBattle,
       };
     },

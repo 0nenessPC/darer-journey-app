@@ -4,12 +4,14 @@ import { PixelText, PixelBtn } from '../components/shared';
 import BottomNav from '../components/BottomNav';
 
 const SHOP_ITEMS = [
+  // Platinum items (cosmetics + functional)
   {
     id: 'streak_freeze',
     name: 'Streak Freeze',
     icon: '❄️',
     description: 'Protects your streak for one missed day',
     price: 10,
+    currencyType: 'platinum',
     category: 'functional',
     repeatable: true,
     effect: 'streak_freeze',
@@ -20,6 +22,7 @@ const SHOP_ITEMS = [
     icon: '🧪',
     description: 'Your next battle earns 2x XP',
     price: 15,
+    currencyType: 'platinum',
     category: 'functional',
     repeatable: true,
     effect: 'double_xp',
@@ -30,6 +33,7 @@ const SHOP_ITEMS = [
     icon: '🏷️',
     description: 'Display "Shadow Hunter" on your profile',
     price: 20,
+    currencyType: 'platinum',
     category: 'cosmetic',
     repeatable: false,
   },
@@ -39,6 +43,7 @@ const SHOP_ITEMS = [
     icon: '🏷️',
     description: 'Display "Courage Knight" on your profile',
     price: 30,
+    currencyType: 'platinum',
     category: 'cosmetic',
     repeatable: false,
   },
@@ -48,6 +53,7 @@ const SHOP_ITEMS = [
     icon: '🏷️',
     description: 'Display "Storm Breaker" on your profile',
     price: 50,
+    currencyType: 'platinum',
     category: 'cosmetic',
     repeatable: false,
   },
@@ -57,6 +63,7 @@ const SHOP_ITEMS = [
     icon: '🌲',
     description: 'A green, leafy path through the Whisper Woods',
     price: 25,
+    currencyType: 'platinum',
     category: 'theme',
     repeatable: false,
   },
@@ -66,6 +73,7 @@ const SHOP_ITEMS = [
     icon: '🌌',
     description: 'Navigate through starlit darkness',
     price: 35,
+    currencyType: 'platinum',
     category: 'theme',
     repeatable: false,
   },
@@ -75,6 +83,7 @@ const SHOP_ITEMS = [
     icon: '👑',
     description: 'A golden border for your hero avatar',
     price: 20,
+    currencyType: 'platinum',
     category: 'cosmetic',
     repeatable: false,
   },
@@ -84,8 +93,51 @@ const SHOP_ITEMS = [
     icon: '🔥',
     description: 'A burning flame border for your hero avatar',
     price: 30,
+    currencyType: 'platinum',
     category: 'cosmetic',
     repeatable: false,
+  },
+
+  // Diamond items (premium)
+  {
+    id: 'dara_voice_calm',
+    name: 'Dara Voice: Calm',
+    icon: '🎙️',
+    description: "Unlock Dara's calm narration voice",
+    price: 2,
+    currencyType: 'diamond',
+    category: 'premium',
+    repeatable: false,
+  },
+  {
+    id: 'dara_voice_energetic',
+    name: 'Dara Voice: Energetic',
+    icon: '🎙️',
+    description: "Unlock Dara's energetic voice",
+    price: 3,
+    currencyType: 'diamond',
+    category: 'premium',
+    repeatable: false,
+  },
+  {
+    id: 'reward_coffee',
+    name: 'Real Coffee',
+    icon: '☕',
+    description: 'Exchange for a real coffee treat',
+    price: 1,
+    currencyType: 'diamond',
+    category: 'premium',
+    repeatable: true,
+  },
+  {
+    id: 'reward_treat',
+    name: 'Treat Yourself',
+    icon: '🎁',
+    description: 'Small real-life reward',
+    price: 2,
+    currencyType: 'diamond',
+    category: 'premium',
+    repeatable: true,
   },
 ];
 
@@ -94,33 +146,42 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
   const [purchasing, setPurchasing] = useState(null);
   const [justPurchased, setJustPurchased] = useState(null);
 
-  const coins = hero.courageCoins || 0;
+  const platinum = hero.platinum || 0;
+  const diamonds = hero.diamonds || 0;
   const purchased = hero.purchasedItems || [];
-  const functionalItems = purchased.filter(p => p.repeatable && p.id !== undefined);
+  const functionalItems = purchased.filter((p) => p.repeatable && p.id !== undefined);
 
   const categories = [
     { key: 'all', label: 'ALL' },
     { key: 'functional', label: '⚡ ITEMS' },
     { key: 'cosmetic', label: '🏷️ COSMETICS' },
     { key: 'theme', label: '🗺 THEMES' },
+    { key: 'premium', label: '💎 PREMIUM' },
   ];
 
-  const filtered = category === 'all'
-    ? SHOP_ITEMS
-    : SHOP_ITEMS.filter(i => i.category === category);
+  const filtered =
+    category === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter((i) => i.category === category);
 
   const handlePurchase = (item) => {
-    if (coins < item.price) return;
-    if (!item.repeatable && purchased.some(p => p.id === item.id)) return;
+    const balance = item.currencyType === 'diamond' ? diamonds : platinum;
+    if (balance < item.price) return;
+    if (!item.repeatable && purchased.some((p) => p.id === item.id)) return;
 
     setPurchasing(item.id);
     // Simulate a brief processing delay for feel
     setTimeout(() => {
-      setHero(h => {
+      setHero((h) => {
         const updates = {
-          courageCoins: h.courageCoins - item.price,
-          purchasedItems: [...(h.purchasedItems || []), { id: item.id, date: new Date().toISOString(), repeatable: item.repeatable }],
+          purchasedItems: [
+            ...(h.purchasedItems || []),
+            { id: item.id, date: new Date().toISOString(), repeatable: item.repeatable, currencyType: item.currencyType },
+          ],
         };
+        if (item.currencyType === 'diamond') {
+          updates.diamonds = (h.diamonds || 0) - item.price;
+        } else {
+          updates.platinum = (h.platinum || 0) - item.price;
+        }
         // Apply consumable items immediately
         if (item.effect === 'double_xp') {
           updates.doubleXP = (h.doubleXP || 0) + 1;
@@ -137,33 +198,58 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
 
   const isOwned = (item) => {
     if (item.repeatable) return false;
-    return purchased.some(p => p.id === item.id);
+    return purchased.some((p) => p.id === item.id);
   };
 
   return (
     <div style={{ minHeight: '100vh', background: C.mapBg, padding: '16px 16px 100px' }}>
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '12px 0', borderBottom: `2px solid ${C.mutedBorder}`, marginBottom: 16,
-      }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <PixelText size={9} color={C.subtleText}>←</PixelText>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 0',
+          borderBottom: `2px solid ${C.mutedBorder}`,
+          marginBottom: 16,
+        }}
+      >
+        <button
+          onClick={onBack}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          <PixelText size={9} color={C.subtleText}>
+            ←
+          </PixelText>
         </button>
-        <PixelText size={10} color={C.goalGold}>🛒 DARA'S SHOP</PixelText>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 14 }}>🪙</span>
-          <PixelText size={10} color={C.goldMd}>{coins}</PixelText>
+        <PixelText size={10} color={C.goalGold}>
+          🛒 DARA'S SHOP
+        </PixelText>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚪</span>
+          <PixelText size={8} color={C.cream}>
+            {platinum}
+          </PixelText>
+          <span style={{ fontSize: 14 }}>💎</span>
+          <PixelText size={8} color="#60A5FA">
+            {diamonds}
+          </PixelText>
         </div>
       </div>
 
       {/* Purchase confirmation toast */}
       {justPurchased && (
-        <div style={{
-          padding: C.padLg, marginBottom: 12, textAlign: 'center',
-          background: C.hpGreen + '15', border: `2px solid ${C.hpGreen}40`,
-          borderRadius: 6, animation: 'fadeIn 0.3s ease-out',
-        }}>
+        <div
+          style={{
+            padding: C.padLg,
+            marginBottom: 12,
+            textAlign: 'center',
+            background: C.hpGreen + '15',
+            border: `2px solid ${C.hpGreen}40`,
+            borderRadius: 6,
+            animation: 'fadeIn 0.3s ease-out',
+          }}
+        >
           <PixelText size={8} color={C.hpGreen}>
             ✓ {justPurchased.name} acquired!
           </PixelText>
@@ -172,12 +258,24 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
 
       {/* Category tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 16 }} role="tablist">
-        {categories.map(cat => (
-          <button key={cat.key} onClick={() => setCategory(cat.key)} role="tab" aria-selected={category === cat.key} style={{
-            flex: 1, padding: '6px 0', border: `2px solid ${category === cat.key ? C.goldMd : C.mutedBorder}`,
-            borderRadius: 4, background: category === cat.key ? C.goldMd + '20' : 'transparent', cursor: 'pointer',
-          }}>
-            <PixelText size={6} color={category === cat.key ? C.goldMd : C.grayLt}>{cat.label}</PixelText>
+        {categories.map((cat) => (
+          <button
+            key={cat.key}
+            onClick={() => setCategory(cat.key)}
+            role="tab"
+            aria-selected={category === cat.key}
+            style={{
+              flex: 1,
+              padding: '6px 0',
+              border: `2px solid ${category === cat.key ? C.goldMd : C.mutedBorder}`,
+              borderRadius: 4,
+              background: category === cat.key ? C.goldMd + '20' : 'transparent',
+              cursor: 'pointer',
+            }}
+          >
+            <PixelText size={6} color={category === cat.key ? C.goldMd : C.grayLt}>
+              {cat.label}
+            </PixelText>
           </button>
         ))}
       </div>
@@ -185,52 +283,77 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
       {/* Shop items */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
-          <PixelText size={8} color={C.grayLt}>Nothing here yet.</PixelText>
+          <PixelText size={8} color={C.grayLt}>
+            Nothing here yet.
+          </PixelText>
         </div>
       ) : (
-        filtered.map(item => {
+        filtered.map((item) => {
           const owned = isOwned(item);
-          const canAfford = coins >= item.price;
+          const balance = item.currencyType === 'diamond' ? diamonds : platinum;
+          const canAfford = balance >= item.price;
           const buying = purchasing === item.id;
+          const currencyIcon = item.currencyType === 'diamond' ? '💎' : '⚪';
+          const priceColor = item.currencyType === 'diamond' ? '#60A5FA' : C.goldMd;
 
           return (
-            <div key={item.id} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: C.padLg, marginBottom: 8,
-              background: owned ? C.hpGreen + '08' : C.cardBg,
-              border: `2px solid ${owned ? C.hpGreen + '40' : canAfford ? C.mutedBorder : C.grayBorder + '40'}`,
-              borderRadius: 6,
-              opacity: owned ? 0.7 : 1,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 6,
-                background: C.cardBg,
-                border: `2px solid ${C.mutedBorder}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24,
-              }}>
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: C.padLg,
+                marginBottom: 8,
+                background: owned ? C.hpGreen + '08' : C.cardBg,
+                border: `2px solid ${owned ? C.hpGreen + '40' : canAfford ? C.mutedBorder : C.grayBorder + '40'}`,
+                borderRadius: 6,
+                opacity: owned ? 0.7 : 1,
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 6,
+                  background: C.cardBg,
+                  border: `2px solid ${C.mutedBorder}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 24,
+                }}
+              >
                 {item.icon}
               </div>
               <div style={{ flex: 1 }}>
-                <PixelText size={8} color={owned ? C.hpGreen : C.cream}>{item.name}</PixelText>
-                <PixelText size={6} color={C.grayLt} style={{ display: 'block', marginTop: 2 }}>{item.description}</PixelText>
+                <PixelText size={8} color={owned ? C.hpGreen : C.cream}>
+                  {item.name}
+                </PixelText>
+                <PixelText size={6} color={C.grayLt} style={{ display: 'block', marginTop: 2 }}>
+                  {item.description}
+                </PixelText>
               </div>
               <div style={{ textAlign: 'right' }}>
                 {owned ? (
-                  <PixelText size={7} color={C.hpGreen}>OWNED</PixelText>
+                  <PixelText size={7} color={C.hpGreen}>
+                    OWNED
+                  </PixelText>
                 ) : (
                   <button
                     onClick={() => handlePurchase(item)}
                     disabled={!canAfford || buying}
                     style={{
-                      padding: '6px 12px', borderRadius: 4,
-                      background: canAfford ? C.goldMd : C.charcoal,
-                      border: 'none', cursor: canAfford ? 'pointer' : 'default',
+                      padding: '6px 12px',
+                      borderRadius: 4,
+                      background: canAfford ? (item.currencyType === 'diamond' ? '#60A5FA' : C.goldMd) : C.charcoal,
+                      border: 'none',
+                      cursor: canAfford ? 'pointer' : 'default',
                       fontFamily: 'inherit',
                     }}
                   >
                     <PixelText size={7} color={canAfford ? C.charcoal : C.grayLt}>
-                      {buying ? '...' : `${item.price} 🪙`}
+                      {buying ? '...' : `${item.price} ${currencyIcon}`}
                     </PixelText>
                   </button>
                 )}
@@ -240,21 +363,27 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
         })
       )}
 
-      {/* How to earn coins */}
-      <div style={{
-        marginTop: 20, padding: C.padLg,
-        background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
-        borderRadius: 6,
-      }}>
+      {/* How to earn currencies */}
+      <div
+        style={{
+          marginTop: 20,
+          padding: C.padLg,
+          background: C.cardBg,
+          border: `2px solid ${C.mutedBorder}`,
+          borderRadius: 6,
+        }}
+      >
         <PixelText size={8} color={C.goldMd} style={{ display: 'block', marginBottom: 8 }}>
-          HOW TO EARN COINS
+          HOW TO EARN
         </PixelText>
         <PixelText size={7} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8 }}>
-          🗡️ Defeat a boss: 1-3 coins{'\n'}
-          (more for harder bosses){'\n'}
-          ⚔️ Partial victory: 1 coin{'\n'}
+          ⚪ Platinum — earned from any exposure{'\n'}
+          &nbsp;&nbsp;&nbsp;5-15 per battle (scales with difficulty){'\n'}
           {'\n'}
-          Coins are earned through{'\n'}real effort in your exposures.
+          💎 Diamonds — earned from verified exposures{'\n'}
+          &nbsp;&nbsp;&nbsp;1-3 per verified battle (pin location or upload photo){'\n'}
+          {'\n'}
+          Both are earned through real effort{'\n'}in your exposures.
         </PixelText>
       </div>
 

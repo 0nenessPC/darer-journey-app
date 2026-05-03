@@ -2,21 +2,93 @@
 
 export const LOOT_TABLE = [
   // Common (~50%)
-  { id: 'xp_small', name: '+50 XP', icon: '✨', rarity: 'common', weight: 25, type: 'xp', value: 50 },
-  { id: 'courage_coin', name: '+1 Courage Coin', icon: '🪙', rarity: 'common', weight: 25, type: 'coins', value: 1 },
+  {
+    id: 'xp_small',
+    name: '+50 XP',
+    icon: '✨',
+    rarity: 'common',
+    weight: 25,
+    type: 'xp',
+    value: 50,
+  },
+  {
+    id: 'platinum_small',
+    name: '+5 Platinum',
+    icon: '⚪',
+    rarity: 'common',
+    weight: 25,
+    type: 'platinum',
+    value: 5,
+  },
 
   // Uncommon (~35%)
-  { id: 'xp_medium', name: '+100 XP', icon: '💫', rarity: 'uncommon', weight: 15, type: 'xp', value: 100 },
-  { id: 'courage_coins_2', name: '+2 Courage Coins', icon: '🪙', rarity: 'uncommon', weight: 10, type: 'coins', value: 2 },
-  { id: 'streak_freeze', name: 'Streak Freeze', icon: '❄️', rarity: 'uncommon', weight: 10, type: 'streak_freeze', value: 1 },
+  {
+    id: 'xp_medium',
+    name: '+100 XP',
+    icon: '💫',
+    rarity: 'uncommon',
+    weight: 15,
+    type: 'xp',
+    value: 100,
+  },
+  {
+    id: 'platinum_medium',
+    name: '+10 Platinum',
+    icon: '⚪',
+    rarity: 'uncommon',
+    weight: 10,
+    type: 'platinum',
+    value: 10,
+  },
+  {
+    id: 'streak_freeze',
+    name: 'Streak Freeze',
+    icon: '❄️',
+    rarity: 'uncommon',
+    weight: 10,
+    type: 'streak_freeze',
+    value: 1,
+  },
 
   // Rare (~12%)
-  { id: 'xp_large', name: '+200 XP', icon: '🌟', rarity: 'rare', weight: 7, type: 'xp', value: 200 },
-  { id: 'double_xp_token', name: 'Double XP Token', icon: '🧪', rarity: 'rare', weight: 5, type: 'double_xp', value: 1 },
+  {
+    id: 'xp_large',
+    name: '+200 XP',
+    icon: '🌟',
+    rarity: 'rare',
+    weight: 7,
+    type: 'xp',
+    value: 200,
+  },
+  {
+    id: 'double_xp_token',
+    name: 'Double XP Token',
+    icon: '🧪',
+    rarity: 'rare',
+    weight: 5,
+    type: 'double_xp',
+    value: 1,
+  },
 
   // Legendary (~3%)
-  { id: 'shadow_crystal', name: 'Shadow Crystal', icon: '💎', rarity: 'legendary', weight: 2, type: 'collectible', value: 1 },
-  { id: 'xp_huge', name: '+500 XP', icon: '👑', rarity: 'legendary', weight: 1, type: 'xp', value: 500 },
+  {
+    id: 'shadow_crystal',
+    name: 'Shadow Crystal',
+    icon: '💎',
+    rarity: 'legendary',
+    weight: 2,
+    type: 'collectible',
+    value: 1,
+  },
+  {
+    id: 'xp_huge',
+    name: '+500 XP',
+    icon: '👑',
+    rarity: 'legendary',
+    weight: 1,
+    type: 'xp',
+    value: 500,
+  },
 ];
 
 const RARITY_COLORS = {
