@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { z } from 'zod';
 import { C, DM_SANS_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, DialogBox, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
+import { logger } from '../utils/logger';
 import VoiceInputField from '../components/VoiceInputField';
 import { useCloudVoice } from '../hooks/useCloudVoice';
+import { validateAIResponse, ValueSchema } from '../utils/aiSchemas';
 
 function ValuesTypewriterText({ text }) {
   return (
@@ -72,17 +75,9 @@ export default function ValuesScreen({ heroName, onComplete }) {
     setGuideAnswers(prev => { const next = [...prev]; next[guideStep] = text; return next; });
   };
 
-  // Extract a JSON array from AI response (handles markdown, prose wrapping, etc.)
+  // Extract and validate JSON array from AI response
   const extractJsonArray = (text) => {
-    // Strip markdown code blocks
-    const stripped = text.replace(/```(?:json)?\s*([\s\S]*?)```/g, '$1').trim();
-    // Try to find JSON array
-    const match = stripped.match(/\[[\s\S]*\]/);
-    if (match) {
-      return JSON.parse(match[0]);
-    }
-    // Try parsing the whole response as JSON
-    return JSON.parse(stripped);
+    return validateAIResponse(text, z.array(z.object({ text: z.string(), icon: z.string().optional() }))) || null;
   };
 
   const generateValuesFromAnswers = async () => {
@@ -94,7 +89,7 @@ export default function ValuesScreen({ heroName, onComplete }) {
       );
       // Guard against API fallback responses ("..." or "Dara gathers her thoughts...")
       if (!res || res === "..." || res.includes("Dara gathers")) {
-        console.warn('[ValuesScreen] AI call failed (API error), showing default cards');
+        logger.warn('[ValuesScreen] AI call failed (API error), showing default cards');
         setStep("cards");
         return;
       }
@@ -109,7 +104,7 @@ export default function ValuesScreen({ heroName, onComplete }) {
         setStep("cards");
         return;
       }
-      console.warn('[ValuesScreen] AI response not usable, falling back to default cards');
+      logger.warn('[ValuesScreen] AI response not usable, falling back to default cards');
       setStep("cards");
     } catch (e) {
       console.error('[ValuesScreen] generateValuesFromAnswers error:', e);
@@ -343,7 +338,7 @@ This path won't be easy — but what is worth fighting for? Not goals you "shoul
 
           {freeText.trim() && (
             <div style={{
-              padding: 14, background: "C.cardBg", border: "2px solid ${C.mutedBorder}",
+              padding: 14, background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
               borderRadius: 6, marginBottom: 12, textAlign: "left",
             }}>
               <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 4 }}>IN YOUR WORDS:</PixelText>

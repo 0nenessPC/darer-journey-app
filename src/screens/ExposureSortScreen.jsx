@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAIChat, callAI } from '../utils/chat';
+import { logger } from '../utils/logger';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, TypingDots, DialogBox } from '../components/shared';
+import { validateAIResponse } from '../utils/aiSchemas';
+import { z } from 'zod';
 // --- EXPOSURE HIERARCHY SORT (AI generates personalized battles, user swipes) ---
 export default function ExposureSortScreen({ hero, shadowText, onComplete, obState = {}, setOBState }) {
   const [exposures, setExposures] = useState([]);
@@ -67,14 +70,11 @@ No other text.`,
 - Shadow assessment: ${shadowText || "Avoidance of social situations, fear of judgment"}` }],
         4000
       );
-      const jsonMatch = res.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const initial = parsed.slice(0, 10).map((e, i) => ({ ...e, id: "exp" + i, level: e.level || i + 1 }));
-          setExposures(initial);
-          setAllSuggestions(initial.map(e => ({ name: e.name, activity: e.activity, level: e.level })));
-        }
+      const parsed = validateAIResponse(res, z.array(z.object({ name: z.string(), activity: z.string(), level: z.number().optional() })));
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const initial = parsed.slice(0, 10).map((e, i) => ({ ...e, id: "exp" + i, level: e.level || i + 1 }));
+        setExposures(initial);
+        setAllSuggestions(initial.map(e => ({ name: e.name, activity: e.activity, level: e.level })));
       }
     } catch (e) { /* AI generation failed — will show retry */ }
     setLoading(false);
@@ -102,14 +102,11 @@ No other text.`,
 - Shadow assessment: ${shadowText || "Avoidance of social situations, fear of judgment"}` }],
         2000
       );
-      const jsonMatch = res.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.name && parsed.activity) {
-          return { ...parsed, id: "exp_r_" + Date.now(), level: parsed.level || level };
-        }
+      const parsed = validateAIResponse(res, z.object({ name: z.string(), activity: z.string(), level: z.number().optional() }));
+      if (parsed && parsed.name && parsed.activity) {
+        return { ...parsed, id: "exp_r_" + Date.now(), level: parsed.level || level };
       }
-    } catch (e) { console.warn("Replacement generation failed:", e); }
+    } catch (e) { logger.warn("Replacement generation failed:", e); }
     return null;
   };
 

@@ -8,6 +8,8 @@ import { useDARERFlow } from '../hooks/useDARERFlow';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import DecidePhase from '../components/DARER/DecidePhase';
 import RepeatPhase from '../components/DARER/RepeatPhase';
+import { validateAIResponse } from '../utils/aiSchemas';
+import { z } from 'zod';
 import AllowFields from '../components/DARER/AllowFields';
 import SUDSSlider from '../components/DARER/SUDSSlider';
 import SUDSComparison from '../components/DARER/SUDSComparison';
@@ -232,10 +234,8 @@ No other text.`,
           },
         ],
       );
-      const jsonMatch = res.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= 2) {
+      const parsed = validateAIResponse(res, z.array(z.object({ text: z.string(), icon: z.string().optional(), time: z.string().optional() })));
+      if (Array.isArray(parsed) && parsed.length >= 2) {
           const newExposures = parsed.slice(0, 3).map((e, i) => ({
             ...e,
             id: 'tutorial_' + (e.name || 'exp' + i).replace(/\s+/g, '_').toLowerCase(),
@@ -258,7 +258,6 @@ No other text.`,
           setExposuresLoading(false);
           return;
         }
-      }
       throw new Error('Parse failed');
     } catch (e) {
       console.error('Tutorial exposure generation failed:', e);
@@ -663,7 +662,12 @@ No other text.`,
             <ProgressBar />
             <PhaseLabel letter="D" title="DECIDE" active color={C.goalGold} />
             <DecidePhase
-              label={{ icon: '🏰', title: 'DECIDE', subtitle: 'Why this battle matters', color: C.goalGold }}
+              label={{
+                icon: '🏰',
+                title: 'DECIDE',
+                subtitle: 'Why this battle matters',
+                color: C.goalGold,
+              }}
               entityName={chosenExposure.text}
               values={heroValues || []}
               selectedVals={decideSelectedVals}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { logger } from '../utils/logger';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, TypingDots } from '../components/shared';
 import { callAI } from '../utils/chat';
 import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 import { useCloudVoice } from '../hooks/useCloudVoice';
 import Modal from './Modal';
+import { validateAIResponse, BossConfigSchema } from '../utils/aiSchemas';
 
 function AskDaraTypewriterBubble({ text, muted, voice }) {
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -116,32 +118,21 @@ Always keep the exposure small, actionable, and specific.`;
           20000
         );
 
-        if (res && res.includes("{")) {
-          // Try to parse the JSON from the response
-          let jsonStr = res;
-          const jsonMatch = res.match(/\{[^}]+\}/s);
-          if (jsonMatch) jsonStr = jsonMatch[0];
-
-          try {
-            const exposure = JSON.parse(jsonStr);
-            if (exposure.name && exposure.difficulty) {
-              const finalMsg = { role: "assistant", text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.` };
-              chatHistory.current.push(finalMsg);
-              setMessages(prev => [...prev, finalMsg]);
-              if (voiceMode) {
-                voice.speak(finalMsg.text, { speed: 0.9 });
-              }
-              setGeneratedExposure({
-                name: exposure.name,
-                desc: exposure.desc || `Based on your conversation with Dara`,
-                difficulty: Math.min(10, Math.max(1, Number(exposure.difficulty))),
-              });
-              setTyping(false);
-              return;
-            }
-          } catch (parseErr) {
-            console.warn("Failed to parse Dara's JSON:", parseErr);
+        const exposure = validateAIResponse(res, BossConfigSchema);
+        if (exposure) {
+          const finalMsg = { role: "assistant", text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.` };
+          chatHistory.current.push(finalMsg);
+          setMessages(prev => [...prev, finalMsg]);
+          if (voiceMode) {
+            voice.speak(finalMsg.text, { speed: 0.9 });
           }
+          setGeneratedExposure({
+            name: exposure.name,
+            desc: exposure.desc || `Based on your conversation with Dara`,
+            difficulty: Math.min(10, Math.max(1, Number(exposure.difficulty))),
+          });
+          setTyping(false);
+          return;
         }
 
         // If parsing failed, fall back to manual form
