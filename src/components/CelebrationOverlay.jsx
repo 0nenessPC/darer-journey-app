@@ -52,7 +52,17 @@ function ConfettiParticles() {
     color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
   }));
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10001 }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: 'none',
+        zIndex: 10001,
+      }}
+    >
       {particles.map((p) => (
         <div
           key={p.id}
@@ -285,6 +295,11 @@ function XPAnimation({ xp, onDone }) {
 
 function LevelUpAnimation({ level, prevLevel, onDone }) {
   const isLevelUp = level > prevLevel;
+  useEffect(() => {
+    const timer = setTimeout(onDone, 2000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div
       style={{
@@ -686,13 +701,13 @@ export default function CelebrationOverlay({
         style={{
           background: C.charcoal,
           borderRadius: 12,
-          border: `3px solid ${current.type === 'victoryBurst' ? (OUTCOME_CONFIG[outcome]?.color || C.hpGreen) : C.goldMd}`,
+          border: `3px solid ${current.type === 'victoryBurst' ? OUTCOME_CONFIG[outcome]?.color || C.hpGreen : C.goldMd}`,
           padding: current.type === 'victoryBurst' ? '48px 20px' : '32px 20px',
           maxWidth: 360,
           width: '100%',
           maxHeight: '80vh',
           overflowY: 'auto',
-          boxShadow: `0 0 40px ${(OUTCOME_CONFIG[outcome]?.color || C.goldMd)}30`,
+          boxShadow: `0 0 40px ${OUTCOME_CONFIG[outcome]?.color || C.goldMd}30`,
         }}
       >
         {current.type === 'victoryBurst' && (
