@@ -1269,6 +1269,9 @@ export default function BossBattle({
       {/* Post-battle celebration overlay */}
       {celebration && (
         <CelebrationOverlay
+          outcome={celebration.outcome || 'victory'}
+          heroName={hero.name}
+          bossName={celebration.bossName || boss?.name || 'Unknown'}
           xpEarned={celebration.xpEarned || 0}
           coinsEarned={celebration.coinsEarned || 0}
           diamondsEarned={celebration.diamondsEarned || 0}

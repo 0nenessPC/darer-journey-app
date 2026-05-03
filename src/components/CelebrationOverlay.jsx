@@ -16,6 +16,173 @@ const RARITY_COLORS = {
   legendary: C.fearRed,
 };
 
+const OUTCOME_CONFIG = {
+  victory: {
+    label: 'BOSS DEFEATED!',
+    color: C.hpGreen,
+    bgTint: C.hpGreen + '30',
+    cheer: (heroName, bossName) =>
+      `You did it, ${heroName}! The Shadow of "${bossName}" falls before you. Your courage is real.`,
+  },
+  partial: {
+    label: 'YOU SHOWED UP',
+    color: C.amber,
+    bgTint: C.amber + '30',
+    cheer: (heroName) =>
+      `That took everything you had, ${heroName}. And you showed up anyway. That counts.`,
+  },
+  retreat: {
+    label: 'YOU STOOD YOUR GROUND',
+    color: C.rose,
+    bgTint: C.rose + '30',
+    cheer: (heroName) =>
+      `You're still here, ${heroName}. The Storm was loud today, but you learned. Come back when you're ready.`,
+  },
+};
+
+// Confetti particles for victory
+const CONFETTI_COLORS = [C.hpGreen, C.goldMd, C.teal, C.cream, C.plum];
+function ConfettiParticles() {
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.6,
+    duration: 1.2 + Math.random() * 1.5,
+    size: 4 + Math.random() * 8,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  }));
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10001 }}>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: `${p.left}%`,
+            width: p.size,
+            height: p.size * 0.6,
+            background: p.color,
+            borderRadius: 2,
+            animation: `confettiDrop ${p.duration}s ease-in ${p.delay}s both`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function VictoryBurst({ outcome = 'victory', onDone }) {
+  useEffect(() => {
+    const timer = setTimeout(onDone, 1500);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
+  const cfg = OUTCOME_CONFIG[outcome] || OUTCOME_CONFIG.victory;
+
+  return (
+    <>
+      {outcome === 'victory' && <ConfettiParticles />}
+      <div
+        style={{
+          textAlign: 'center',
+          animation: 'screenShake 0.5s ease-out, burstFlash 0.8s ease-out',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 64,
+            marginBottom: 12,
+            animation: 'sparkleBurst 0.6s ease-out',
+            display: 'inline-block',
+          }}
+        >
+          {outcome === 'victory' ? '⚔️' : outcome === 'partial' ? '🛡️' : '💪'}
+        </div>
+        <PixelText size={16} color={cfg.color} style={{ display: 'block' }}>
+          {cfg.label}
+        </PixelText>
+        <div
+          style={{
+            marginTop: 16,
+            width: 60,
+            height: 3,
+            borderRadius: 2,
+            background: cfg.color,
+            margin: '16px auto 0',
+            animation: 'screenFadeIn 0.8s ease-out 0.6s both',
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
+function DaraCheer({ outcome = 'victory', heroName = 'Hero', bossName = 'the Shadow', onDone }) {
+  const spokenRef = useRef(false);
+
+  useEffect(() => {
+    if (spokenRef.current) return;
+    spokenRef.current = true;
+
+    const cfg = OUTCOME_CONFIG[outcome] || OUTCOME_CONFIG.victory;
+    const msg = cfg.cheer(heroName, bossName);
+
+    // Browser TTS — instant, no server round-trip
+    if (typeof speechSynthesis !== 'undefined') {
+      speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(msg);
+      utter.rate = 0.9;
+      utter.pitch = 1.1;
+      utter.volume = 0.85;
+      utter.onend = onDone;
+      utter.onerror = () => setTimeout(onDone, 2500);
+      speechSynthesis.speak(utter);
+      // Fallback timeout: if speech never fires, dismiss after 3s
+      return () => {};
+    }
+    // No TTS available — dismiss after 2.5s
+    const timer = setTimeout(onDone, 2500);
+    return () => clearTimeout(timer);
+  }, [outcome, heroName, bossName, onDone]);
+
+  const cfg = OUTCOME_CONFIG[outcome] || OUTCOME_CONFIG.victory;
+  const cheerText = cfg.cheer(heroName, bossName);
+
+  return (
+    <div style={{ textAlign: 'center', animation: 'cheerPopIn 0.5s ease-out' }}>
+      <div
+        style={{
+          fontSize: 36,
+          marginBottom: 8,
+        }}
+      >
+        💬
+      </div>
+      <PixelText size={7} color={C.plumMd} style={{ display: 'block', marginBottom: 8 }}>
+        DARA
+      </PixelText>
+      <div
+        style={{
+          padding: '14px 16px',
+          background: C.cardBg,
+          border: `2px solid ${cfg.color}60`,
+          borderRadius: 8,
+          maxWidth: 320,
+          margin: '0 auto',
+        }}
+      >
+        <PixelText size={7} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+          {cheerText}
+        </PixelText>
+      </div>
+      <PixelText size={6} color={C.subtleText} style={{ display: 'block', marginTop: 8 }}>
+        Tap anywhere to continue →
+      </PixelText>
+    </div>
+  );
+}
+
 function CoinAnimation({ amount, onDone }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
@@ -426,6 +593,9 @@ function WeeklyRewardsAnimation({ rewards, onDone }) {
 }
 
 export default function CelebrationOverlay({
+  outcome = 'victory',
+  heroName = 'Hero',
+  bossName = 'the Shadow',
   xpEarned = 0,
   coinsEarned = 0,
   diamondsEarned = 0,
@@ -444,6 +614,11 @@ export default function CelebrationOverlay({
 
   // Build the sequence of celebration phases
   const sequence = [];
+  // Phase 1: Victory burst (opening flash + confetti)
+  sequence.push({ type: 'victoryBurst', value: outcome });
+  // Phase 2: Dara's spoken cheer
+  sequence.push({ type: 'daraCheer', value: { outcome, heroName, bossName } });
+  // Then the reward sequence
   if (xpEarned > 0) sequence.push({ type: 'xp', value: xpEarned });
   if (coinsEarned > 0) sequence.push({ type: 'coins', value: coinsEarned });
   if (diamondsEarned > 0) sequence.push({ type: 'diamonds', value: diamondsEarned });
@@ -496,7 +671,10 @@ export default function CelebrationOverlay({
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0,0,0,0.85)',
+        background:
+          current.type === 'victoryBurst'
+            ? OUTCOME_CONFIG[outcome]?.bgTint || 'rgba(0,0,0,0.9)'
+            : 'rgba(0,0,0,0.85)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -508,15 +686,26 @@ export default function CelebrationOverlay({
         style={{
           background: C.charcoal,
           borderRadius: 12,
-          border: `3px solid ${C.goldMd}`,
-          padding: '32px 20px',
+          border: `3px solid ${current.type === 'victoryBurst' ? (OUTCOME_CONFIG[outcome]?.color || C.hpGreen) : C.goldMd}`,
+          padding: current.type === 'victoryBurst' ? '48px 20px' : '32px 20px',
           maxWidth: 360,
           width: '100%',
           maxHeight: '80vh',
           overflowY: 'auto',
-          boxShadow: '0 0 40px rgba(232,160,74,0.3)',
+          boxShadow: `0 0 40px ${(OUTCOME_CONFIG[outcome]?.color || C.goldMd)}30`,
         }}
       >
+        {current.type === 'victoryBurst' && (
+          <VictoryBurst outcome={current.value} onDone={advance} />
+        )}
+        {current.type === 'daraCheer' && (
+          <DaraCheer
+            outcome={current.value.outcome}
+            heroName={current.value.heroName}
+            bossName={current.value.bossName}
+            onDone={advance}
+          />
+        )}
         {current.type === 'xp' && <XPAnimation xp={current.value} onDone={advance} />}
         {current.type === 'coins' && <CoinAnimation amount={current.value} onDone={advance} />}
         {current.type === 'diamonds' && (
