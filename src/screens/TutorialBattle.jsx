@@ -113,6 +113,10 @@ export default function TutorialBattle({
   const setDecideCustom = flow.setDecideCustom;
   const decideSelectedVals = flow.decideSelectedVals;
   const setDecideSelectedVals = flow.setDecideSelectedVals;
+
+  // Engagement loot: proof of completion
+  const [lootImage, setLootImage] = useState(null);
+  const [lootText, setLootText] = useState('');
   const exposureWhen = flow.exposureWhen;
   const setExposureWhen = flow.setExposureWhen;
   const exposureWhere = flow.exposureWhere;
@@ -234,30 +238,35 @@ No other text.`,
           },
         ],
       );
-      const parsed = validateAIResponse(res, z.array(z.object({ text: z.string(), icon: z.string().optional(), time: z.string().optional() })));
+      const parsed = validateAIResponse(
+        res,
+        z.array(
+          z.object({ text: z.string(), icon: z.string().optional(), time: z.string().optional() }),
+        ),
+      );
       if (Array.isArray(parsed) && parsed.length >= 2) {
-          const newExposures = parsed.slice(0, 3).map((e, i) => ({
-            ...e,
-            id: 'tutorial_' + (e.name || 'exp' + i).replace(/\s+/g, '_').toLowerCase(),
-            suds: Math.min(2, e.suds || 1),
-            time: e.time || '10 seconds',
-            icon: e.icon || '✨',
-          }));
-          // Deduplication: if any new text matches a previously shown text, force fallback
-          const allPrev = [...avoidTexts];
-          const hasDupe = newExposures.some((ne) =>
-            allPrev.some((p) => p.toLowerCase().trim() === ne.text.toLowerCase().trim()),
-          );
-          if (hasDupe) {
-            logger.warn('AI returned duplicate exposures — falling back');
-            throw new Error('AI returned duplicates');
-          }
-          setTutorialExposures(newExposures);
-          // Track the texts so next regenerate avoids them
-          setPrevExposureTexts((prev) => [...prev, ...newExposures.map((e) => e.text)]);
-          setExposuresLoading(false);
-          return;
+        const newExposures = parsed.slice(0, 3).map((e, i) => ({
+          ...e,
+          id: 'tutorial_' + (e.name || 'exp' + i).replace(/\s+/g, '_').toLowerCase(),
+          suds: Math.min(2, e.suds || 1),
+          time: e.time || '10 seconds',
+          icon: e.icon || '✨',
+        }));
+        // Deduplication: if any new text matches a previously shown text, force fallback
+        const allPrev = [...avoidTexts];
+        const hasDupe = newExposures.some((ne) =>
+          allPrev.some((p) => p.toLowerCase().trim() === ne.text.toLowerCase().trim()),
+        );
+        if (hasDupe) {
+          logger.warn('AI returned duplicate exposures — falling back');
+          throw new Error('AI returned duplicates');
         }
+        setTutorialExposures(newExposures);
+        // Track the texts so next regenerate avoids them
+        setPrevExposureTexts((prev) => [...prev, ...newExposures.map((e) => e.text)]);
+        setExposuresLoading(false);
+        return;
+      }
       throw new Error('Parse failed');
     } catch (e) {
       console.error('Tutorial exposure generation failed:', e);
@@ -968,8 +977,115 @@ No other text.`,
                 </div>
 
                 <PixelBtn
-                  onClick={() => setEngageSubStep(2)}
+                  onClick={() => setEngageSubStep(1.5)}
                   disabled={!engageOutcome}
+                  color={C.gold}
+                  textColor={C.charcoal}
+                  style={{ width: '100%', marginTop: 16 }}
+                >
+                  CONTINUE →
+                </PixelBtn>
+              </div>
+            )}
+
+            {/* Sub-step 1.5: Loot — proof of completion */}
+            {engageSubStep === 1.5 && (
+              <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                <DialogBox speaker="DARA">
+                  <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
+                    Every battle leaves a mark.{'\n'}
+                    {'\n'}
+                    Share a moment from this{'\n'}exposure — a photo, a memory, a{'\n'}feeling. This
+                    is your loot.
+                  </PixelText>
+                </DialogBox>
+
+                {/* Image upload */}
+                <label
+                  style={{
+                    display: 'block',
+                    marginTop: 12,
+                    padding: 20,
+                    background: C.cardBg,
+                    border: `2px dashed ${lootImage ? C.hpGreen : C.mutedBorder}`,
+                    borderRadius: 8,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    animation: lootImage ? 'lootShimmer 2s ease-in-out infinite' : 'none',
+                  }}
+                >
+                  {lootImage ? (
+                    <div style={{ position: 'relative' }}>
+                      <img
+                        src={lootImage}
+                        alt="Battle proof"
+                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setLootImage(null);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          background: C.bossRed,
+                          color: C.cream,
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '4px 8px',
+                          cursor: 'pointer',
+                          fontSize: 12,
+                        }}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>📸</div>
+                      <PixelText size={7} color={C.subtleText}>Tap to take a photo or choose from gallery</PixelText>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setLootImage(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+
+                {/* Meaningful moment text */}
+                <div style={{ marginTop: 12 }}>
+                  <textarea
+                    value={lootText}
+                    onChange={(e) => setLootText(e.target.value)}
+                    placeholder="Share a meaningful moment — what did you notice, feel, or create?..."
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      background: C.inputBg,
+                      border: `2px solid ${C.mutedBorder}`,
+                      borderRadius: 6,
+                      color: C.cream,
+                      fontSize: 14,
+                      fontFamily: "'DM Sans', sans-serif",
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <PixelBtn
+                  onClick={() => setEngageSubStep(2)}
                   color={C.gold}
                   textColor={C.charcoal}
                   style={{ width: '100%', marginTop: 16 }}
@@ -1234,7 +1350,19 @@ No other text.`,
                 onRegenerate={null}
                 onComplete={() => {
                   if (setOBState) setOBState({ tutorialComplete: true });
-                  onComplete();
+                  onComplete({
+                    lootImage,
+                    lootText,
+                    chosenExposure,
+                    engageOutcome,
+                    sudsBefore,
+                    sudsAfter,
+                    decideWhy,
+                    exposureWhen,
+                    exposureWhere,
+                    exposureArmory,
+                    coachMessages: coachChat.messages,
+                  });
                 }}
                 isLoading={repeatOptions.length === 0}
                 readOnly

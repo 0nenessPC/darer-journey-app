@@ -3,7 +3,7 @@ import { PixelText } from "./shared.jsx";
 import BottomNav from './BottomNav';
 
 function LadderScreen({ hero, quest, setScreen, onBack }) {
-  const totalXp = (quest.bosses || []).filter(b => b.defeated).length * 100;
+  const totalXp = hero.totalXP || 0;
 
   // Mock ladder entries
   const mockEntries = [
@@ -20,7 +20,7 @@ function LadderScreen({ hero, quest, setScreen, onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "20px 20px 100px" }}>
       {/* Header */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           <PixelText size={9} color={C.subtleText}>←</PixelText>
         </button>

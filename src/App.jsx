@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
-import { loadProgress, NDA_VERSION } from "./utils/supabase";
+import { supabase, loadProgress, NDA_VERSION, saveValuesData } from "./utils/supabase";
 import { buildHeroContext } from "./utils/aiHelper.jsx";
 import NdaAgreementScreen from "./components/NdaAgreementScreen.jsx";
 import { C, SYS, DEFAULT_ARMORY, ONBOARDING, DM_SANS_FONT } from "./constants/gameData";
@@ -10,6 +10,7 @@ import AskDaraChat from "./components/AskDaraChat.jsx";
 import AddExposureModal from "./components/AddExposureModal.jsx";
 import AddManualEntryForm from "./components/AddManualEntryForm.jsx";
 import LadderScreen from "./components/LadderScreen.jsx";
+import AlliesWall from "./components/AlliesWall.jsx";
 import DeleteConfirm from "./components/DeleteConfirm.jsx";
 import FeedbackModal from "./components/FeedbackModal.jsx";
 import { useAppState } from "./hooks/useAppState.jsx";
@@ -31,6 +32,11 @@ const ShadowLore = lazy(() => import("./screens/ShadowLore.jsx"));
 const IntakeScreen = lazy(() => import("./screens/IntakeScreen.jsx"));
 const ShadowReveal = lazy(() => import("./screens/ShadowReveal.jsx"));
 const ArmoryScreen = lazy(() => import("./screens/ArmoryScreen.jsx"));
+const CouragePath = lazy(() => import("./screens/CouragePath.jsx"));
+const ShopScreen = lazy(() => import("./screens/ShopScreen.jsx"));
+const LoreScreen = lazy(() => import("./screens/LoreScreen.jsx"));
+const DaraLetterScreen = lazy(() => import("./screens/DaraLetterScreen.jsx"));
+const WelcomeBackLetter = lazy(() => import("./screens/WelcomeBackLetter.jsx"));
 
 // ============ MAIN APP ============
 export default function DARERQuest() {
@@ -139,6 +145,13 @@ export default function DARERQuest() {
     setScreen("exposureSort");
   }, [hero.darerId, setHero, setShadowText, setQuest, setOnboardingState, setScreen]);
 
+  // Clear pending letter when returning to map after reading
+  useEffect(() => {
+    if (screen === "map" && hero.pendingLetter) {
+      setHero(h => ({ ...h, pendingLetter: null, pendingLetterDate: null }));
+    }
+  }, [screen, hero.pendingLetter, setHero]);
+
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: DM_SANS_FONT, position: "relative" }}>
       {/* Screen transition wrapper — re-mounts on screen change for fade animation */}
@@ -206,10 +219,23 @@ export default function DARERQuest() {
       }>
       {screen === "intro" && <GameIntro onComplete={() => setScreen("character")} obState={getOBState("intro", { slide: 0 })} setOBState={(s) => setOBState("intro", s)} />}
       {screen === "character" && <CharacterCreate initialName="" darerId={hero.darerId} onComplete={handleCharacterComplete} onFastForward={handleFastForward} obState={getOBState("character", { name: "", nameConfirmed: false })} setOBState={(s) => setOBState("character", s)} />}
-      {screen === "values" && <ValuesScreen heroName={hero.name} onComplete={(cards, text) => {
-        setHero(h => ({ ...h, values: cards, valuesText: text }));
-        setScreen("darerStrategy");
-      }} obState={getOBState("values", { step: "default", values: [], guideAnswers: [], guideStep: 0 })} setOBState={(s) => setOBState("values", s)} />}
+      {screen === "values" && (() => {
+        const valuesOB = getOBState("values", { step: "default", values: [], guideAnswers: [], guideStep: 0 });
+        return <ValuesScreen heroName={hero.name} onComplete={async (cards, text) => {
+          setHero(h => ({ ...h, values: cards, valuesText: text }));
+          setScreen("darerStrategy");
+          // Save structured values data to normalized table
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await saveValuesData(user.id, {
+              guideAnswers: valuesOB.guideAnswers || [],
+              selectedValues: cards || [],
+              customValue: text || null,
+              aiGeneratedValues: valuesOB.generatedValues || [],
+            });
+          }
+        }} obState={valuesOB} setOBState={(s) => setOBState("values", s)} />;
+      })()}
       {/* === REORDERED CLINICAL FLOW === */}
       {/* mapPreview → shadowLore → psychoed → shadowLorePost → intake → shadowReveal → values → darerStrategy → tutorial → exposureSort */}
       {screen === "shadowLore" && <ShadowLore heroName={hero.name} onPsychoed={() => setScreen("psychoed")} onReady={() => setScreen("intake")} obState={getOBState("shadowLore", { step: 0 })} setOBState={(s) => setOBState("shadowLore", s)} />}
@@ -233,11 +259,17 @@ export default function DARERQuest() {
         const battleBoss = b.defeated ? { ...b, hp: b.maxHp || 100 } : b;
         setActiveBoss(battleBoss);
         setScreen("battle");
-      }} onViewProfile={() => setScreen("profile")} onLadder={() => setScreen("ladder")} onBank={() => setScreen("bank")} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
+      }} onViewProfile={() => setScreen("profile")} onLadder={() => setScreen("ladder")} onBank={() => setScreen("bank")} onAllies={() => setScreen("allies")} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle key={activeBoss.id} boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} setActiveBoss={setActiveBoss} setScreen={setScreen} onBank={() => setScreen("bank")} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
       {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} onNav={(s) => setScreen(s)} />}
       {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
+      {screen === "couragePath" && <CouragePath hero={hero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("profile")} setScreen={setScreen} />}
+      {screen === "shop" && <ShopScreen hero={hero} setHero={setHero} onBack={() => setScreen("profile")} setScreen={setScreen} />}
+      {screen === "lorePath" && <LoreScreen quest={quest} onBack={() => setScreen("profile")} setScreen={setScreen} />}
+      {screen === "daraLetter" && <DaraLetterScreen letter={hero.pendingLetter || ""} date={hero.pendingLetterDate} onBack={() => setScreen("map")} hero={hero} />}
+      {screen === "welcomeBack" && <WelcomeBackLetter letterData={hero.welcomeBackData || {}} onContinue={() => { setHero(h => ({ ...h, welcomeBackData: null })); setScreen("map"); }} hero={hero} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
+      {screen === "allies" && <AlliesWall onBack={() => setScreen("map")} setScreen={setScreen} />}
       </Suspense>
 
       {/* Delete Confirmation Dialog */}

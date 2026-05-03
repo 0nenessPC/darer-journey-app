@@ -24,6 +24,7 @@ export default function RisePhase({
   onNext,
   showBackButton, onBack,
   calendarParams,
+  onPracticeComplete,
 }) {
   const buildCalendarUrl = () => {
     const dt = exposureScheduledTime
@@ -31,9 +32,10 @@ export default function RisePhase({
       : new Date(Date.now() + 60 * 60 * 1000);
     const title = encodeURIComponent(calendarParams.title);
     const desc = encodeURIComponent(calendarParams.desc);
+    const location = encodeURIComponent(exposureWhere || '');
     const startStr = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endStr = new Date(dt.getTime() + 30 * 60000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&dates=${startStr}/${endStr}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&location=${location}&dates=${startStr}/${endStr}`;
   };
 
   return (
@@ -83,15 +85,6 @@ export default function RisePhase({
                   boxSizing: "border-box", colorScheme: "dark",
                 }}
               />
-              <button
-                onClick={() => window.open(buildCalendarUrl(), '_blank')}
-                style={{
-                  width: "100%", padding: "8px 14px", marginTop: 8,
-                  background: C.teal, border: "none", borderRadius: 4, cursor: "pointer",
-                }}
-              >
-                <PixelText size={7} color={C.charcoal}>📱 SET CALENDAR REMINDER →</PixelText>
-              </button>
             </div>
           )}
 
@@ -121,6 +114,21 @@ export default function RisePhase({
               }}
             />
           </div>
+
+          {/* CALENDAR REMINDER — after WHEN + TIME + WHERE */}
+          {(exposureWhen && exposureScheduledTime) && (
+            <div style={{ marginTop: 16, animation: "fadeIn 0.3s ease-out" }}>
+              <button
+                onClick={() => window.open(buildCalendarUrl(), '_blank')}
+                style={{
+                  width: "100%", padding: "10px 14px",
+                  background: C.teal, border: "none", borderRadius: 4, cursor: "pointer",
+                }}
+              >
+                <PixelText size={7} color={C.charcoal}>📱 SET CALENDAR REMINDER →</PixelText>
+              </button>
+            </div>
+          )}
 
           <PixelBtn
             onClick={() => setRiseSubStep(1)}
@@ -206,8 +214,14 @@ export default function RisePhase({
         <div>
           <PracticeSession
             tool={selectedArmoryTool}
-            onComplete={() => setRiseSubStep(3)}
-            onQuit={() => setRiseSubStep(3)}
+            onComplete={(practiceData) => {
+              if (onPracticeComplete) onPracticeComplete(practiceData);
+              setRiseSubStep(3);
+            }}
+            onQuit={(practiceData) => {
+              if (onPracticeComplete) onPracticeComplete(practiceData);
+              setRiseSubStep(3);
+            }}
           />
         </div>
       )}

@@ -1,9 +1,12 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useAIChat, generateFollowUpExposures } from '../utils/chat';
 import { buildHeroContext } from '../utils/aiHelper.jsx';
+import { supabase } from '../utils/supabase';
+import { saveArmoryPractice } from '../utils/supabase';
 import { C, PIXEL_FONT, SYS } from '../constants/gameData';
 import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
 import BottomNav from '../components/BottomNav';
+import CelebrationOverlay from '../components/CelebrationOverlay';
 import DecidePhase from '../components/DARER/DecidePhase';
 import RepeatPhase from '../components/DARER/RepeatPhase';
 import AllowFields from '../components/DARER/AllowFields';
@@ -94,6 +97,23 @@ export default function BossBattle({
 
   // Shared DARER flow state (Decide, Allow, Rise, Engage fields + voice)
   const flow = useDARERFlow({ obState, setOBState });
+
+  // Save armory practice data to Supabase
+  const handlePracticeComplete = async (practiceData) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && practiceData?.toolId) {
+      await saveArmoryPractice(user.id, practiceData);
+    }
+  };
+
+  // Post-battle celebration state
+  const [celebration, setCelebration] = useState(null);
+  const handleBattleResult = async (outcome, details) => {
+    const result = await onVictory(outcome, details);
+    if (result) {
+      setCelebration(result);
+    }
+  };
 
   // Auto-speak Dara's encouragement when Decide section appears (motivational interviewing: express empathy, build self-efficacy)
   const decideSpoken = useRef(false);
@@ -293,7 +313,12 @@ export default function BossBattle({
 
   // Auto-append voice transcript to loot text when user finishes speaking on loot screen
   useEffect(() => {
-    if (phase === 'result' && flow.engageSubStep === 0.5 && flow.voice.transcript && !flow.voice.isListening) {
+    if (
+      phase === 'result' &&
+      flow.engageSubStep === 0.5 &&
+      flow.voice.transcript &&
+      !flow.voice.isListening
+    ) {
       setLootText((prev) => (prev ? prev + ' ' + flow.voice.transcript : flow.voice.transcript));
       flow.voice.resetTranscript();
     }
@@ -302,7 +327,9 @@ export default function BossBattle({
   // Auto-append voice transcript to decide custom input when user finishes speaking
   useEffect(() => {
     if (phase === 'prep' && prepStep === 0 && flow.voice.transcript && !flow.voice.isListening) {
-      flow.setDecideCustom((prev) => (prev ? prev + ' ' + flow.voice.transcript : flow.voice.transcript));
+      flow.setDecideCustom((prev) =>
+        prev ? prev + ' ' + flow.voice.transcript : flow.voice.transcript,
+      );
       flow.voice.resetTranscript();
     }
   }, [flow.voice.transcript, flow.voice.isListening, phase, prepStep]);
@@ -488,6 +515,7 @@ export default function BossBattle({
                       title: `DARER: ${boss.name}`,
                       desc: `Face the ${boss.name} exposure: ${boss.desc}. Location: ${flow.exposureWhere || 'TBD'}. Your anchor: ${prepAnswers.value || 'courage'}.`,
                     }}
+                    onPracticeComplete={handlePracticeComplete}
                   />
                 </div>
               );
@@ -1048,7 +1076,7 @@ export default function BossBattle({
               generateRepeatOptions();
             }}
             onComplete={() =>
-              onVictory(outcome, {
+              handleBattleResult(outcome, {
                 prepAnswers,
                 suds,
                 exposureWhen: flow.exposureWhen,
@@ -1058,6 +1086,22 @@ export default function BossBattle({
                 battleMessages: battleChat.messages,
                 victoryMessages: victoryChat.messages,
                 repeatChoice: selectedRepeat,
+                lootImage: lootImage,
+                lootText: lootText,
+                // Structured fields for normalized battles table
+                decideSelectedVals: flow.decideSelectedVals,
+                decideCustom: flow.decideCustom,
+                allowFearful: flow.allowFearful,
+                allowLikelihood: flow.allowLikelihood,
+                allowSeverity: flow.allowSeverity,
+                allowCanHandle: flow.allowCanHandle,
+                allowFearShowing: flow.allowFearShowing,
+                allowPhysicalSensations: flow.allowPhysicalSensations,
+                allowCustomSensation: flow.allowCustomSensation,
+                fearedHappened: flow.fearedHappened,
+                fearedSeverity: flow.fearedSeverity,
+                madeItThrough: flow.madeItThrough,
+                engageFreeText: flow.engageFreeText,
               })
             }
             isLoading={flow.repeatOptions.length === 0}
@@ -1198,6 +1242,22 @@ export default function BossBattle({
         }}
         zIndex={20}
       />
+
+      {/* Post-battle celebration overlay */}
+      {celebration && (
+        <CelebrationOverlay
+          xpEarned={celebration.xpEarned || 0}
+          coinsEarned={celebration.coinsEarned || 0}
+          lootDrop={celebration.lootDrop}
+          achievements={celebration.newAchievements || []}
+          playerLevel={celebration.playerLevel || 1}
+          prevLevel={celebration.prevLevel || 1}
+          streakCount={celebration.streakCount || 0}
+          hasLetter={celebration.hasLetter || false}
+          weeklyChallengeRewards={celebration.weeklyChallengeRewards || null}
+          onDismiss={() => setCelebration(null)}
+        />
+      )}
     </div>
   );
 }

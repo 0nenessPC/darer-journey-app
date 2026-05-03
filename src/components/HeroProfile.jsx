@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText, PixelBtn } from '../components/shared';
 import PracticeSession from '../components/PracticeSession';
+import { supabase, saveArmoryPractice } from '../utils/supabase';
 import BottomNav from './BottomNav';
+import { ACHIEVEMENTS, CATEGORY_ORDER, CATEGORY_LABELS, getAchievement } from '../constants/achievements';
+import { getToolLevel, getToolProgress, getSignatureTool, getMasteryTools } from '../utils/armoryGrowth';
 export default function HeroProfile({ hero, setHero, quest, battleHistory = [], onBack, setScreen }) {
   const defeated = quest.bosses.filter(b => b.defeated).length;
   const [activeTab, setActiveTab] = useState("hero");
   const [practiceMode, setPracticeMode] = useState(null);
   const [expandedBossId, setExpandedBossId] = useState(null);
+  const [showLootGallery, setShowLootGallery] = useState(false);
+  const [newAchievement, setNewAchievement] = useState(null);
 
   const incrementPractice = (toolId) => {
     setHero(h => {
@@ -33,7 +38,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
     });
   };
 
-  const handleComplete = (toolId) => {
+  const handleComplete = async (toolId) => {
     incrementPractice(toolId);
   };
 
@@ -42,7 +47,24 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
   // Practice session running
   if (practiceMode && !practiceMode.justUnlocked) {
     const tool = armory.find(a => a.id === practiceMode.toolId);
-    return <PracticeSession tool={tool} onComplete={() => handleComplete(practiceMode.toolId)} onQuit={() => { setPracticeMode(null); setArmoryView(false); }} />;
+    return (
+      <PracticeSession
+        tool={tool}
+        onComplete={async (practiceData) => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && practiceData?.toolId) await saveArmoryPractice(user.id, practiceData);
+          handleComplete(practiceData.toolId);
+          setPracticeMode(null);
+          setArmoryView(false);
+        }}
+        onQuit={async (practiceData) => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && practiceData?.toolId) await saveArmoryPractice(user.id, practiceData);
+          setPracticeMode(null);
+          setArmoryView(false);
+        }}
+      />
+    );
   }
 
   // Just unlocked notification
@@ -72,19 +94,21 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{
           width: 80, height: 80, margin: "0 auto 12px", borderRadius: 6,
-          background: C.plum, border: "4px solid ${C.mutedBorder}",
+          background: C.plum, border: `4px solid ${C.mutedBorder}`,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}><PixelText size={32} color={C.goldMd}>⚔</PixelText></div>
         <PixelText size={14} color={C.cream}>{hero.name}</PixelText>
         <div style={{ marginTop: 4 }}><PixelText size={8} color={C.goldMd}>{defeated}/{quest.bosses.length} BOSSES DEFEATED</PixelText></div>
       </div>
 
-      {/* Tab toggle: Hero / Log / Armory */}
+      {/* Tab toggle: Hero / Log / Armory / Courage */}
       <div style={{ display: "flex", gap: 4, marginBottom: 20 }} role="tablist">
         {[
           { key: "hero", label: "HERO" },
           { key: "log", label: "BATTLE LOG" },
           { key: "armory", label: "⚗ ARMORY" },
+          { key: "courage", label: "🔥 COURAGE" },
+          { key: "achievements", label: "🏅 BADGES" },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} role="tab" aria-selected={activeTab === tab.key} style={{
             flex: 1, padding: "8px 0", border: `2px solid ${activeTab === tab.key ? C.goldMd : C.mutedBorder}`, borderRadius: 4,
@@ -216,6 +240,57 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
 
       {activeTab === "log" && (
         <>
+        {showLootGallery ? (
+          <div>
+            <button onClick={() => setShowLootGallery(false)} style={{ background: "none", border: "none", cursor: "pointer", marginBottom: 16, padding: 0 }}>
+              <PixelText size={8} color={C.grayLt}>← BACK TO BATTLES</PixelText>
+            </button>
+            <PixelText size={10} color={C.goalGold} style={{ display: "block", marginBottom: 16, textAlign: "center" }}>
+              📸 MEANINGFUL MOMENTS
+            </PixelText>
+            {battleHistory.filter(b => b.lootImage || b.lootText).length === 0 ? (
+              <div style={{ padding: "40px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
+                <PixelText size={9} color={C.grayLt}>No meaningful moments saved yet.</PixelText>
+                <div style={{ marginTop: 8 }}><PixelText size={7} color={C.grayLt}>After each battle, share a{'\n'}moment to remember it.</PixelText></div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {battleHistory.filter(b => b.lootImage || b.lootText).slice().reverse().map((battle, idx) => {
+                  const boss = quest.bosses.find(b => b.id === battle.bossId);
+                  return (
+                    <div key={battle.bossId || idx} style={{
+                      padding: C.padLg, background: C.cardBg,
+                      border: `2px solid ${C.goalGold}30`, borderRadius: 6,
+                    }}>
+                      {battle.lootImage && (
+                        <img
+                          src={battle.lootImage}
+                          alt="Battle moment"
+                          style={{ width: "100%", maxHeight: 180, objectFit: "cover", borderRadius: 4, marginBottom: 8 }}
+                        />
+                      )}
+                      {battle.lootText && (
+                        <PixelText size={7} color={C.cream} style={{ display: "block", lineHeight: 1.8 }}>
+                          {battle.lootText}
+                        </PixelText>
+                      )}
+                      <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between" }}>
+                        <PixelText size={6} color={C.grayLt}>
+                          {boss?.name || "Unknown boss"} · {new Date(battle.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </PixelText>
+                        <PixelText size={6} color={battle.outcome === "victory" ? C.hpGreen : C.amber}>
+                          {battle.outcome?.toUpperCase()}
+                        </PixelText>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+        <>
         {quest.bosses.filter(b => b.defeated).length === 0 ? (
           <div style={{ padding: "40px 16px", textAlign: "center" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
@@ -224,9 +299,20 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
           </div>
         ) : (
           <>
-            <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 12 }}>
-              {battleHistory.length} battle{battleHistory.length !== 1 ? "s" : ""} recorded
-            </PixelText>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <PixelText size={8} color={C.grayLt}>
+                {battleHistory.length} battle{battleHistory.length !== 1 ? "s" : ""} recorded
+              </PixelText>
+              <button
+                onClick={() => setShowLootGallery(true)}
+                style={{
+                  background: `${C.goalGold}20`, border: `2px solid ${C.goalGold}60`,
+                  borderRadius: 4, padding: "4px 10px", cursor: "pointer",
+                }}
+              >
+                <PixelText size={7} color={C.goalGold}>📸 MOMENTS</PixelText>
+              </button>
+            </div>
             {battleHistory.slice().reverse().map((battle, idx) => {
               const boss = quest.bosses.find(b => b.id === battle.bossId);
               if (!boss) return null;
@@ -242,7 +328,7 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                       <div><PixelText size={6} color={C.grayLt}>{boss.desc}</PixelText></div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <PixelText size={7} color={C.goldMd}>+100 XP</PixelText>
+                      <PixelText size={7} color={C.goldMd}>+{battle.xpEarned ?? 100} XP</PixelText>
                       <PixelText size={8} color={C.grayLt}>{expandedBossId === battle.bossId ? "▲" : "▼"}</PixelText>
                     </div>
                   </button>
@@ -302,13 +388,49 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
           </>
         )}
         </>
+        )}
+        </>
       )}
 
       {activeTab === "armory" && (
       /* === ARMORY VIEW === */
       <>
+      {/* Signature tool + mastery */}
+      {(() => {
+        const sig = getSignatureTool(armory);
+        const masteryTools = getMasteryTools(armory);
+        if (!sig) return null;
+        return (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{
+              padding: C.padMd,
+              background: C.cardBg,
+              border: `2px solid ${C.goalGold}40`,
+              borderRadius: 6,
+              textAlign: 'center',
+            }}>
+              <PixelText size={7} color={C.goalGold} style={{ display: 'block', marginBottom: 4 }}>
+                ⚔️ SIGNATURE TOOL
+              </PixelText>
+              <div style={{ fontSize: 28 }}>{sig.icon}</div>
+              <PixelText size={8} color={C.cream} style={{ display: 'block' }}>{sig.name}</PixelText>
+              <PixelText size={6} color={C.grayLt}>
+                Practiced {sig.practiceCount || 0}x · {getToolLevel(sig.practiceCount || 0).name}
+              </PixelText>
+            </div>
+            {masteryTools.length > 0 && (
+              <div style={{ marginTop: 8, textAlign: 'center' }}>
+                <PixelText size={7} color={C.hpGreen}>
+                  {masteryTools.map(t => `${t.icon} ${t.name} ⭐⭐⭐`).join(' · ')}
+                </PixelText>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <div style={{ padding: C.padMd, textAlign: "center" }}>
-        <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>Practice to unlock new tools</PixelText>
+        <PixelText size={8} color={C.grayLt} style={{ display: "block", marginBottom: 16 }}>Practice to level up tools</PixelText>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {armory.map((item, i) => {
@@ -318,6 +440,8 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
           const progressNeeded = cond?.practiceCount || 2;
           const currentProgress = prevItem ? (prevItem.practiceCount || 0) : 0;
           const progressPct = Math.min(1, currentProgress / progressNeeded);
+          const toolLevel = !isLocked ? getToolLevel(item.practiceCount || 0) : null;
+          const toolProg = !isLocked ? getToolProgress(item.practiceCount || 0) : null;
 
           return (
             <div key={item.id} style={{
@@ -336,11 +460,21 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                   position: "relative",
                 }}>
                   <span style={{ fontSize: 22 }}>{item.icon}</span>
+                  {!isLocked && toolLevel && (
+                    <div style={{
+                      position: 'absolute', top: -6, right: -6,
+                      background: C.cardBg, borderRadius: '50%',
+                      width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: `1px solid ${C.goldMd}60`,
+                    }}>
+                      <PixelText size={6} color={C.goldMd}>{toolLevel.level}</PixelText>
+                    </div>
+                  )}
                   {isLocked && (
                     <div style={{
                       position: "absolute", top: -4, right: -4,
                       width: 18, height: 18, borderRadius: "50%",
-                      background: C.grayBorder, border: "2px solid ${C.grayBorderLt}",
+                      background: C.grayBorder, border: `2px solid ${C.grayBorderLt}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <span style={{ fontSize: 9 }}>🔒</span>
@@ -348,7 +482,12 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <PixelText size={9} color={isLocked ? C.grayLt : C.cream}>{item.name}</PixelText>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <PixelText size={9} color={isLocked ? C.grayLt : C.cream}>{item.name}</PixelText>
+                    {!isLocked && toolLevel && (
+                      <PixelText size={6} color={C.goldMd}>{toolLevel.icon} {toolLevel.name}</PixelText>
+                    )}
+                  </div>
                   <div style={{ marginTop: 2 }}>
                     <PixelText size={6} color={C.grayLt}>{item.description}</PixelText>
                   </div>
@@ -371,25 +510,171 @@ export default function HeroProfile({ hero, setHero, quest, battleHistory = [], 
                 </div>
               )}
 
-              {!isLocked && (
-                <div>
-                  <div style={{ marginTop: 8, marginBottom: 10 }}>
-                    <PixelText size={6} color={C.teal}>Practiced {item.practiceCount || 0}x{item.practiceCount >= 2 ? "" : ` (${2 - (item.practiceCount || 0)} more to unlock next)`}</PixelText>
+              {!isLocked && toolProg && toolProg.next && (
+                <div style={{ marginTop: 8, marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <PixelText size={6} color={C.teal}>{item.practiceCount || 0}/{toolProg.next.practiceNeeded} to {toolProg.next.name}</PixelText>
+                    <PixelText size={6} color={C.grayLt}>{Math.round(toolProg.progress)}%</PixelText>
                   </div>
-                  <button onClick={() => setPracticeMode({ toolId: item.id })} style={{
-                    width: "100%", padding: "10px 14px", borderRadius: 4,
-                    background: C.plum + "30", border: `2px solid ${C.plum + "80"}`,
-                    cursor: "pointer",
-                  }}>
-                    <PixelText size={8} color={C.plumMd}>PRACTICE →</PixelText>
-                  </button>
+                  <div style={{ height: 4, background: C.grayBg, borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", width: `${toolProg.progress}%`,
+                      background: C.goldMd,
+                      transition: "width 0.3s",
+                    }} />
+                  </div>
                 </div>
+              )}
+
+              {!isLocked && (
+                <button onClick={() => setPracticeMode({ toolId: item.id })} style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 4,
+                  background: C.plum + "30", border: `2px solid ${C.plum + "80"}`,
+                  cursor: "pointer",
+                }}>
+                  <PixelText size={8} color={C.plumMd}>PRACTICE →</PixelText>
+                </button>
               )}
             </div>
           );
         })}
       </div>
       </>
+      )}
+
+      {activeTab === "courage" && (
+        <div style={{ padding: '24px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔥</div>
+          <PixelText size={10} color={C.goalGold} style={{ display: 'block', marginBottom: 8 }}>
+            COURAGE PATH
+          </PixelText>
+          <PixelText size={8} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8, marginBottom: 16 }}>
+            See your SUDS trends, personal{'\n'}bests, repeat mastery, and{'\n'}your growing courage level.
+          </PixelText>
+          <PixelBtn
+            onClick={() => setScreen('couragePath')}
+            color={C.gold}
+            textColor={C.charcoal}
+            style={{ width: '100%' }}
+          >
+            VIEW MY PROGRESS →
+          </PixelBtn>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `2px solid ${C.mutedBorder}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+              <span style={{ fontSize: 18 }}>🪙</span>
+              <PixelText size={9} color={C.goldMd}>
+                {hero.courageCoins || 0} COINS
+              </PixelText>
+            </div>
+            <PixelBtn
+              onClick={() => setScreen('shop')}
+              color={C.plum}
+              textColor={C.cream}
+              style={{ width: '100%' }}
+            >
+              VISIT DARA'S SHOP →
+            </PixelBtn>
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `2px solid ${C.mutedBorder}` }}>
+            <PixelText size={9} color={C.goalGold} style={{ display: 'block', marginBottom: 12 }}>
+              📚 SHADOW LORE
+            </PixelText>
+            <PixelText size={7} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8, marginBottom: 12 }}>
+              Unlock stories about the Shadow's{'\n'}origin, Dara's journey, and the{'\n'}secrets of courage.
+            </PixelText>
+            <PixelBtn
+              onClick={() => setScreen('lorePath')}
+              color={C.gold}
+              textColor={C.charcoal}
+              style={{ width: '100%' }}
+            >
+              READ LORE →
+            </PixelBtn>
+          </div>
+
+          {hero.pendingLetter && (
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: `2px solid ${C.goalGold}40` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>✉️</span>
+                <PixelText size={8} color={C.goalGold}>NEW LETTER FROM DARA</PixelText>
+              </div>
+              <PixelBtn
+                onClick={() => setScreen('daraLetter')}
+                color={C.plum}
+                textColor={C.cream}
+                style={{ width: '100%' }}
+              >
+                READ LETTER →
+              </PixelBtn>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "achievements" && (
+        <div>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <PixelText size={10} color={C.goalGold}>🏅 ACHIEVEMENTS</PixelText>
+            <div style={{ marginTop: 4 }}>
+              <PixelText size={8} color={C.grayLt}>
+                {(hero.achievements || []).length}/{ACHIEVEMENTS.length} unlocked
+              </PixelText>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ height: 6, background: C.grayBg, borderRadius: 3, marginBottom: 20, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${((hero.achievements || []).length / ACHIEVEMENTS.length) * 100}%`,
+              background: C.goalGold,
+              transition: 'width 0.3s',
+            }} />
+          </div>
+
+          {CATEGORY_ORDER.map(cat => {
+            const catAchievements = ACHIEVEMENTS.filter(a => a.category === cat);
+            return (
+              <div key={cat} style={{ marginBottom: 16 }}>
+                <PixelText size={8} color={C.teal} style={{ display: 'block', marginBottom: 8 }}>
+                  {CATEGORY_LABELS[cat]}
+                </PixelText>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {catAchievements.map(ach => {
+                    const isUnlocked = (hero.achievements || []).includes(ach.id);
+                    return (
+                      <div key={ach.id} style={{
+                        padding: C.padMd,
+                        background: isUnlocked ? C.cardBg : C.deepDark,
+                        border: `2px solid ${isUnlocked ? C.goalGold + '60' : C.mutedBorder + '40'}`,
+                        borderRadius: 6,
+                        opacity: isUnlocked ? 1 : 0.5,
+                        textAlign: 'center',
+                      }}>
+                        <div style={{ fontSize: 28, marginBottom: 4, filter: isUnlocked ? 'none' : 'grayscale(1) opacity(0.3)' }}>
+                          {ach.icon}
+                        </div>
+                        <PixelText size={7} color={isUnlocked ? C.goalGold : C.grayLt} style={{ display: 'block' }}>
+                          {ach.name}
+                        </PixelText>
+                        <PixelText size={6} color={C.grayLt} style={{ display: 'block', marginTop: 2, lineHeight: 1.6 }}>
+                          {ach.desc}
+                        </PixelText>
+                        {isUnlocked && (
+                          <div style={{ marginTop: 4 }}>
+                            <PixelText size={6} color={C.hpGreen}>UNLOCKED</PixelText>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <BottomNav active="hero" onNav={setScreen} />
