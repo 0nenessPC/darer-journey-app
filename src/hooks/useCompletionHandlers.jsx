@@ -632,40 +632,149 @@ export function useCompletionHandlers({
 
   const handleTutorialComplete = useCallback(
     async (details = {}) => {
-      setScreen('exposureSort');
+      const {
+        lootImage,
+        lootText,
+        chosenExposure,
+        engageOutcome,
+        sudsBefore,
+        sudsAfter,
+        decideWhy,
+        exposureWhen,
+        exposureWhere,
+        exposureArmory,
+      } = details;
+
+      // Record activity for streak tracking (tutorial counts as first exposure)
+      const streakUpdate = recordActivity({
+        streakCount: hero.streakCount || 0,
+        lanterns: hero.lanterns || 0,
+        bestStreak: hero.bestStreak || 0,
+        isRepeat: false,
+      });
+
+      // Fixed XP for tutorial: 50 base + SUDS bonus
+      const sudsDelta = (sudsBefore || 0) - (sudsAfter || 0);
+      const sudsBonus = sudsDelta > 0 ? Math.floor(sudsDelta / 10) * 10 : 0;
+      const xpEarned = 50 + sudsBonus;
+      const coinsEarned = 5; // Tutorial always awards 5 coins
+
+      // XP breakdown for BattleRewardScreen
+      const xpBreakdown = [
+        { label: 'First Exposure', xp: 50 },
+        { label: 'SUDS Check-in', xp: 25 },
+        { label: 'Reflection', xp: 25 },
+      ];
+      if (sudsBonus > 0) xpBreakdown.push({ label: 'SUDS Drop Bonus', xp: sudsBonus });
+
+      // Update hero state
+      setHero((h) => {
+        const totalXP = (h.totalXP || 0) + xpEarned;
+        const playerLevel = getPlayerLevel(totalXP);
+        const updates = {
+          totalXP,
+          playerLevel,
+          courageCoins: (h.courageCoins || 0) + coinsEarned,
+          streakCount: streakUpdate.streakCount,
+          lanterns: streakUpdate.lanterns,
+          bestStreak: streakUpdate.bestStreak,
+          lastActiveDate: streakUpdate.lastActiveDate,
+        };
+
+        // Award lantern loot
+        updates.lanterns = (updates.lanterns || 0) + 1;
+
+        // Check achievements for first exposure
+        const prevAchievements = h.achievements || [];
+        const { unlocked: newAchievements } = checkAchievements(
+          {
+            defeatedCount: 1,
+            victoryCount: engageOutcome === 'full' ? 1 : 0,
+            streakCount: streakUpdate.streakCount,
+            coins: (h.courageCoins || 0) + coinsEarned,
+            maxSudsDrop: sudsDelta > 0 ? sudsDelta : 0,
+            lootCount: lootImage || lootText ? 1 : 0,
+            repeatCount: 0,
+            nightBattles: 0,
+            allDiffTiers: 1,
+            customBossCount: 0,
+            zonesVisited: 1,
+            bestRepeatSudsDrop: 0,
+            minRepeatSudsAfter: 100,
+            repeatVariations: 0,
+          },
+          prevAchievements,
+        );
+        if (newAchievements.length > 0) {
+          updates.achievements = [...prevAchievements, ...newAchievements];
+        }
+
+        return { ...h, ...updates };
+      });
+
+      // Save to Supabase
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
+        const tutorialRecord = {
+          bossId: chosenExposure?.id || 'tutorial',
+          bossName: chosenExposure?.text || 'Tutorial Exposure',
+          bossDesc: chosenExposure?.where || '',
+          outcome: engageOutcome || 'tried',
+          date: new Date().toISOString(),
+          suds_before: sudsBefore ?? null,
+          suds_after: sudsAfter ?? null,
+          prep_value: decideWhy || '',
+          exposure_when: exposureWhen || '',
+          exposure_where: exposureWhere || '',
+          exposure_armory: exposureArmory || '',
+          loot_text: lootText || '',
+          loot_image_url: lootImage || null,
+          is_tutorial: true,
+          battle_chat_message_count: (details.coachMessages || []).length,
+        };
+
         await saveProgress(user.id, {
           screen: 'exposureSort',
           hero,
           quest,
           tutorial_complete: true,
-          tutorial_loot: { image: details.lootImage, text: details.lootText },
+          tutorial_loot: { image: lootImage, text: lootText },
         });
-        // Write to normalized battles table for analytics
-        const tutorialRecord = {
-          bossId: details.chosenExposure?.id || 'tutorial',
-          bossName: details.chosenExposure?.text || 'Tutorial Exposure',
-          bossDesc: details.chosenExposure?.where || '',
-          outcome: details.engageOutcome || 'tried',
-          date: new Date().toISOString(),
-          suds_before: details.sudsBefore ?? null,
-          suds_after: details.sudsAfter ?? null,
-          prep_value: details.decideWhy || '',
-          exposure_when: details.exposureWhen || '',
-          exposure_where: details.exposureWhere || '',
-          exposure_armory: details.exposureArmory || '',
-          loot_text: details.lootText || '',
-          loot_image_url: details.lootImage || null,
-          is_tutorial: true,
-          battle_chat_message_count: (details.coachMessages || []).length,
-        };
         await saveBattleRecord(user.id, tutorialRecord);
       }
+
+      // Return celebration payload (caller handles navigation after celebration)
+      const bossName = chosenExposure?.text || 'Tutorial Exposure';
+
+      return {
+        outcome: engageOutcome === 'full' ? 'victory' : engageOutcome === 'partial' ? 'partial' : 'retreat',
+        bossName,
+        xpEarned,
+        coinsEarned,
+        diamondsEarned: 0,
+        playerLevel: hero.playerLevel || 1,
+        prevLevel: hero.playerLevel || 1,
+        newAchievements: [],
+        lootDrop: {
+          id: 'lantern',
+          name: 'Streak Lantern',
+          icon: '🏮',
+          type: 'lantern',
+          value: 1,
+          rarity: 'uncommon',
+          description: 'Your first lantern — your path stays lit',
+        },
+        streakCount: streakUpdate.streakCount,
+        hasLetter: false,
+        sudsDrop: sudsDelta,
+        xpBreakdown,
+        weeklyChallengeRewards: null,
+        evidenceCards: [],
+      };
     },
-    [hero, quest, setScreen],
+    [hero, quest, setHero],
   );
 
   return {

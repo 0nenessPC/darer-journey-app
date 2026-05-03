@@ -13,6 +13,8 @@ import LadderScreen from "./components/LadderScreen.jsx";
 import AlliesWall from "./components/AlliesWall.jsx";
 import DeleteConfirm from "./components/DeleteConfirm.jsx";
 import FeedbackModal from "./components/FeedbackModal.jsx";
+import CelebrationOverlay from "./components/CelebrationOverlay.jsx";
+import BattleRewardScreen from "./components/BattleRewardScreen.jsx";
 import { useAppState } from "./hooks/useAppState.jsx";
 import { useBossHandlers } from "./hooks/useBossHandlers.jsx";
 import { useCompletionHandlers } from "./hooks/useCompletionHandlers.jsx";
@@ -61,6 +63,8 @@ export default function DARERQuest() {
   const [pendingDeleteBoss, setPendingDeleteBoss] = useState(null);
   const [justAddedBossId, setJustAddedBossId] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [tutorialCelebration, setTutorialCelebration] = useState(null);
+  const [showTutorialReward, setShowTutorialReward] = useState(false);
 
   // Memoized hero context for AI — avoids recomputing on every render
   const heroContext = useMemo(
@@ -245,7 +249,15 @@ export default function DARERQuest() {
       {screen === "shadowReveal" && <ShadowReveal heroName={hero.name} shadowText={shadowText} onContinue={() => setScreen("values")} obState={getOBState("shadowReveal", { revealed: false })} setOBState={(s) => setOBState("shadowReveal", s)} />}
       {screen === "darerStrategy" && <DARERStrategy heroName={hero.name} shadowText={shadowText} heroValues={hero.values || []} onContinue={() => setScreen("armoryIntro")} obState={getOBState("darerStrategy", { step: 0 })} setOBState={(s) => setOBState("darerStrategy", s)} />}
       {screen === "armoryIntro" && <ArmoryScreen heroName={hero.name} onContinue={() => setScreen("tutorial")} obState={getOBState("armoryIntro", { step: "intro" })} setOBState={(s) => setOBState("armoryIntro", s)} />}
-      {screen === "tutorial" && <TutorialBattle heroName={hero.name} hero={hero} quest={quest} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={handleTutorialComplete} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
+      {screen === "tutorial" && <TutorialBattle heroName={hero.name} hero={hero} quest={quest} shadowText={shadowText} heroValues={hero.values || []} heroStrengths={hero.strengths || []} heroCoreValues={hero.coreValues || []} onComplete={async (details) => {
+        const celebration = await handleTutorialComplete(details);
+        if (celebration) {
+          setTutorialCelebration(celebration);
+          setShowTutorialReward(true);
+        } else {
+          setScreen("exposureSort");
+        }
+      }} obState={getOBState("tutorial", { step: 0 })} setOBState={(s) => setOBState("tutorial", s)} />}
       {screen === "exposureSort" && <ExposureSortScreen hero={hero} shadowText={shadowText} onComplete={(bosses) => {
         setQuest(q => ({ ...q, bosses, goal: hero.values?.[0]?.text || q.goal }));
         const firstBoss = bosses.length > 0 ? bosses[0] : null;
@@ -270,6 +282,46 @@ export default function DARERQuest() {
       {screen === "welcomeBack" && <WelcomeBackLetter letterData={hero.welcomeBackData || {}} onContinue={() => { setHero(h => ({ ...h, welcomeBackData: null })); setScreen("map"); }} hero={hero} />}
       {screen === "ladder" && <LadderScreen hero={hero} quest={quest} battleHistory={battleHistory} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "allies" && <AlliesWall onBack={() => setScreen("map")} setScreen={setScreen} />}
+
+      {/* Tutorial post-battle celebration — full gamification for first exposure */}
+      {showTutorialReward && tutorialCelebration && (
+        <BattleRewardScreen
+          outcome={tutorialCelebration.outcome}
+          bossName={tutorialCelebration.bossName}
+          heroName={hero.name}
+          xpBreakdown={tutorialCelebration.xpBreakdown || []}
+          totalXP={tutorialCelebration.xpEarned || 0}
+          coinsEarned={tutorialCelebration.coinsEarned || 0}
+          sudsDrop={tutorialCelebration.sudsDrop || 0}
+          evidenceCards={tutorialCelebration.evidenceCards || []}
+          onDismiss={() => {
+            setShowTutorialReward(false);
+          }}
+        />
+      )}
+      {tutorialCelebration && !showTutorialReward && (
+        <CelebrationOverlay
+          outcome={tutorialCelebration.outcome || 'victory'}
+          heroName={hero.name}
+          bossName={tutorialCelebration.bossName || 'Tutorial Exposure'}
+          xpEarned={tutorialCelebration.xpEarned || 0}
+          coinsEarned={tutorialCelebration.coinsEarned || 0}
+          diamondsEarned={tutorialCelebration.diamondsEarned || 0}
+          lootDrop={tutorialCelebration.lootDrop || null}
+          achievements={tutorialCelebration.newAchievements || []}
+          playerLevel={tutorialCelebration.playerLevel || 1}
+          prevLevel={tutorialCelebration.prevLevel || 1}
+          streakCount={tutorialCelebration.streakCount || 0}
+          hasLetter={tutorialCelebration.hasLetter || false}
+          weeklyChallengeRewards={tutorialCelebration.weeklyChallengeRewards || null}
+          evidenceCards={tutorialCelebration.evidenceCards || []}
+          onDismiss={() => {
+            setTutorialCelebration(null);
+            setScreen("exposureSort");
+          }}
+        />
+      )}
+
       </Suspense>
 
       {/* Delete Confirmation Dialog */}
