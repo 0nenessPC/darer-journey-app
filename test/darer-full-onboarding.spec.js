@@ -96,9 +96,9 @@ test.describe('DARER Journey', () => {
         ]);
       } else if (sys.includes('exposure') && sys.includes('boss') && sys.includes('generate')) {
         reply = JSON.stringify([
-          { id: "b1", name: "The Cashier", desc: "Ask a store clerk a question", difficulty: 2, xp: 50 },
-          { id: "b2", name: "The Introducer", desc: "Introduce yourself to someone new", difficulty: 4, xp: 100 },
-          { id: "b3", name: "The Presenter", desc: "Share an opinion in a small group", difficulty: 5, xp: 150 },
+          { name: "The Cashier", activity: "Ask a store clerk a question", level: 2 },
+          { name: "The Introducer", activity: "Introduce yourself to someone new", level: 4 },
+          { name: "The Presenter", activity: "Share an opinion in a small group", level: 5 },
         ]);
       } else if (sys.includes('values') && sys.includes('generate')) {
         reply = JSON.stringify([
@@ -516,6 +516,17 @@ test.describe('DARER Journey', () => {
     const outcomeBtn = page.locator('button').filter({ hasText: /I did it.*stayed all the way/i }).first();
     await expect(outcomeBtn).toBeVisible({ timeout: 10000 });
     await outcomeBtn.click();
+
+    // A12: ENGAGE sub-step 1.5 (Loot upload) — proof of completion
+    console.log('  → Engage: loot upload');
+    // Click CONTINUE to advance from outcome selection to loot upload
+    await btn(page, 'CONTINUE', 10000);
+    await screen(page, 'Every battle leaves a mark', 15000);
+    // Fill the meaningful moment text
+    const lootTextarea = page.locator('textarea').first();
+    await expect(lootTextarea).toBeVisible({ timeout: 10000 });
+    await lootTextarea.fill('I felt proud — the fear was quieter than I expected');
+    // Continue to SUDs (no image needed, upload is optional)
     await btn(page, 'CONTINUE', 10000);
 
     // A13: ENGAGE sub-step 2 (SUDs After) — use 0-100 range slider
