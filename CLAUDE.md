@@ -25,9 +25,11 @@ npm run test:e2e:ui      # Playwright E2E with UI
 npm run test:e2e:headed  # Playwright E2E headed browser
 npm run test:ai          # AI-powered content quality tests (needs OPENAI_API_KEY)
 npm run test:ai:ui       # AI tests with UI
+npm run test:unit        # Vitest: unit tests for parseShadow, aiHelper, etc.
+npm run test:unit:watch  # Vitest interactive watch mode
 ```
 
-Tests use a mobile viewport (420x860), single worker (sequential). The `e2e` test mocks all AI calls via `page.route('**/api/qwen-chat')`. The `ai` tests use DashScope Qwen 3.5 Flash for visual/content assertions and gracefully skip if `DASHSCOPE_API_KEY` is not set.
+Tests use a mobile viewport (420x860), single worker (sequential). The `e2e` test mocks all AI calls via `page.route('**/api/qwen-chat')`. The `ai` tests use DashScope Qwen 3.5 Flash for visual/content assertions and gracefully skip if `DASHSCOPE_API_KEY` is not set. Playwright auto-starts the dev server via `webServer` config before running.
 
 ## Architecture
 
@@ -438,5 +440,112 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 - `npm run test:e2e` — 1/1 passing
 - `npm run test:ai` — 12/12 passing
 
-### Pending / Next Steps
-- None — Phase 1–4 all complete.
+### Session: 2026-05-07 — DecidePhase/RepeatPhase Wired + Logger Fix
+
+- **`src/screens/BossBattle.jsx` — DecidePhase wired**:
+  - Replaced ~150 lines of inline Decide JSX (prepStep === 0) with `<DecidePhase>` component call
+  - Passes: `label={vs}`, `entityName={boss.name}`, `values={pickValues}` (hero.values or hero.coreValues), `selectedVals={decideSelectedVals}`, `customText={decideCustom}`, `onNext` that sets prepAnswers.value and advances prepStep, `showVoiceInput`, `voice`
+
+- **`src/screens/BossBattle.jsx` — RepeatPhase wired**:
+  - Replaced ~150 lines of inline Repeat JSX (phase === 'repeat') with `<RepeatPhase>` component call
+  - Passes: `outcome`, `repeatOptions`, `selectedRepeat`, `setSelectedRepeat`, `onRegenerate`, `onComplete` (calls onVictory), `isLoading`, `readOnly={false}`, `heroName={hero.name}`
+
+- **`src/screens/TutorialBattle.jsx` — DecidePhase wired**:
+  - Replaced ~85 lines of inline Decide JSX (phase === 'decide') with `<DecidePhase>` component call
+  - Passes: label with Decide metadata, `entityName={chosenExposure.text}`, `values={heroValues}`, `customText={decideCustom}`, `onNext` that sets decideWhy and advances phase, `showVoiceInput={false}`
+
+- **`src/screens/TutorialBattle.jsx` — RepeatPhase wired**:
+  - Replaced ~115 lines of inline Repeat JSX (engageSubStep === 6) with `<RepeatPhase>` component call
+  - Passes: `outcome={engageOutcome}`, `repeatOptions`, `readOnly` (faded preview for trial users), `isLoading`, `continueLabel="GOT IT — ON TO THE PATH →"`, `onComplete` that calls onComplete()
+
+- **`src/utils/logger.js` — Added missing file** (was imported but never committed, broke Vercel build):
+  - Simple no-op-in-prod console wrapper: log/warn disabled in PROD, error always logs
+
+- **`src/components/DARER/DecidePhase.jsx`** — Shared Decide phase (created previous session, now wired):
+  - Value pick buttons (multi-select), custom text input, optional voice button, PixelBtn to advance
+
+- **`src/components/DARER/RepeatPhase.jsx`** — Shared Repeat phase (created previous session, now wired):
+  - Psychoeducation block, AI-generated options list, readOnly toggle for TutorialBattle vs BossBattle
+
+**Total lines removed from battle screens**: ~500 lines of duplicated JSX → 4 component calls
+**Verification**:
+- `npx vite build` — 126 modules, 440 KB main bundle, 1.32s
+- `npm run test:e2e` — 1/1 passing (full onboarding through tutorial)
+
+### Session: 2026-05-05 — ESLint Warning Fix, ExposureBank Nav Bug, Roadmap Created
+
+- **Consolidated improvement roadmap** — merged two audit lists into a 22-item prioritized roadmap with 8 phases. Documented in plan file at `C:\Users\YCSH8\.claude\plans\distributed-dazzling-clock.md`.
+
+- **`src/utils/chat.js` — ESLint warning fix**:
+  - Removed unnecessary `ctx` from `useCallback` dependency array on `sendMessage` (line 58)
+  - `ctx` is accessed via `ctxRef.current` (a ref), not directly — including it as a dep causes needless re-creates
+  - ESLint now passes with zero warnings
+
+- **Tooling infrastructure created** (Phase 6):
+  - `.eslintrc.cjs` — ESLint config with react, react-hooks, jsx-a11y plugins
+  - `.prettierrc` — semi, singleQuote, trailingComma, printWidth 100, tabWidth 2
+  - `.prettierignore` — dist/, node_modules/, playwright-report/, test-results/
+  - `package.json` — added `lint`, `lint:fix`, `format`, `format:check` scripts
+
+- **`src/screens/ExposureBankScreen.jsx` — Bottom nav bug fix**:
+  - User reported: clicking MAP, LADDER, or HERO tabs from ExposureBank did nothing
+  - Root cause: `onNav` handler only checked `if (s === "map") onBack()` — ignored `"ladder"` and `"profile"`
+  - Added `onNav` prop to component, wired to `setScreen(s)` in App.jsx
+  - BottomNav now navigates correctly to all 4 tabs
+
+- **`src/App.jsx` — Wired `onNav` prop** for ExposureBankScreen: `onNav={(s) => setScreen(s)}`
+
+**Verification**:
+- `npx eslint src/` — zero warnings, zero errors
+- `npx vite build` — 119 modules, 445 KB main bundle, 1.25s
+
+### Session: 2026-05-07 — Architecture Phase Complete, Test Infra, Roadmap Review
+
+- **`src/hooks/useDARERFlow.jsx` — Hook extraction complete**:
+  - BossBattle: replaced ~25 useState calls with `const flow = useDARERFlow({ obState, setOBState })`, all references now `flow.xxx`
+  - TutorialBattle: same pattern, replaced 20+ useState calls
+  - Both screens still handle their own obState persistence (mixed with screen-specific fields)
+  - Fixed `flow.voice.speak` → `voice.speak` in BossBattle `BattleTypewriterBubble` (was using hook ref outside component scope)
+
+- **`playwright.config.js` — Added `webServer` config**:
+  - All 7 AI smoke tests were failing with `ERR_CONNECTION_REFUSED` — no dev server running
+  - Added `webServer: { command: 'npm run dev', url: 'http://localhost:3000', reuseExistingServer: true }`
+  - AI smoke tests now 12/12 passing consistently
+
+- **`src/utils/aiSchemas.js` — Zod schema validation for AI outputs** (Phase 8 #18):
+  - Created schemas: `ValueSchema`, `ExposureSchema`, `BossConfigSchema`, `IntakeResponseSchema`
+  - `validateAIResponse()` helper handles markdown stripping, JSON extraction, Zod parsing
+  - Wired into: `generateFollowUpExposures` (chat.js), ValuesScreen, ExposureSortScreen, TutorialBattle, AskDaraChat
+  - Malformed AI responses now fall back gracefully instead of crashing
+
+- **Vitest unit test infrastructure** (Phase 8 #17):
+  - `vitest.config.js`, `test/setup.js`, `test/unit/` directory
+  - `test/unit/parseShadow.test.js` — 5 tests for section extraction
+  - `test/unit/aiHelper.test.js` — 11 tests for `buildHeroContext`
+  - Added `npm run test:unit` and `test:unit:watch` scripts
+  - 16/16 passing
+
+- **`src/hooks/useAppState.jsx` — Split into sub-hooks** (Phase 8 #19):
+  - `useAuth.jsx` — Supabase session management, login/logout/NDA handlers
+  - `useNavigation.jsx` — screen state, back-stack, setScreen/goBack
+  - `useHeroState.jsx` — hero/quest/battle/shadow/onboarding state + restoreProgress/newUser + setOBState/getOBState
+  - `useAppState.jsx` now orchestrates the three sub-hooks, adding auto-save debounce and browser-close save
+  - Return shape identical — zero App.jsx changes needed
+
+- **Roadmap review** (#12 CSS migration, #20 TypeScript):
+  - #12: Broke into 8 steps. Recommendation: skip — minimal benefit for mobile-only PWA with no complex layouts
+  - #20: Broke into 15 steps. Recommendation: low ROI for solo dev, worthwhile if bringing on collaborators
+
+**Verification**:
+- `npx vite build` — passes cleanly (1.69s, 512 KB)
+- `npm run test:e2e` — 1/1 passing
+- `npm run test:ai` — 12/12 passing
+- `npm run test:unit` — 16/16 passing (2 test files)
+
+### Completed Roadmap Items (this + previous sessions)
+
+**Phase 5: Bug fixes** — COMPLETE (items 1-3)
+**Phase 6: Tooling** — COMPLETE (items 4-6: ESLint/Prettier, pre-commit hook, CI, production console audit)
+**Phase 7: Architecture** — COMPLETE (items 7-11: useDARERFlow hook, gameData split, ONBOARDING single source, debounce auto-save, voice hooks)
+**Phase 8: Refinement** — 6/11 done (#13 AbortController, #14 useMemo buildHeroContext, #15 deduplicate boss creation, #16 rapid-fire send guard, #17 Vitest, #18 Zod validation, #19 split useAppState, #22 barrel exports)
+**Phase 8: Skipped** — #12 CSS architecture, #20 TypeScript migration (low ROI for this project)
