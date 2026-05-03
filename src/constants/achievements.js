@@ -64,32 +64,32 @@ export const ACHIEVEMENTS = [
   // Streak milestones
   {
     id: 'streak_3',
-    name: 'On a Roll',
-    icon: '🔥',
+    name: 'Three Days',
+    icon: '🏮',
     desc: 'Reach a 3-day streak',
     category: 'streak',
     check: ({ streakCount }) => streakCount >= 3,
   },
   {
     id: 'streak_7',
-    name: 'Week Warrior',
-    icon: '💥',
+    name: 'Seven Days',
+    icon: '🏮',
     desc: 'Reach a 7-day streak',
     category: 'streak',
     check: ({ streakCount }) => streakCount >= 7,
   },
   {
     id: 'streak_14',
-    name: 'Dedicated',
-    icon: '🌟',
+    name: 'Fourteen Days',
+    icon: '🏮',
     desc: 'Reach a 14-day streak',
     category: 'streak',
     check: ({ streakCount }) => streakCount >= 14,
   },
   {
     id: 'streak_30',
-    name: 'Iron Will',
-    icon: '💎',
+    name: 'Thirty Days',
+    icon: '🏮',
     desc: 'Reach a 30-day streak',
     category: 'streak',
     check: ({ streakCount }) => streakCount >= 30,
@@ -103,22 +103,22 @@ export const ACHIEVEMENTS = [
     check: ({ nightBattles }) => nightBattles >= 1,
   },
 
-  // Platinum
+  // Courage Coins
   {
-    id: 'platinum_10',
+    id: 'coins_10',
     name: 'Saver',
-    icon: '⚪',
-    desc: 'Accumulate 10 Platinum',
+    icon: '🪙',
+    desc: 'Accumulate 10 Courage Coins',
     category: 'collection',
-    check: ({ platinum }) => platinum >= 10,
+    check: ({ coins }) => coins >= 10,
   },
   {
-    id: 'platinum_50',
+    id: 'coins_50',
     name: 'Treasury',
     icon: '💰',
-    desc: 'Accumulate 50 Platinum',
+    desc: 'Accumulate 50 Courage Coins',
     category: 'collection',
-    check: ({ platinum }) => platinum >= 50,
+    check: ({ coins }) => coins >= 50,
   },
 
   // SUDS reduction

@@ -160,9 +160,12 @@ export function useCompletionHandlers({
       }
 
       // Record activity for streak tracking
+      const isRepeat = activeBoss?.id?.startsWith('repeat_');
       const streakUpdate = recordActivity({
         streakCount: hero.streakCount || 0,
-        streakFreezes: hero.streakFreezes || 0,
+        lanterns: hero.lanterns || 0,
+        bestStreak: hero.bestStreak || 0,
+        isRepeat,
       });
 
       // Roll loot drop (victory only)
@@ -356,7 +359,8 @@ export function useCompletionHandlers({
             courageCoins: (h.courageCoins || 0) + coinsEarned,
             diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
-            streakFreezes: streakUpdate.streakFreezes,
+            lanterns: streakUpdate.lanterns,
+            bestStreak: streakUpdate.bestStreak,
             lastActiveDate: streakUpdate.lastActiveDate,
             pendingLetter: letter,
             pendingLetterDate: new Date().toISOString(),
@@ -374,8 +378,8 @@ export function useCompletionHandlers({
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
             } else if (lootDrop.type === 'coins') {
               updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'streak_freeze') {
-              updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'lantern') {
+              updates.lanterns = (updates.lanterns || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
               updates.doubleXP = doubleXPCount + lootDrop.value;
             } else if (lootDrop.type === 'collectible') {
@@ -433,7 +437,8 @@ export function useCompletionHandlers({
             courageCoins: (h.courageCoins || 0) + coinsEarned,
             diamonds: (h.diamonds || 0) + diamondsEarned,
             streakCount: streakUpdate.streakCount,
-            streakFreezes: streakUpdate.streakFreezes,
+            lanterns: streakUpdate.lanterns,
+            bestStreak: streakUpdate.bestStreak,
             lastActiveDate: streakUpdate.lastActiveDate,
             totalXP: totalXP,
             playerLevel: playerLevel,
@@ -446,8 +451,8 @@ export function useCompletionHandlers({
               updates.bonusXP = (h.bonusXP || 0) + lootDrop.value;
             } else if (lootDrop.type === 'coins') {
               updates.courageCoins = (updates.courageCoins || 0) + lootDrop.value;
-            } else if (lootDrop.type === 'streak_freeze') {
-              updates.streakFreezes = (updates.streakFreezes || 0) + lootDrop.value;
+            } else if (lootDrop.type === 'lantern') {
+              updates.lanterns = (updates.lanterns || 0) + lootDrop.value;
             } else if (lootDrop.type === 'double_xp') {
               updates.doubleXP = (h.doubleXP || 0) + lootDrop.value;
             } else if (lootDrop.type === 'collectible') {
@@ -485,7 +490,6 @@ export function useCompletionHandlers({
       setScreen('map');
 
       // Generate evidence cards from this battle
-      const isRepeat = activeBoss?.id?.startsWith('repeat_');
       const originalBoss = quest.bosses.find(
         (b) => b.name === activeBoss?.name && b.id !== activeBoss?.id,
       );

@@ -6,15 +6,15 @@ import BottomNav from '../components/BottomNav';
 const SHOP_ITEMS = [
   // Platinum items (cosmetics + functional)
   {
-    id: 'streak_freeze',
-    name: 'Streak Freeze',
-    icon: '❄️',
+    id: 'streak_lantern',
+    name: 'Streak Lantern',
+    icon: '🏮',
     description: 'Protects your streak for one missed day',
     price: 10,
     currencyType: 'platinum',
     category: 'functional',
     repeatable: true,
-    effect: 'streak_freeze',
+    effect: 'lantern',
   },
   {
     id: 'double_xp_potion',
@@ -190,8 +190,8 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
         // Apply consumable items immediately
         if (item.effect === 'double_xp') {
           updates.doubleXP = (h.doubleXP || 0) + 1;
-        } else if (item.effect === 'streak_freeze') {
-          updates.streakFreezes = (h.streakFreezes || 0) + 1;
+        } else if (item.effect === 'lantern') {
+          updates.lanterns = (h.lanterns || 0) + 1;
         }
         return { ...h, ...updates };
       });

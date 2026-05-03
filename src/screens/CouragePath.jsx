@@ -322,7 +322,7 @@ export default function CouragePath({ hero, quest, battleHistory, onBack, setScr
           </PixelText>
         </button>
         <PixelText size={10} color={C.goalGold}>
-          🔥 COURAGE PATH
+          🏮 COURAGE PATH
         </PixelText>
       </div>
 
@@ -602,11 +602,17 @@ export default function CouragePath({ hero, quest, battleHistory, onBack, setScr
               }
             />
             <StatCard
-              icon="🔥"
+              icon="🏮"
               label="Day streak"
               value={stats.streak}
               color={C.goldMd}
-              subtext={stats.streak > 0 ? 'Keep it going!' : 'Practice today!'}
+              subtext={
+                hero.bestStreak > 0
+                  ? `Best: ${hero.bestStreak} days`
+                  : stats.streak > 0
+                    ? 'Keep it going!'
+                    : 'Practice today!'
+              }
             />
           </div>
 

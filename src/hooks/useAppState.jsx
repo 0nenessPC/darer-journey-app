@@ -3,6 +3,7 @@ import { supabase, saveProgress, loadProgress, NDA_VERSION } from '../utils/supa
 import { useAuth } from './useAuth';
 import { useNavigation } from './useNavigation';
 import { useHeroState } from './useHeroState';
+import { updateStreakOnOpen } from '../utils/streak';
 
 /**
  * useAppState — orchestrates auth, navigation, and hero state sub-hooks.
@@ -115,11 +116,30 @@ export function useAppState() {
     const progress = await loadProgress(user.id);
     if (progress) {
       hero.restoreProgress(progress);
+      // Update streak based on time since last activity
+      const heroData = progress.hero || {};
+      const streakResult = updateStreakOnOpen({
+        streakCount: heroData.streakCount || 0,
+        lastActiveDate: heroData.lastActiveDate,
+        lanterns: heroData.lanterns || 0,
+      });
+      if (streakResult.wasReset || streakResult.usedLantern) {
+        hero.setHero(h => ({
+          ...h,
+          streakCount: streakResult.streakCount,
+          lanterns: streakResult.lanterns,
+        }));
+      }
     } else {
       hero.newUser();
     }
-    // Route based on restored state
-    if (progress?.quest?.bosses?.length > 0) {
+    // Check for welcome-back letter (2+ days away)
+    const heroData = progress ? { ...hero.hero, ...((progress.hero || {})) } : hero.hero;
+    const welcomeBackData = hero.checkWelcomeBack(heroData, hero.battleHistory);
+    if (welcomeBackData) {
+      hero.setHero(h => ({ ...h, welcomeBackData }));
+      nav.setScreen('welcomeBack');
+    } else if (progress?.quest?.bosses?.length > 0) {
       nav.setScreen('map');
     } else if (progress?.onboarding_state?.exposureSort?.done) {
       nav.setScreen('map');
@@ -152,9 +172,32 @@ export function useAppState() {
       );
       if (!result) return false;
       const progress = await loadProgress(user.id);
-      if (progress) hero.restoreProgress(progress);
-      else hero.newUser();
-      if (progress?.quest?.bosses?.length > 0) {
+      if (progress) {
+        hero.restoreProgress(progress);
+        // Update streak on login
+        const heroData = progress.hero || {};
+        const streakResult = updateStreakOnOpen({
+          streakCount: heroData.streakCount || 0,
+          lastActiveDate: heroData.lastActiveDate,
+          lanterns: heroData.lanterns || 0,
+        });
+        if (streakResult.wasReset || streakResult.usedLantern) {
+          hero.setHero(h => ({
+            ...h,
+            streakCount: streakResult.streakCount,
+            lanterns: streakResult.lanterns,
+          }));
+        }
+      } else {
+        hero.newUser();
+      }
+      // Check for welcome-back letter (2+ days away)
+      const ndaHeroData = progress ? { ...hero.hero, ...((progress.hero || {})) } : hero.hero;
+      const ndaWelcomeBackData = hero.checkWelcomeBack(ndaHeroData, hero.battleHistory);
+      if (ndaWelcomeBackData) {
+        hero.setHero(h => ({ ...h, welcomeBackData: ndaWelcomeBackData }));
+        nav.setScreen('welcomeBack');
+      } else if (progress?.quest?.bosses?.length > 0) {
         nav.setScreen('map');
       } else if (progress?.onboarding_state?.exposureSort?.done) {
         nav.setScreen('map');

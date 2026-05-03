@@ -10,12 +10,13 @@ export function useHeroState() {
     stats: { courage: 5, resilience: 5, openness: 5 },
     traits: [],
     armory: JSON.parse(JSON.stringify(DEFAULT_ARMORY)),
-    platinum: 0,
+    courageCoins: 0,
     diamonds: 0,
     purchasedItems: [],
     streakCount: 0,
+    bestStreak: 0,
     lastActiveDate: null,
-    streakFreezes: 0,
+    lanterns: 0,
     totalXP: 0,
     playerLevel: 1,
   });
@@ -29,14 +30,18 @@ export function useHeroState() {
   const restoreProgress = useCallback((progress) => {
     const loadedHero = progress.hero || {};
 
-    // Migration: courageCoins → platinum
-    if (loadedHero.courageCoins !== undefined && loadedHero.platinum === undefined) {
-      loadedHero.platinum = loadedHero.courageCoins;
-      delete loadedHero.courageCoins;
+    // Migration: platinum → courageCoins (renamed back)
+    if (loadedHero.platinum !== undefined && loadedHero.courageCoins === undefined) {
+      loadedHero.courageCoins = loadedHero.platinum;
+      delete loadedHero.platinum;
     }
-    if (loadedHero.diamonds === undefined) {
-      loadedHero.diamonds = 0;
+    // Migration: streakFreezes → lanterns
+    if (loadedHero.streakFreezes !== undefined && loadedHero.lanterns === undefined) {
+      loadedHero.lanterns = loadedHero.streakFreezes;
+      delete loadedHero.streakFreezes;
     }
+    if (loadedHero.diamonds === undefined) loadedHero.diamonds = 0;
+    if (loadedHero.bestStreak === undefined) loadedHero.bestStreak = 0;
 
     const migratedArmory = loadedHero.armory
       ? loadedHero.armory.map((item, i) => {
@@ -63,9 +68,11 @@ export function useHeroState() {
     if (daysSince < 2) return null;
 
     const lastBattle = battleHistory[battleHistory.length - 1];
-    const totalDefeated = (battleHistory || []).filter(b => b.outcome === 'victory' || b.outcome === 'partial').filter((b, i, arr) => arr.findIndex(x => x.bossId === b.bossId) === i).length;
+    const totalDefeated = (battleHistory || [])
+      .filter((b) => b.outcome === 'victory' || b.outcome === 'partial')
+      .filter((b, i, arr) => arr.findIndex((x) => x.bossId === b.bossId) === i).length;
     const bestSudsDrop = Math.max(
-      ...(battleHistory || []).map(b => (b.suds?.before || 0) - (b.suds?.after || 0)).concat([0])
+      ...(battleHistory || []).map((b) => (b.suds?.before || 0) - (b.suds?.after || 0)).concat([0]),
     );
     const streakCount = hero.streakCount || 0;
 

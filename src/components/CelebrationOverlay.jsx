@@ -16,7 +16,7 @@ const RARITY_COLORS = {
   legendary: C.fearRed,
 };
 
-function PlatinumAnimation({ amount, onDone }) {
+function CoinAnimation({ amount, onDone }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     if (amount === 0) {
@@ -37,12 +37,12 @@ function PlatinumAnimation({ amount, onDone }) {
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>⚪</div>
-      <PixelText size={14} color={C.cream} style={{ display: 'block' }}>
-        +{display} PLATINUM
+      <div style={{ fontSize: 48, marginBottom: 12 }}>🪙</div>
+      <PixelText size={14} color={C.goldMd} style={{ display: 'block' }}>
+        +{display} COINS
       </PixelText>
       <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginTop: 4 }}>
-        PLATINUM EARNED
+        COURAGE COINS EARNED
       </PixelText>
     </div>
   );
@@ -69,7 +69,9 @@ function DiamondAnimation({ amount, onDone }) {
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
-      <div style={{ fontSize: 48, marginBottom: 12, filter: 'drop-shadow(0 0 8px #60A5FA)' }}>💎</div>
+      <div style={{ fontSize: 48, marginBottom: 12, filter: 'drop-shadow(0 0 8px #60A5FA)' }}>
+        💎
+      </div>
       <PixelText size={14} color="#60A5FA" style={{ display: 'block' }}>
         +{display} DIAMONDS
       </PixelText>
@@ -289,13 +291,15 @@ function StreakNotification({ streakCount, onDone }) {
           animation: isMilestone ? 'victoryFlash 0.8s ease-out' : 'none',
         }}
       >
-        🔥
+        🏮
       </div>
       <PixelText size={12} color={C.goldMd} style={{ display: 'block' }}>
         {streakCount} DAY{streakCount > 1 ? 'S' : ''}
       </PixelText>
       <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginTop: 4 }}>
-        {isMilestone ? 'STREAK MILESTONE! YOUR DEDICATION SHINES' : 'THE FIRE BURNS BRIGHT'}
+        {isMilestone
+          ? `MILESTONE: ${streakCount} DAYS. YOUR PRACTICE IS GROWING`
+          : "YOU'RE SHOWING UP CONSISTENTLY"}
       </PixelText>
       {isMilestone && (
         <div
@@ -309,12 +313,12 @@ function StreakNotification({ streakCount, onDone }) {
         >
           <PixelText size={7} color={C.goldMd}>
             {streakCount === 7
-              ? 'A STREAK FREEZE HAS BEEN AWARDED!'
+              ? "YOU'VE EARNED A LANTERN — YOUR PATH STAYS LIT"
               : streakCount === 14
-                ? 'INCONSISTENT — YOUR PERSEVERANCE INSPIRES'
+                ? '14 DAYS. YOU KEEP COMING BACK. THAT IS WHAT MATTERS.'
                 : streakCount === 30
-                  ? 'LEGENDARY COMMITMENT — DARER ELITE'
-                  : 'KEEP THE FLAME ALIVE'}
+                  ? '30 DAYS. YOUR PRACTICE IS DEEPER THAN YOUR FEAR.'
+                  : 'KEEP THE LIGHT BURNING'}
           </PixelText>
         </div>
       )}
@@ -385,7 +389,7 @@ function EvidenceCardView({ card, onDone }) {
 
 function WeeklyRewardsAnimation({ rewards, onDone }) {
   const parts = [];
-  if (rewards.platinum > 0) parts.push(`+${rewards.platinum} ⚪`);
+  if (rewards.coins > 0) parts.push(`+${rewards.coins} 🪙`);
   if (rewards.xp > 0) parts.push(`+${rewards.xp} XP`);
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
@@ -423,7 +427,7 @@ function WeeklyRewardsAnimation({ rewards, onDone }) {
 
 export default function CelebrationOverlay({
   xpEarned = 0,
-  platinumEarned = 0,
+  coinsEarned = 0,
   diamondsEarned = 0,
   lootDrop = null,
   achievements = [],
@@ -441,7 +445,7 @@ export default function CelebrationOverlay({
   // Build the sequence of celebration phases
   const sequence = [];
   if (xpEarned > 0) sequence.push({ type: 'xp', value: xpEarned });
-  if (platinumEarned > 0) sequence.push({ type: 'platinum', value: platinumEarned });
+  if (coinsEarned > 0) sequence.push({ type: 'coins', value: coinsEarned });
   if (diamondsEarned > 0) sequence.push({ type: 'diamonds', value: diamondsEarned });
   if (lootDrop) sequence.push({ type: 'loot', value: lootDrop });
   if (achievements.length > 0) sequence.push({ type: 'achievements', value: achievements });
@@ -449,7 +453,7 @@ export default function CelebrationOverlay({
   if (streakCount > 0) sequence.push({ type: 'streak', value: streakCount });
   if (
     weeklyChallengeRewards &&
-    (weeklyChallengeRewards.platinum > 0 || weeklyChallengeRewards.xp > 0)
+    (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)
   ) {
     sequence.push({ type: 'weeklyRewards', value: weeklyChallengeRewards });
   }
@@ -471,7 +475,7 @@ export default function CelebrationOverlay({
   useEffect(() => {
     phaseRef.current = 0;
     setPhase(0);
-  }, [xpEarned, platinumEarned, diamondsEarned, lootDrop, achievements, evidenceCards]);
+  }, [xpEarned, coinsEarned, diamondsEarned, lootDrop, achievements, evidenceCards]);
 
   if (sequence.length === 0) {
     onDismiss();
@@ -514,8 +518,10 @@ export default function CelebrationOverlay({
         }}
       >
         {current.type === 'xp' && <XPAnimation xp={current.value} onDone={advance} />}
-        {current.type === 'platinum' && <PlatinumAnimation amount={current.value} onDone={advance} />}
-        {current.type === 'diamonds' && <DiamondAnimation amount={current.value} onDone={advance} />}
+        {current.type === 'coins' && <CoinAnimation amount={current.value} onDone={advance} />}
+        {current.type === 'diamonds' && (
+          <DiamondAnimation amount={current.value} onDone={advance} />
+        )}
         {current.type === 'loot' && <LootAnimation loot={current.value} onDone={advance} />}
         {current.type === 'achievements' && (
           <AchievementPopup achievements={current.value} onDone={advance} />

@@ -148,10 +148,10 @@ export default function GameMap({
             </PixelText>
           </div>
         )}
-        {hero.streakFreezes > 0 && (
+        {(hero.lanterns || 0) > 0 && (
           <div style={{ marginLeft: 4 }}>
             <PixelText size={7} color={C.teal}>
-              ❄️{hero.streakFreezes}
+              🏮{hero.lanterns}
             </PixelText>
           </div>
         )}
@@ -510,9 +510,11 @@ export default function GameMap({
                     <div style={{ marginTop: 8 }}>
                       <PixelText size={6} color={C.goalGold}>
                         📸{' '}
-                        {(battleHistory || []).filter(
-                          (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
-                        ).length}{' '}
+                        {
+                          (battleHistory || []).filter(
+                            (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
+                          ).length
+                        }{' '}
                         moment
                         {(battleHistory || []).filter(
                           (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
