@@ -42,7 +42,9 @@ CREATE TABLE IF NOT EXISTS battles (
   dara_letter text,
   suds_drop int GENERATED ALWAYS AS (suds_before - suds_after) STORED,
   is_tutorial boolean DEFAULT false,
-  battle_chat_message_count int DEFAULT 0
+  battle_chat_message_count int DEFAULT 0,
+  mastery_level text,
+  attempts int DEFAULT 1
 );
 
 CREATE INDEX IF NOT EXISTS idx_battles_user ON battles(user_id);

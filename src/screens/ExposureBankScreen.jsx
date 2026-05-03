@@ -3,8 +3,9 @@ import { C } from '../constants/gameData';
 import { PixelText, HPBar } from '../components/shared';
 import SwipeableBoss from '../components/SwipeableBoss';
 import BottomNav from '../components/BottomNav';
+import { getMasteryLabel, getMasteryColor } from '../utils/mastery';
 
-export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocusedBoss, onBack, onAchieveBoss, onDeleteBoss }) {
+export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocusedBoss, onBack, onAchieveBoss, onDeleteBoss, onNav }) {
   const [searchQuery, setSearchQuery] = useState("");
   const allBosses = quest.bosses;
   const unfinishedBosses = allBosses.filter(b => !b.defeated);
@@ -79,7 +80,9 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
           {/* Right side badge */}
           <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
             {isCompleted ? (
-              <PixelText size={7} color={C.hpGreen}>↻ REPEAT</PixelText>
+              <PixelText size={7} color={getMasteryColor(boss.completions || 1)}>
+                {getMasteryLabel(boss.completions || 1)}
+              </PixelText>
             ) : (
               <PixelText size={8} color={levelColor(bDiff)}>LV.{bDiff}</PixelText>
             )}
@@ -124,9 +127,9 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
   return (
     <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
       {/* Header */}
-      <div style={{ padding: "12px 16px", borderBottom: "2px solid ${C.mutedBorder}", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{
-          background: C.cardBg, border: "1px solid ${C.mutedBorder}", borderRadius: 4,
+          background: C.cardBg, border: `1px solid ${C.mutedBorder}`, borderRadius: 4,
           padding: "4px 10px", cursor: "pointer",
         }}>
           <PixelText size={7} color={C.grayLt}>← BACK</PixelText>
@@ -173,7 +176,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         {filteredDefeated.length > 0 && (
           <div>
             <PixelText size={9} color={C.hpGreen} style={{ display: "block", marginBottom: 12 }}>
-              — COMPLETED — {searchQuery && `(${filteredDefeated.length})`}
+              — MASTERY PATH — {searchQuery && `(${filteredDefeated.length})`}
             </PixelText>
             {filteredDefeated.map(b => renderBossCard(b))}
             <div style={{ textAlign: "center", marginTop: 8 }}>
@@ -183,7 +186,7 @@ export default function ExposureBankScreen({ quest, hero, focusedBoss, setFocuse
         )}
       </div>
 
-      <BottomNav active="bank" onNav={(s) => { if (s === "map") onBack(); }} />
+      <BottomNav active="bank" onNav={(s) => { if (s === "map") onBack(); else if (onNav) onNav(s); }} />
     </div>
   );
 }

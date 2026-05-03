@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { supabase, saveProgress } from "../utils/supabase";
+import { getMasteryLevel } from "../utils/mastery";
 
 /**
  * useBossHandlers — manages boss delete/achieve actions on the map screen.
@@ -23,7 +24,27 @@ export function useBossHandlers({ pendingDeleteBoss, setPendingDeleteBoss, activ
   }, [pendingDeleteBoss, activeBoss, setQuest, setActiveBoss, setPendingDeleteBoss, quest, hero]);
 
   const handleAchieveBoss = useCallback(async (boss) => {
-    const newQuest = { ...quest, bosses: quest.bosses.map(b => b.id === boss.id ? { ...b, defeated: true, hp: 0 } : b) };
+    const prevCompletions = boss.completions || 0;
+    const newCompletions = prevCompletions + 1;
+    const mastery = getMasteryLevel(newCompletions);
+    const newQuest = {
+      ...quest,
+      bosses: quest.bosses.map(b =>
+        b.id === boss.id
+          ? {
+              ...b,
+              defeated: true,
+              hp: 0,
+              attempts: (b.attempts || 0) + 1,
+              completions: newCompletions,
+              repeats: newCompletions - 1,
+              masteryLevel: mastery.label.toLowerCase().replace(/\s+/g, '_'),
+              lastPracticedAt: new Date().toISOString(),
+              bestSudsDrop: b.bestSudsDrop || 0,
+            }
+          : b,
+      ),
+    };
     setQuest(newQuest);
     if (activeBoss?.id === boss.id) setActiveBoss(null);
     // Persist to Supabase

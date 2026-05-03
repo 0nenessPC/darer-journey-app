@@ -6,9 +6,25 @@ import BottomNav from './BottomNav';
 import Modal from './Modal';
 import { getCurrentZone, JOURNEY_ZONES, getZonesVisited } from '../constants/mapZones';
 import { generateShadowForecast, generateWhisperFromDara } from '../utils/shadowForecast';
-export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss, onViewProfile, onLadder, onBank, onAllies, focusedBoss, setFocusedBoss, onAddExposure, onAchieveBoss, onDeleteBoss, justAddedBossId }) {
-  const nextBoss = quest.bosses.find(b => !b.defeated);
-  const defeatedCount = quest.bosses.filter(b => b.defeated).length;
+import { getMasteryStatusText, getMasteryColor, getNextMilestone } from '../utils/mastery';
+export default function GameMap({
+  quest,
+  hero,
+  battleHistory = [],
+  onSelectBoss,
+  onViewProfile,
+  onLadder,
+  onBank,
+  onAllies,
+  focusedBoss,
+  setFocusedBoss,
+  onAddExposure,
+  onAchieveBoss,
+  onDeleteBoss,
+  justAddedBossId,
+}) {
+  const nextBoss = quest.bosses.find((b) => !b.defeated);
+  const defeatedCount = quest.bosses.filter((b) => b.defeated).length;
   const totalXp = defeatedCount * 100;
   const zone = getCurrentZone(defeatedCount);
   const [pendingBoss, setPendingBoss] = useState(null);
@@ -21,7 +37,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
   // Sync focusedBoss to first undefeated only when there is NO focus set yet
   useEffect(() => {
     if (!focusedBoss) {
-      const next = quest.bosses.find(b => !b.defeated);
+      const next = quest.bosses.find((b) => !b.defeated);
       if (next) setFocusedBoss(next);
     }
   }, []);
@@ -31,7 +47,7 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
     if (!justAddedBossId) return;
     const el = document.getElementById(`boss-${justAddedBossId}`);
     if (el) {
-      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
     }
   }, [justAddedBossId]);
 
@@ -45,110 +61,195 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
     }
   };
 
-  const activeBosses = quest.bosses.filter(b => !b.defeated);
-  const customBosses = quest.bosses.filter(b => b.isCustom && !b.defeated);
-  const defeatedBosses = quest.bosses.filter(b => b.defeated);
+  const activeBosses = quest.bosses.filter((b) => !b.defeated);
+  const customBosses = quest.bosses.filter((b) => b.isCustom && !b.defeated);
+  const defeatedBosses = quest.bosses.filter((b) => b.defeated);
   const activeCount = activeBosses.length;
 
-  const levelColor = (lv) => lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
-  const levelLabel = (lv) => lv <= 3 ? "SHALLOW WATER" : lv <= 6 ? "GETTING DEEPER" : lv <= 8 ? "DEEP END" : "BOSS TERRITORY";
+  const levelColor = (lv) =>
+    lv <= 3 ? C.hpGreen : lv <= 6 ? C.goldMd : lv <= 8 ? C.levelAmber : C.bossRed;
+  const levelLabel = (lv) =>
+    lv <= 3
+      ? 'SHALLOW WATER'
+      : lv <= 6
+        ? 'GETTING DEEPER'
+        : lv <= 8
+          ? 'DEEP END'
+          : 'BOSS TERRITORY';
 
   const boss = focusedBoss || nextBoss;
   const bDiff = boss?.difficulty ?? boss?.level;
   const isHighLevel = nextBoss && bDiff - (nextBoss?.difficulty ?? nextBoss?.level) >= 2;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.mapBg, padding: "0 0 100px" }}>
+    <div style={{ minHeight: '100vh', background: C.mapBg, padding: '0 0 100px' }}>
       {/* Hero status bar */}
-      <div style={{ padding: "12px 16px", borderBottom: `2px solid ${C.mutedBorder}`, display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{
-          width: 36, height: 36, background: C.plum, border: `2px solid ${C.mutedBorder}`, borderRadius: 4,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}><PixelText size={14} color={C.goldMd}>⚔</PixelText></div>
+      <div
+        style={{
+          padding: '12px 16px',
+          borderBottom: `2px solid ${C.mutedBorder}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            background: C.plum,
+            border: `2px solid ${C.mutedBorder}`,
+            borderRadius: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PixelText size={14} color={C.goldMd}>
+            ⚔
+          </PixelText>
+        </div>
         <div style={{ flex: 1 }}>
-          <PixelText size={8} color={C.cream}>{hero.name}</PixelText>
+          <PixelText size={8} color={C.cream}>
+            {hero.name}
+          </PixelText>
           <HPBar current={totalXp} max={quest.bosses.length * 100} height={8} />
         </div>
-        <div style={{ textAlign: "right" }}>
-          <PixelText size={8} color={C.goldMd}>LV.{hero.playerLevel || 1}</PixelText>
-          <div><PixelText size={7} color={C.grayLt}>{hero.totalXP || 0} XP</PixelText></div>
-          <PixelText size={7} color={C.grayLt}>{activeCount}/{quest.bosses.length} BOSSES</PixelText>
+        <div style={{ textAlign: 'right' }}>
+          <PixelText size={8} color={C.goldMd}>
+            LV.{hero.playerLevel || 1}
+          </PixelText>
+          <div>
+            <PixelText size={7} color={C.grayLt}>
+              {hero.totalXP || 0} XP
+            </PixelText>
+          </div>
+          <PixelText size={7} color={C.grayLt}>
+            {activeCount}/{quest.bosses.length} BOSSES
+          </PixelText>
         </div>
         {/* Streak counter */}
         {(hero.streakCount || 0) > 0 && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4,
-            padding: '4px 8px', background: C.goldMd + '15', border: `1px solid ${C.goldMd}40`,
-            borderRadius: 4,
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              marginLeft: 4,
+              padding: '4px 8px',
+              background: C.goldMd + '15',
+              border: `1px solid ${C.goldMd}40`,
+              borderRadius: 4,
+            }}
+          >
             <span style={{ fontSize: 14 }}>🔥</span>
-            <PixelText size={9} color={C.goldMd}>{hero.streakCount}</PixelText>
+            <PixelText size={9} color={C.goldMd}>
+              {hero.streakCount}
+            </PixelText>
           </div>
         )}
         {hero.streakFreezes > 0 && (
           <div style={{ marginLeft: 4 }}>
-            <PixelText size={7} color={C.teal}>❄️{hero.streakFreezes}</PixelText>
+            <PixelText size={7} color={C.teal}>
+              ❄️{hero.streakFreezes}
+            </PixelText>
           </div>
         )}
       </div>
 
       {/* Zone banner — environmental progression */}
-      <div style={{
-        padding: "10px 16px",
-        background: zone.headerBg,
-        borderBottom: `2px solid ${zone.accent}40`,
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-      }}>
+      <div
+        style={{
+          padding: '10px 16px',
+          background: zone.headerBg,
+          borderBottom: `2px solid ${zone.accent}40`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
         <span style={{ fontSize: 20 }}>{zone.icon}</span>
         <div style={{ flex: 1 }}>
-          <PixelText size={8} color={zone.accent} style={{ display: "block" }}>{zone.name}</PixelText>
-          <PixelText size={6} color={C.grayLt}>{zone.subtitle}</PixelText>
+          <PixelText size={8} color={zone.accent} style={{ display: 'block' }}>
+            {zone.name}
+          </PixelText>
+          <PixelText size={6} color={C.grayLt}>
+            {zone.subtitle}
+          </PixelText>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <PixelText size={7} color={C.grayLt}>{defeatedCount} defeated</PixelText>
+        <div style={{ textAlign: 'right' }}>
+          <PixelText size={7} color={C.grayLt}>
+            {defeatedCount} defeated
+          </PixelText>
         </div>
       </div>
 
       {/* Living Map — environmental progression */}
-      <div style={{
-        padding: '12px 16px',
-        background: zone.headerBg,
-        borderBottom: `2px solid ${zone.accent}20`,
-      }}>
+      <div
+        style={{
+          padding: '12px 16px',
+          background: zone.headerBg,
+          borderBottom: `2px solid ${zone.accent}20`,
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
           {/* Lanterns — light up with progress (max 5) */}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 22, filter: defeatedCount >= 1 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+            <div
+              style={{
+                fontSize: 22,
+                filter: defeatedCount >= 1 ? 'none' : 'grayscale(1) opacity(0.4)',
+              }}
+            >
               {defeatedCount >= 1 ? '🏮' : '🏮'}
             </div>
-            <PixelText size={6} color={defeatedCount >= 1 ? zone.accent : C.grayLt}>1</PixelText>
+            <PixelText size={6} color={defeatedCount >= 1 ? zone.accent : C.grayLt}>
+              1
+            </PixelText>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 22, filter: defeatedCount >= 4 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+            <div
+              style={{
+                fontSize: 22,
+                filter: defeatedCount >= 4 ? 'none' : 'grayscale(1) opacity(0.4)',
+              }}
+            >
               {defeatedCount >= 4 ? '🏮' : '🏮'}
             </div>
-            <PixelText size={6} color={defeatedCount >= 4 ? zone.accent : C.grayLt}>4</PixelText>
+            <PixelText size={6} color={defeatedCount >= 4 ? zone.accent : C.grayLt}>
+              4
+            </PixelText>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 22, filter: defeatedCount >= 8 ? 'none' : 'grayscale(1) opacity(0.4)' }}>
+            <div
+              style={{
+                fontSize: 22,
+                filter: defeatedCount >= 8 ? 'none' : 'grayscale(1) opacity(0.4)',
+              }}
+            >
               {defeatedCount >= 8 ? '🏮' : '🏮'}
             </div>
-            <PixelText size={6} color={defeatedCount >= 8 ? zone.accent : C.grayLt}>8</PixelText>
+            <PixelText size={6} color={defeatedCount >= 8 ? zone.accent : C.grayLt}>
+              8
+            </PixelText>
           </div>
           {/* Flowers — bloom with progress */}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 22, filter: defeatedCount >= 3 ? 'none' : 'grayscale(1) opacity(0.3)' }}>
+            <div
+              style={{
+                fontSize: 22,
+                filter: defeatedCount >= 3 ? 'none' : 'grayscale(1) opacity(0.3)',
+              }}
+            >
               {defeatedCount >= 3 ? '🌸' : '🥀'}
             </div>
-            <PixelText size={6} color={defeatedCount >= 3 ? C.hpGreen : C.grayLt}>bloom</PixelText>
+            <PixelText size={6} color={defeatedCount >= 3 ? C.hpGreen : C.grayLt}>
+              bloom
+            </PixelText>
           </div>
           {/* Fog — lifts with progress */}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 22, opacity: Math.max(0.3, 1 - defeatedCount * 0.05) }}>
-              🌫️
-            </div>
+            <div style={{ fontSize: 22, opacity: Math.max(0.3, 1 - defeatedCount * 0.05) }}>🌫️</div>
             <PixelText size={6} color={defeatedCount >= 10 ? C.hpGreen : C.grayLt}>
               {defeatedCount >= 10 ? 'cleared' : 'fog'}
             </PixelText>
@@ -162,7 +263,17 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
             return (
               <div key={z.id} style={{ textAlign: 'center' }}>
                 <span style={{ fontSize: 14, opacity: visited ? 1 : 0.3 }}>{z.icon}</span>
-                {isCurrent && <div style={{ width: 6, height: 6, borderRadius: '50%', background: zone.accent, margin: '2px auto 0' }} />}
+                {isCurrent && (
+                  <div
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: zone.accent,
+                      margin: '2px auto 0',
+                    }}
+                  />
+                )}
               </div>
             );
           })}
@@ -171,14 +282,16 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
 
       {/* Whisper From Dara — re-engagement after 3+ days away */}
       {whisper && !dismissedWhisper && (
-        <div style={{
-          margin: '12px 16px',
-          padding: C.padLg,
-          background: `linear-gradient(135deg, ${C.plum}20, ${C.goalGold}10)`,
-          border: `2px solid ${C.plum}60`,
-          borderRadius: 8,
-          animation: 'fadeIn 0.5s ease-out',
-        }}>
+        <div
+          style={{
+            margin: '12px 16px',
+            padding: C.padLg,
+            background: `linear-gradient(135deg, ${C.plum}20, ${C.goalGold}10)`,
+            border: `2px solid ${C.plum}60`,
+            borderRadius: 8,
+            animation: 'fadeIn 0.5s ease-out',
+          }}
+        >
           <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
             <span style={{ fontSize: 24 }}>💬</span>
             <PixelText size={8} color={C.plumMd} style={{ flex: 1, lineHeight: 1.8 }}>
@@ -186,16 +299,41 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
             </PixelText>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <PixelBtn onClick={() => setDismissedWhisper(true)} color={C.plum} style={{ flex: 1 }}>I'LL BE BACK SOON</PixelBtn>
-            <PixelBtn onClick={() => { setDismissedWhisper(true); if (nextBoss) onSelectBoss(nextBoss); }} color={C.gold} textColor={C.charcoal} style={{ flex: 1 }}>LET'S GO →</PixelBtn>
+            <PixelBtn onClick={() => setDismissedWhisper(true)} color={C.plum} style={{ flex: 1 }}>
+              I'LL BE BACK SOON
+            </PixelBtn>
+            <PixelBtn
+              onClick={() => {
+                setDismissedWhisper(true);
+                if (nextBoss) onSelectBoss(nextBoss);
+              }}
+              color={C.gold}
+              textColor={C.charcoal}
+              style={{ flex: 1 }}
+            >
+              LET'S GO →
+            </PixelBtn>
           </div>
         </div>
       )}
 
       {/* Journey goal banner */}
-      <div style={{ padding: "12px 16px", background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`, textAlign: "center" }}>
-        <PixelText size={7} color={C.grayLt}>JOURNEY GOAL</PixelText>
-        <div style={{ marginTop: 4 }}><PixelText size={9} color={C.goalGold}>🏰 {quest.goal}</PixelText></div>
+      <div
+        style={{
+          padding: '12px 16px',
+          background: C.cardBg,
+          borderBottom: `2px solid ${C.mutedBorder}`,
+          textAlign: 'center',
+        }}
+      >
+        <PixelText size={7} color={C.grayLt}>
+          JOURNEY GOAL
+        </PixelText>
+        <div style={{ marginTop: 4 }}>
+          <PixelText size={9} color={C.goalGold}>
+            🏰 {quest.goal}
+          </PixelText>
+        </div>
       </div>
 
       {/* Add exposure bar */}
@@ -203,22 +341,24 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         <button
           onClick={onAddExposure}
           style={{
-            width: "100%",
-            padding: "10px 16px",
+            width: '100%',
+            padding: '10px 16px',
             background: C.cardBg,
             borderBottom: `2px solid ${C.mutedBorder}`,
-            borderLeft: "none",
-            borderRight: "none",
-            borderTop: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            borderLeft: 'none',
+            borderRight: 'none',
+            borderTop: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             gap: 8,
-            cursor: "pointer",
+            cursor: 'pointer',
           }}
         >
           <span style={{ fontSize: 16 }}>➕</span>
-          <PixelText size={9} color={C.teal}>ADD NEW EXPOSURE</PixelText>
+          <PixelText size={9} color={C.teal}>
+            ADD NEW EXPOSURE
+          </PixelText>
         </button>
       )}
 
@@ -227,22 +367,24 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
         <button
           onClick={onAllies}
           style={{
-            width: "100%",
-            padding: "8px 16px",
+            width: '100%',
+            padding: '8px 16px',
             background: C.cardBg,
             borderBottom: `2px solid ${C.mutedBorder}`,
-            borderLeft: "none",
-            borderRight: "none",
-            borderTop: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            borderLeft: 'none',
+            borderRight: 'none',
+            borderTop: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             gap: 8,
-            cursor: "pointer",
+            cursor: 'pointer',
           }}
         >
           <span style={{ fontSize: 14 }}>🤝</span>
-          <PixelText size={8} color={C.goalGold}>ALLIES WALL — SEE OTHER DARERs</PixelText>
+          <PixelText size={8} color={C.goalGold}>
+            ALLIES WALL — SEE OTHER DARERs
+          </PixelText>
         </button>
       )}
 
@@ -250,52 +392,81 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
       <div style={{ padding: C.padLg }}>
         {!boss ? (
           // No bosses at all
-          <div style={{ textAlign: "center", padding: "40px 16px" }}>
-            <PixelText size={10} color={C.grayLt}>No exposures yet.</PixelText>
-            <div style={{ marginTop: 8 }}><PixelText size={8} color={C.grayLt}>Add your first exposure to begin!</PixelText></div>
+          <div style={{ textAlign: 'center', padding: '40px 16px' }}>
+            <PixelText size={10} color={C.grayLt}>
+              No exposures yet.
+            </PixelText>
+            <div style={{ marginTop: 8 }}>
+              <PixelText size={8} color={C.grayLt}>
+                Add your first exposure to begin!
+              </PixelText>
+            </div>
           </div>
         ) : (
-          <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+          <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
             {/* Path progress summary */}
-            <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <PixelText size={7} color={C.grayLt}>
-                {activeCount} shadow{activeCount !== 1 ? "s" : ""} remaining · {defeatedCount} defeated
+                {activeCount} shadow{activeCount !== 1 ? 's' : ''} remaining · {defeatedCount}{' '}
+                defeated
               </PixelText>
             </div>
 
             {/* Focused boss hero card */}
-            <div style={{
-              padding: 20,
-              background: `linear-gradient(180deg, ${levelColor(bDiff)}10 0%, ${C.cardBg} 100%)`,
-              border: `3px solid ${boss === nextBoss ? C.goldMd : levelColor(bDiff) + "80"}`,
-              borderRadius: 8,
-              boxShadow: boss === nextBoss ? `0 0 20px ${C.goldMd}25` : "none",
-            }}>
+            <div
+              style={{
+                padding: 20,
+                background: `linear-gradient(180deg, ${levelColor(bDiff)}10 0%, ${C.cardBg} 100%)`,
+                border: `3px solid ${boss === nextBoss ? C.goldMd : levelColor(bDiff) + '80'}`,
+                borderRadius: 8,
+                boxShadow: boss === nextBoss ? `0 0 20px ${C.goldMd}25` : 'none',
+              }}
+            >
               {/* Level badge */}
-              <div style={{
-                display: "inline-block", padding: "4px 12px", borderRadius: 4, marginBottom: 14,
-                background: levelColor(bDiff) + "20", border: `2px solid ${levelColor(bDiff)}50`,
-              }}>
-                <PixelText size={8} color={levelColor(bDiff)}>LV.{bDiff} · {levelLabel(bDiff)}</PixelText>
+              <div
+                style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  borderRadius: 4,
+                  marginBottom: 14,
+                  background: levelColor(bDiff) + '20',
+                  border: `2px solid ${levelColor(bDiff)}50`,
+                }}
+              >
+                <PixelText size={8} color={levelColor(bDiff)}>
+                  LV.{bDiff} · {levelLabel(bDiff)}
+                </PixelText>
               </div>
 
               {/* High SUDs warning */}
               {isHighLevel && (
-                <div style={{
-                  display: "inline-block", marginLeft: 10, padding: "4px 8px", borderRadius: 4,
-                  background: C.amber + "20", border: `2px solid ${C.amber}50`,
-                }}>
-                  <PixelText size={6} color={C.amber}>⚠ HIGH DIFFICULTY</PixelText>
+                <div
+                  style={{
+                    display: 'inline-block',
+                    marginLeft: 10,
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    background: C.amber + '20',
+                    border: `2px solid ${C.amber}50`,
+                  }}
+                >
+                  <PixelText size={6} color={C.amber}>
+                    ⚠ HIGH DIFFICULTY
+                  </PixelText>
                 </div>
               )}
 
               {/* Boss name */}
-              <PixelText size={12} color={C.cream} style={{ display: "block", marginBottom: 8 }}>
+              <PixelText size={12} color={C.cream} style={{ display: 'block', marginBottom: 8 }}>
                 {boss.name}
               </PixelText>
 
               {/* Boss description */}
-              <PixelText size={8} color={C.grayLt} style={{ display: "block", lineHeight: 1.7, marginBottom: 14 }}>
+              <PixelText
+                size={8}
+                color={C.grayLt}
+                style={{ display: 'block', lineHeight: 1.7, marginBottom: 14 }}
+              >
                 {boss.desc}
               </PixelText>
 
@@ -304,17 +475,28 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
                 <HPBar current={boss.hp} max={boss.maxHp} height={10} label="BOSS HP" />
               )}
 
-              {/* Completed badge */}
+              {/* Mastery badge */}
               {boss.defeated && (
-                <div style={{ marginTop: 10, textAlign: "center" }}>
-                  <PixelText size={8} color={C.hpGreen}>✓ PREVIOUSLY DEFEATED</PixelText>
+                <div style={{ marginTop: 10, textAlign: 'center' }}>
+                  <PixelText size={7} color={getMasteryColor(boss.completions || 1)}>
+                    ✓ {getMasteryStatusText(boss)}
+                  </PixelText>
+                  {getNextMilestone(boss.completions || 1) && (
+                    <div style={{ marginTop: 4 }}>
+                      <PixelText size={6} color={C.subtleText}>
+                        Next: {getNextMilestone(boss.completions || 1).label} at {getNextMilestone(boss.completions || 1).at}x
+                      </PixelText>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Custom badge */}
               {boss.isCustom && (
                 <div style={{ marginTop: 8 }}>
-                  <PixelText size={6} color={C.teal}>✏️ CUSTOM EXPOSURE</PixelText>
+                  <PixelText size={6} color={C.teal}>
+                    ✏️ CUSTOM EXPOSURE
+                  </PixelText>
                 </div>
               )}
             </div>
@@ -322,18 +504,20 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
             {/* ENGAGE or REPEAT button */}
             <PixelBtn
               onClick={() => handleBossSelect(boss)}
-              color={boss.defeated ? C.hpGreen : C.bossRed}
-              textColor={boss.defeated ? C.cream : C.cream}
-              style={{ width: "100%", marginTop: 16, padding: "14px 0" }}
+              color={boss.defeated ? getMasteryColor(boss.completions || 1) : C.bossRed}
+              textColor={C.cream}
+              style={{ width: '100%', marginTop: 16, padding: '14px 0' }}
             >
-              {boss.defeated ? "↻ REPEAT THIS EXPOSURE" : "⚔ ENGAGE THIS BOSS ⚔"}
+              {boss.defeated
+                ? `↻ REPEAT (${boss.completions || 0}x) — ${getMasteryStatusText(boss).split(' — ')[0]}`
+                : '⚔ ENGAGE THIS BOSS ⚔'}
             </PixelBtn>
 
             {/* CHANGE FOCUS button */}
             <PixelBtn
               onClick={onBank}
               color={C.plum}
-              style={{ width: "100%", marginTop: 8, padding: "10px 0" }}
+              style={{ width: '100%', marginTop: 8, padding: '10px 0' }}
             >
               CHANGE FOCUS →
             </PixelBtn>
@@ -342,20 +526,26 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
 
         {/* Goal castle — zone-aware */}
         <div style={{ marginTop: 24 }}>
-          <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-            <div style={{ width: 3, height: 20, background: zone.accent + "40" }} />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
+            <div style={{ width: 3, height: 20, background: zone.accent + '40' }} />
           </div>
-          <div style={{
-            padding: C.padLg,
-            background: `linear-gradient(180deg, ${zone.accent}10 0%, ${C.goalGold}15 100%)`,
-            border: `3px solid ${C.goalGold}`,
-            borderRadius: 6,
-            textAlign: "center",
-          }}>
+          <div
+            style={{
+              padding: C.padLg,
+              background: `linear-gradient(180deg, ${zone.accent}10 0%, ${C.goalGold}15 100%)`,
+              border: `3px solid ${C.goalGold}`,
+              borderRadius: 6,
+              textAlign: 'center',
+            }}
+          >
             <div style={{ fontSize: 32, marginBottom: 8 }}>🏰</div>
-            <PixelText size={10} color={C.goalGold}>{quest.goal.toUpperCase()}</PixelText>
+            <PixelText size={10} color={C.goalGold}>
+              {quest.goal.toUpperCase()}
+            </PixelText>
             <div style={{ marginTop: 4 }}>
-              <PixelText size={7} color={zone.accent}>{zone.desc}</PixelText>
+              <PixelText size={7} color={zone.accent}>
+                {zone.desc}
+              </PixelText>
             </div>
           </div>
         </div>
@@ -363,34 +553,83 @@ export default function GameMap({ quest, hero, battleHistory = [], onSelectBoss,
 
       {/* High-SUDs Warning Dialog */}
       {pendingBoss && (
-        <Modal open onClose={() => setPendingBoss(null)} variant="center" maxWidth={400} zIndex={50} backdropClose={false} borderColor={C.amber}>
-          <div style={{ textAlign: "center" }}>
+        <Modal
+          open
+          onClose={() => setPendingBoss(null)}
+          variant="center"
+          maxWidth={400}
+          zIndex={50}
+          backdropClose={false}
+          borderColor={C.amber}
+        >
+          <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-            <PixelText size={11} color={C.amber} style={{ display: "block", marginBottom: 8 }}>HIGH DIFFICULTY WARNING</PixelText>
-            <div style={{ padding: C.padMd, background: "C.inputBg", borderRadius: 6, marginBottom: 16 }}>
-              <PixelText size={9} color={C.cream}>{pendingBoss.name}</PixelText>
-              <div style={{ marginTop: 4 }}><PixelText size={7} color={C.grayLt}>{pendingBoss.desc}</PixelText></div>
+            <PixelText size={11} color={C.amber} style={{ display: 'block', marginBottom: 8 }}>
+              HIGH DIFFICULTY WARNING
+            </PixelText>
+            <div
+              style={{
+                padding: C.padMd,
+                background: 'C.inputBg',
+                borderRadius: 6,
+                marginBottom: 16,
+              }}
+            >
+              <PixelText size={9} color={C.cream}>
+                {pendingBoss.name}
+              </PixelText>
+              <div style={{ marginTop: 4 }}>
+                <PixelText size={7} color={C.grayLt}>
+                  {pendingBoss.desc}
+                </PixelText>
+              </div>
               <div style={{ marginTop: 6 }}>
-                <PixelText size={8} color={C.amber}>LV.{pendingBoss.level || pendingBoss.difficulty}</PixelText>
-                <PixelText size={6} color={C.grayLt}> · Recommended: LV.{(nextBoss?.level ?? nextBoss?.difficulty) || 1}-{((nextBoss?.level ?? nextBoss?.difficulty) || 1) + 1}</PixelText>
+                <PixelText size={8} color={C.amber}>
+                  LV.{pendingBoss.level || pendingBoss.difficulty}
+                </PixelText>
+                <PixelText size={6} color={C.grayLt}>
+                  {' '}
+                  · Recommended: LV.{(nextBoss?.level ?? nextBoss?.difficulty) || 1}-
+                  {((nextBoss?.level ?? nextBoss?.difficulty) || 1) + 1}
+                </PixelText>
               </div>
             </div>
-            <PixelText size={7} color={C.grayLt} style={{ display: "block", marginBottom: 16, lineHeight: 1.6 }}>
-              This exposure has a significantly higher anxiety level than your current path. It's recommended to work through lower-SUDs activities first to build confidence.
+            <PixelText
+              size={7}
+              color={C.grayLt}
+              style={{ display: 'block', marginBottom: 16, lineHeight: 1.6 }}
+            >
+              This exposure has a significantly higher anxiety level than your current path. It's
+              recommended to work through lower-SUDs activities first to build confidence.
             </PixelText>
-            <div style={{ display: "flex", gap: 8 }}>
-              <PixelBtn onClick={() => setPendingBoss(null)} color={C.plum} style={{ flex: 1 }}>← GO BACK</PixelBtn>
-              <PixelBtn onClick={() => { setPendingBoss(null); onSelectBoss(pendingBoss); }} color={C.amber} textColor={C.charcoal} style={{ flex: 1 }}>I'M READY →</PixelBtn>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <PixelBtn onClick={() => setPendingBoss(null)} color={C.plum} style={{ flex: 1 }}>
+                ← GO BACK
+              </PixelBtn>
+              <PixelBtn
+                onClick={() => {
+                  setPendingBoss(null);
+                  onSelectBoss(pendingBoss);
+                }}
+                color={C.amber}
+                textColor={C.charcoal}
+                style={{ flex: 1 }}
+              >
+                I'M READY →
+              </PixelBtn>
             </div>
           </div>
         </Modal>
       )}
 
-      <BottomNav active="map" onNav={(s) => {
-        if (s === "bank") onBank();
-        else if (s === "ladder") onLadder();
-        else if (s === "profile") onViewProfile();
-      }} />
+      <BottomNav
+        active="map"
+        onNav={(s) => {
+          if (s === 'bank') onBank();
+          else if (s === 'ladder') onLadder();
+          else if (s === 'profile') onViewProfile();
+        }}
+      />
     </div>
   );
 }
