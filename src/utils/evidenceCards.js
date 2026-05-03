@@ -12,7 +12,8 @@ const CARD_TYPES = {
     color: C.hpGreen,
     bg: C.hpGreen + '15',
     border: C.hpGreen + '40',
-    template: (d) => `Predicted storm: ${d.before}\nPeak storm: ${d.peak}\nAfter storm: ${d.after}\n\nEvidence: "The Storm dropped ${d.drop} points. My nervous system learned it was safe."`,
+    template: (d) =>
+      `Predicted storm: ${d.before}\nPeak storm: ${d.peak}\nAfter storm: ${d.after}\n\nEvidence: "The Storm dropped ${d.drop} points. My nervous system learned it was safe."`,
   },
   PREDICTION_DISCONFIRMED: {
     id: 'prediction_disconfirmed',
@@ -21,7 +22,8 @@ const CARD_TYPES = {
     color: C.goldMd,
     bg: C.goldMd + '15',
     border: C.goldMd + '40',
-    template: (d) => `I feared: ${d.feared}\nWhat happened: ${d.actual}\n\nEvidence: "The Shadow predicted danger. Reality proved otherwise."`,
+    template: (d) =>
+      `I feared: ${d.feared}\nWhat happened: ${d.actual}\n\nEvidence: "The Shadow predicted danger. Reality proved otherwise."`,
   },
   STAYED_WITH_STORM: {
     id: 'stayed_with_storm',
@@ -30,7 +32,8 @@ const CARD_TYPES = {
     color: C.amber,
     bg: C.amber + '15',
     border: C.amber + '40',
-    template: (d) => `Peak storm: ${d.peak}\nI stayed anyway.\n\nEvidence: "I didn't run. I sat with the discomfort and it didn't destroy me."`,
+    template: (d) =>
+      `Peak storm: ${d.peak}\nI stayed anyway.\n\nEvidence: "I didn't run. I sat with the discomfort and it didn't destroy me."`,
   },
   PARTIAL_COURAGE: {
     id: 'partial_courage',
@@ -39,7 +42,8 @@ const CARD_TYPES = {
     color: C.plumMd,
     bg: C.plumMd + '15',
     border: C.plumMd + '40',
-    template: (d) => `I started even though it was hard.\n\nEvidence: "Partial action is still action. I showed up."`,
+    template: (d) =>
+      `I started even though it was hard.\n\nEvidence: "Partial action is still action. I showed up."`,
   },
   RETURNED: {
     id: 'returned',
@@ -48,7 +52,8 @@ const CARD_TYPES = {
     color: C.teal,
     bg: C.teal + '15',
     border: C.teal + '40',
-    template: (d) => `Repetition #${d.repeatNum}\nBest SUDS drop this round: ${d.drop}\n\nEvidence: "Each visit makes the Shadow weaker. I'm building mastery."`,
+    template: (d) =>
+      `Repetition #${d.repeatNum}\nBest SUDS drop this round: ${d.drop}\n\nEvidence: "Each visit makes the Shadow weaker. I'm building mastery."`,
   },
 };
 
@@ -80,7 +85,7 @@ export function generateEvidenceCards(battle) {
 
   // --- RETURNED: repeated a completed exposure ---
   if (isRepeat || (masteryLevel && masteryLevel !== 'uncharted')) {
-    const repeatNum = (battle.bossCompletions || 1);
+    const repeatNum = battle.bossCompletions || 1;
     cards.push({
       id: `evidence_${battleId || Date.now()}_returned`,
       type: CARD_TYPES.RETURNED.id,

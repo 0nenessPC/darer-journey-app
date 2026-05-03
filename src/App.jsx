@@ -261,14 +261,14 @@ export default function DARERQuest() {
         setScreen("battle");
       }} onViewProfile={() => setScreen("profile")} onLadder={() => setScreen("ladder")} onBank={() => setScreen("bank")} onAllies={() => setScreen("allies")} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onAddExposure={() => setAddMode("menu")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} justAddedBossId={justAddedBossId} />}
       {screen === "battle" && activeBoss && <BossBattle key={activeBoss.id} boss={activeBoss} quest={quest} hero={hero} shadowText={shadowText} battleHistory={battleHistory} onVictory={handleBossVictory} onRetreat={() => { setActiveBoss(null); setScreen("map"); }} setActiveBoss={setActiveBoss} setScreen={setScreen} onBank={() => setScreen("bank")} obState={getOBState("battle", { phase: "prep", prepStep: 0, prepAnswers: { value: "", allow: "", rise: "" }, suds: { before: 50, during: 60, after: 30 }, outcome: null })} setOBState={(s) => setOBState("battle", s)} />}
-      {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} onNav={(s) => setScreen(s)} />}
+      {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} onNav={(s) => setScreen(s)} battleHistory={battleHistory} />}
       {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "couragePath" && <CouragePath hero={hero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("profile")} setScreen={setScreen} />}
       {screen === "shop" && <ShopScreen hero={hero} setHero={setHero} onBack={() => setScreen("profile")} setScreen={setScreen} />}
       {screen === "lorePath" && <LoreScreen quest={quest} onBack={() => setScreen("profile")} setScreen={setScreen} />}
       {screen === "daraLetter" && <DaraLetterScreen letter={hero.pendingLetter || ""} date={hero.pendingLetterDate} onBack={() => setScreen("map")} hero={hero} />}
       {screen === "welcomeBack" && <WelcomeBackLetter letterData={hero.welcomeBackData || {}} onContinue={() => { setHero(h => ({ ...h, welcomeBackData: null })); setScreen("map"); }} hero={hero} />}
-      {screen === "ladder" && <LadderScreen hero={hero} quest={quest} setScreen={setScreen} onBack={() => setScreen("map")} />}
+      {screen === "ladder" && <LadderScreen hero={hero} quest={quest} battleHistory={battleHistory} setScreen={setScreen} onBack={() => setScreen("map")} />}
       {screen === "allies" && <AlliesWall onBack={() => setScreen("map")} setScreen={setScreen} />}
       </Suspense>
 

@@ -29,7 +29,6 @@ export default function HeroProfile({
   const [activeTab, setActiveTab] = useState('hero');
   const [practiceMode, setPracticeMode] = useState(null);
   const [expandedBossId, setExpandedBossId] = useState(null);
-  const [showLootGallery, setShowLootGallery] = useState(false);
   const [newAchievement, setNewAchievement] = useState(null);
 
   const incrementPractice = (toolId) => {
@@ -528,111 +527,7 @@ export default function HeroProfile({
 
       {activeTab === 'log' && (
         <>
-          {showLootGallery ? (
-            <div>
-              <button
-                onClick={() => setShowLootGallery(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginBottom: 16,
-                  padding: 0,
-                }}
-              >
-                <PixelText size={8} color={C.grayLt}>
-                  ← BACK TO BATTLES
-                </PixelText>
-              </button>
-              <PixelText
-                size={10}
-                color={C.goalGold}
-                style={{ display: 'block', marginBottom: 16, textAlign: 'center' }}
-              >
-                📸 MEANINGFUL MOMENTS
-              </PixelText>
-              {battleHistory.filter((b) => b.lootImage || b.lootText).length === 0 ? (
-                <div style={{ padding: '40px 16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
-                  <PixelText size={9} color={C.grayLt}>
-                    No meaningful moments saved yet.
-                  </PixelText>
-                  <div style={{ marginTop: 8 }}>
-                    <PixelText size={7} color={C.grayLt}>
-                      After each battle, share a{'\n'}moment to remember it.
-                    </PixelText>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {battleHistory
-                    .filter((b) => b.lootImage || b.lootText)
-                    .slice()
-                    .reverse()
-                    .map((battle, idx) => {
-                      const boss = quest.bosses.find((b) => b.id === battle.bossId);
-                      return (
-                        <div
-                          key={battle.bossId || idx}
-                          style={{
-                            padding: C.padLg,
-                            background: C.cardBg,
-                            border: `2px solid ${C.goalGold}30`,
-                            borderRadius: 6,
-                          }}
-                        >
-                          {battle.lootImage && (
-                            <img
-                              src={battle.lootImage}
-                              alt="Battle moment"
-                              style={{
-                                width: '100%',
-                                maxHeight: 180,
-                                objectFit: 'cover',
-                                borderRadius: 4,
-                                marginBottom: 8,
-                              }}
-                            />
-                          )}
-                          {battle.lootText && (
-                            <PixelText
-                              size={7}
-                              color={C.cream}
-                              style={{ display: 'block', lineHeight: 1.8 }}
-                            >
-                              {battle.lootText}
-                            </PixelText>
-                          )}
-                          <div
-                            style={{
-                              marginTop: 8,
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <PixelText size={6} color={C.grayLt}>
-                              {boss?.name || 'Unknown boss'} ·{' '}
-                              {new Date(battle.date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </PixelText>
-                            <PixelText
-                              size={6}
-                              color={battle.outcome === 'victory' ? C.hpGreen : C.amber}
-                            >
-                              {battle.outcome?.toUpperCase()}
-                            </PixelText>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              {quest.bosses.filter((b) => b.defeated).length === 0 ? (
+          {quest.bosses.filter((b) => b.defeated).length === 0 ? (
                 <div style={{ padding: '40px 16px', textAlign: 'center' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
                   <PixelText size={9} color={C.grayLt}>
@@ -658,7 +553,7 @@ export default function HeroProfile({
                       {battleHistory.length} battle{battleHistory.length !== 1 ? 's' : ''} recorded
                     </PixelText>
                     <button
-                      onClick={() => setShowLootGallery(true)}
+                      onClick={() => setScreen('ladder')}
                       style={{
                         background: `${C.goalGold}20`,
                         border: `2px solid ${C.goalGold}60`,
@@ -668,7 +563,7 @@ export default function HeroProfile({
                       }}
                     >
                       <PixelText size={7} color={C.goalGold}>
-                        📸 MOMENTS
+                        📸 WALL OF FAME
                       </PixelText>
                     </button>
                   </div>
@@ -934,8 +829,6 @@ export default function HeroProfile({
                     })}
                 </>
               )}
-            </>
-          )}
         </>
       )}
 
@@ -1308,30 +1201,28 @@ export default function HeroProfile({
                 marginBottom: 16,
               }}
             >
-              {Object.entries(summarizeEvidence(hero.evidenceCards || [])).map(
-                ([type, count]) => {
-                  const cfg = getCardTypeConfig(type);
-                  return (
-                    <div
-                      key={type}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: 4,
-                        background: cfg.bg,
-                        border: `1px solid ${cfg.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      <span style={{ fontSize: 14 }}>{cfg.icon}</span>
-                      <PixelText size={7} color={cfg.color}>
-                        {cfg.label}: {count}
-                      </PixelText>
-                    </div>
-                  );
-                },
-              )}
+              {Object.entries(summarizeEvidence(hero.evidenceCards || [])).map(([type, count]) => {
+                const cfg = getCardTypeConfig(type);
+                return (
+                  <div
+                    key={type}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: 4,
+                      background: cfg.bg,
+                      border: `1px solid ${cfg.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ fontSize: 14 }}>{cfg.icon}</span>
+                    <PixelText size={7} color={cfg.color}>
+                      {cfg.label}: {count}
+                    </PixelText>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -1348,64 +1239,62 @@ export default function HeroProfile({
             </div>
           ) : (
             <div>
-              {[...(hero.evidenceCards || [])]
-                .reverse()
-                .map((card) => {
-                  const cfg = getCardTypeConfig(card.type);
-                  const lines = card.text.split('\n');
-                  return (
+              {[...(hero.evidenceCards || [])].reverse().map((card) => {
+                const cfg = getCardTypeConfig(card.type);
+                const lines = card.text.split('\n');
+                return (
+                  <div
+                    key={card.id}
+                    style={{
+                      padding: '12px 14px',
+                      marginBottom: 8,
+                      borderRadius: 6,
+                      border: `2px solid ${cfg.border}`,
+                      background: cfg.bg,
+                      textAlign: 'left',
+                    }}
+                  >
                     <div
-                      key={card.id}
                       style={{
-                        padding: '12px 14px',
-                        marginBottom: 8,
-                        borderRadius: 6,
-                        border: `2px solid ${cfg.border}`,
-                        background: cfg.bg,
-                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        marginBottom: 6,
                       }}
                     >
-                      <div
+                      <span style={{ fontSize: 18 }}>{cfg.icon}</span>
+                      <PixelText size={7} color={cfg.color}>
+                        {cfg.label}
+                      </PixelText>
+                      <div style={{ flex: 1 }} />
+                      <PixelText size={6} color={C.subtleText}>
+                        {new Date(card.date).toLocaleDateString()}
+                      </PixelText>
+                    </div>
+                    <PixelText
+                      size={6}
+                      color={C.cream}
+                      style={{ display: 'block', marginBottom: 4 }}
+                    >
+                      {card.bossName}
+                    </PixelText>
+                    {lines.map((line, i) => (
+                      <PixelText
+                        key={i}
+                        size={6}
+                        color={line.startsWith('Evidence') ? cfg.color : C.grayLt}
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          marginBottom: 6,
+                          display: 'block',
+                          lineHeight: 1.7,
+                          fontStyle: line.startsWith('Evidence') ? 'italic' : 'normal',
                         }}
                       >
-                        <span style={{ fontSize: 18 }}>{cfg.icon}</span>
-                        <PixelText size={7} color={cfg.color}>
-                          {cfg.label}
-                        </PixelText>
-                        <div style={{ flex: 1 }} />
-                        <PixelText size={6} color={C.subtleText}>
-                          {new Date(card.date).toLocaleDateString()}
-                        </PixelText>
-                      </div>
-                      <PixelText
-                        size={6}
-                        color={C.cream}
-                        style={{ display: 'block', marginBottom: 4 }}
-                      >
-                        {card.bossName}
+                        {line}
                       </PixelText>
-                      {lines.map((line, i) => (
-                        <PixelText
-                          key={i}
-                          size={6}
-                          color={line.startsWith('Evidence') ? cfg.color : C.grayLt}
-                          style={{
-                            display: 'block',
-                            lineHeight: 1.7,
-                            fontStyle: line.startsWith('Evidence') ? 'italic' : 'normal',
-                          }}
-                        >
-                          {line}
-                        </PixelText>
-                      ))}
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

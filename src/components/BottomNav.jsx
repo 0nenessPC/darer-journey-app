@@ -5,7 +5,7 @@ import { PixelText } from './shared';
 const TABS = [
   { icon: '🗺', label: 'MAP', screen: 'map' },
   { icon: '📚', label: 'BANK', screen: 'bank' },
-  { icon: '🏆', label: 'LADDER', screen: 'ladder' },
+  { icon: '🏆', label: 'WALL', screen: 'ladder' },
   { icon: '🛡', label: 'HERO', screen: 'profile' },
 ];
 

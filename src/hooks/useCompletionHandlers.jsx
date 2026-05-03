@@ -457,7 +457,7 @@ export function useCompletionHandlers({
       const evidenceForBattle = generateEvidenceCards({
         ...battleRecord,
         bossId: activeBoss?.id,
-        masteryLevel: isRepeat ? (originalBoss?.masteryLevel || 'uncharted') : null,
+        masteryLevel: isRepeat ? originalBoss?.masteryLevel || 'uncharted' : null,
         bossCompletions,
         battleId: newHistory.length,
       });

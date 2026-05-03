@@ -484,7 +484,8 @@ export default function GameMap({
                   {getNextMilestone(boss.completions || 1) && (
                     <div style={{ marginTop: 4 }}>
                       <PixelText size={6} color={C.subtleText}>
-                        Next: {getNextMilestone(boss.completions || 1).label} at {getNextMilestone(boss.completions || 1).at}x
+                        Next: {getNextMilestone(boss.completions || 1).label} at{' '}
+                        {getNextMilestone(boss.completions || 1).at}x
                       </PixelText>
                     </div>
                   )}
@@ -498,6 +499,31 @@ export default function GameMap({
                     ✏️ CUSTOM EXPOSURE
                   </PixelText>
                 </div>
+              )}
+
+              {/* Loot/moment badge */}
+              {boss.defeated && (
+                <>
+                  {(battleHistory || []).filter(
+                    (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
+                  ).length > 0 && (
+                    <div style={{ marginTop: 8 }}>
+                      <PixelText size={6} color={C.goalGold}>
+                        📸{' '}
+                        {(battleHistory || []).filter(
+                          (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
+                        ).length}{' '}
+                        moment
+                        {(battleHistory || []).filter(
+                          (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
+                        ).length !== 1
+                          ? 's'
+                          : ''}{' '}
+                        captured
+                      </PixelText>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
