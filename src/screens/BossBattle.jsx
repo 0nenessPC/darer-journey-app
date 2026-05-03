@@ -100,7 +100,9 @@ export default function BossBattle({
 
   // Save armory practice data to Supabase
   const handlePracticeComplete = async (practiceData) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user && practiceData?.toolId) {
       await saveArmoryPractice(user.id, practiceData);
     }
@@ -1255,6 +1257,7 @@ export default function BossBattle({
           streakCount={celebration.streakCount || 0}
           hasLetter={celebration.hasLetter || false}
           weeklyChallengeRewards={celebration.weeklyChallengeRewards || null}
+          evidenceCards={celebration.evidenceCards || []}
           onDismiss={() => setCelebration(null)}
         />
       )}

@@ -7,6 +7,7 @@ import { getWeeklyChallenges, checkWeeklyChallenges } from '../constants/weeklyC
 import { battleXP, calcTotalXP, getPlayerLevel, xpToNextLevel } from '../utils/xpSystem';
 import { generatePostBattleLetter } from '../constants/daraLetters';
 import { getMasteryLevel } from '../utils/mastery';
+import { generateEvidenceCards } from '../utils/evidenceCards';
 
 /**
  * useCompletionHandlers — manages completion callbacks for character creation,
@@ -290,7 +291,7 @@ export function useCompletionHandlers({
             const prevCompletions = b.completions || 0;
             const prevAttempts = b.attempts || 0;
             const newCompletions = prevCompletions + 1;
-            const newAttempts = isRepeat ? prevAttempts + 1 : (prevAttempts || 1);
+            const newAttempts = isRepeat ? prevAttempts + 1 : prevAttempts || 1;
             const prevBest = b.bestSudsDrop || 0;
             const mastery = getMasteryLevel(newCompletions);
             return {
@@ -352,6 +353,9 @@ export function useCompletionHandlers({
           }
           updates.totalXP = totalXP;
           updates.playerLevel = playerLevel;
+          if (evidenceForBattle.length > 0) {
+            updates.evidenceCards = [...(h.evidenceCards || []), ...evidenceForBattle];
+          }
           return { ...h, ...updates };
         });
         const {
@@ -378,7 +382,7 @@ export function useCompletionHandlers({
             return {
               ...b,
               hp: Math.max(0, b.hp - 50),
-              attempts: isRepeat ? prevAttempts + 1 : (prevAttempts || 1),
+              attempts: isRepeat ? prevAttempts + 1 : prevAttempts || 1,
               lastPracticedAt: new Date().toISOString(),
               bestSudsDrop: Math.max(prevBest, sudsDrop),
             };
@@ -419,6 +423,9 @@ export function useCompletionHandlers({
           if (newAchievements.length > 0) {
             updates.achievements = [...(h.achievements || []), ...newAchievements];
           }
+          if (evidenceForBattle.length > 0) {
+            updates.evidenceCards = [...(h.evidenceCards || []), ...evidenceForBattle];
+          }
           return { ...h, ...updates };
         });
         const {
@@ -436,6 +443,24 @@ export function useCompletionHandlers({
       }
       setActiveBoss(null);
       setScreen('map');
+
+      // Generate evidence cards from this battle
+      const isRepeat = activeBoss?.id?.startsWith('repeat_');
+      const originalBoss = quest.bosses.find(
+        (b) => b.name === activeBoss?.name && b.id !== activeBoss?.id,
+      );
+      const bossCompletions = isRepeat
+        ? (originalBoss?.completions || 0) + 1
+        : outcome === 'victory'
+          ? 1
+          : 0;
+      const evidenceForBattle = generateEvidenceCards({
+        ...battleRecord,
+        bossId: activeBoss?.id,
+        masteryLevel: isRepeat ? (originalBoss?.masteryLevel || 'uncharted') : null,
+        bossCompletions,
+        battleId: newHistory.length,
+      });
 
       // Return celebration data for the caller to display
       const { unlocked: newAchObjects } =
@@ -541,6 +566,7 @@ export function useCompletionHandlers({
         sudsDrop: (suds?.before || 0) - (suds?.after || 0),
         weeklyChallengeRewards:
           weeklyRewards.coins > 0 || weeklyRewards.xp > 0 ? weeklyRewards : null,
+        evidenceCards: evidenceForBattle,
       };
     },
     [

@@ -16,6 +16,7 @@ import {
   getSignatureTool,
   getMasteryTools,
 } from '../utils/armoryGrowth';
+import { summarizeEvidence, getCardTypeConfig } from '../utils/evidenceCards';
 export default function HeroProfile({
   hero,
   setHero,
@@ -184,6 +185,7 @@ export default function HeroProfile({
         {[
           { key: 'hero', label: 'HERO' },
           { key: 'log', label: 'BATTLE LOG' },
+          { key: 'evidence', label: '🛡️ EVIDENCE' },
           { key: 'armory', label: '⚗ ARMORY' },
           { key: 'courage', label: '🔥 COURAGE' },
           { key: 'achievements', label: '🏅 BADGES' },
@@ -1277,6 +1279,133 @@ export default function HeroProfile({
               >
                 READ LETTER →
               </PixelBtn>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'evidence' && (
+        <div>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <PixelText size={10} color={C.hpGreen}>
+              🛡️ EVIDENCE CARDS
+            </PixelText>
+            <div style={{ marginTop: 4 }}>
+              <PixelText size={8} color={C.grayLt}>
+                {(hero.evidenceCards || []).length} pieces of proof collected
+              </PixelText>
+            </div>
+          </div>
+
+          {/* Summary by type */}
+          {(hero.evidenceCards || []).length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}
+            >
+              {Object.entries(summarizeEvidence(hero.evidenceCards || [])).map(
+                ([type, count]) => {
+                  const cfg = getCardTypeConfig(type);
+                  return (
+                    <div
+                      key={type}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: 4,
+                        background: cfg.bg,
+                        border: `1px solid ${cfg.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <span style={{ fontSize: 14 }}>{cfg.icon}</span>
+                      <PixelText size={7} color={cfg.color}>
+                        {cfg.label}: {count}
+                      </PixelText>
+                    </div>
+                  );
+                },
+              )}
+            </div>
+          )}
+
+          {/* Evidence cards gallery */}
+          {(hero.evidenceCards || []).length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🛡️</div>
+              <PixelText size={8} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8 }}>
+                Evidence cards appear after you{'\n'}complete battles.{'\n'}
+                {'\n'}
+                Each battle generates proof that{'\n'}the Shadow's predictions were wrong —{'\n'}
+                your own personal data that{'\n'}courage works.
+              </PixelText>
+            </div>
+          ) : (
+            <div>
+              {[...(hero.evidenceCards || [])]
+                .reverse()
+                .map((card) => {
+                  const cfg = getCardTypeConfig(card.type);
+                  const lines = card.text.split('\n');
+                  return (
+                    <div
+                      key={card.id}
+                      style={{
+                        padding: '12px 14px',
+                        marginBottom: 8,
+                        borderRadius: 6,
+                        border: `2px solid ${cfg.border}`,
+                        background: cfg.bg,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <span style={{ fontSize: 18 }}>{cfg.icon}</span>
+                        <PixelText size={7} color={cfg.color}>
+                          {cfg.label}
+                        </PixelText>
+                        <div style={{ flex: 1 }} />
+                        <PixelText size={6} color={C.subtleText}>
+                          {new Date(card.date).toLocaleDateString()}
+                        </PixelText>
+                      </div>
+                      <PixelText
+                        size={6}
+                        color={C.cream}
+                        style={{ display: 'block', marginBottom: 4 }}
+                      >
+                        {card.bossName}
+                      </PixelText>
+                      {lines.map((line, i) => (
+                        <PixelText
+                          key={i}
+                          size={6}
+                          color={line.startsWith('Evidence') ? cfg.color : C.grayLt}
+                          style={{
+                            display: 'block',
+                            lineHeight: 1.7,
+                            fontStyle: line.startsWith('Evidence') ? 'italic' : 'normal',
+                          }}
+                        >
+                          {line}
+                        </PixelText>
+                      ))}
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
