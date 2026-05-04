@@ -116,9 +116,11 @@ export default function ExposureBankScreen({
                   <div style={{ marginTop: 2 }}>
                     <PixelText size={6} color={C.goalGold}>
                       📸{' '}
-                      {(battleHistory || []).filter(
-                        (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
-                      ).length}
+                      {
+                        (battleHistory || []).filter(
+                          (b) => b.bossName === boss.name && (b.lootImage || b.lootText),
+                        ).length
+                      }
                     </PixelText>
                   </div>
                 )}

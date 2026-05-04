@@ -1,4 +1,3 @@
-import React from 'react';
 import { C } from '../constants/gameData';
 import { PixelText, PixelBtn } from './shared';
 
@@ -12,8 +11,7 @@ const OUTCOME_CONFIG = {
   victory: {
     icon: '🏆',
     title: 'BOSS DEFEATED!',
-    subtitle: (bossName, heroName) =>
-      `The Shadow of "${bossName}" falls before you, ${heroName}!`,
+    subtitle: (bossName, heroName) => `The Shadow of "${bossName}" falls before you, ${heroName}!`,
     titleColor: C.hpGreen,
     borderColor: C.hpGreen,
     bgTint: C.hpGreen + '10',
@@ -165,7 +163,9 @@ export default function BattleRewardScreen({
               <PixelText size={7} color={C.cream}>
                 +{entry.xp} XP
               </PixelText>
-              <PixelText size={7} color={C.subtleText}>{entry.label}</PixelText>
+              <PixelText size={7} color={C.subtleText}>
+                {entry.label}
+              </PixelText>
             </div>
           ))}
 
@@ -183,7 +183,9 @@ export default function BattleRewardScreen({
               <PixelText size={8} color={C.goldMd}>
                 🪙 +{coinsEarned}
               </PixelText>
-              <PixelText size={7} color={C.subtleText}>COURAGE COINS</PixelText>
+              <PixelText size={7} color={C.subtleText}>
+                COURAGE COINS
+              </PixelText>
             </div>
           )}
 
@@ -201,7 +203,9 @@ export default function BattleRewardScreen({
             <PixelText size={10} color={C.goldMd}>
               {totalXP} XP
             </PixelText>
-            <PixelText size={7} color={C.subtleText}>TOTAL EARNED</PixelText>
+            <PixelText size={7} color={C.subtleText}>
+              TOTAL EARNED
+            </PixelText>
           </div>
         </div>
 

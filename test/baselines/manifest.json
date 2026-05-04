@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "created": "2026-05-08",
+  "screenshots": [
+    {
+      "file": "ai-login.png",
+      "description": "Login screen — email/password inputs, LOG IN and NEW GAME buttons",
+      "assertion": "Login form renders cleanly on mobile viewport"
+    },
+    {
+      "file": "ai-intro.png",
+      "description": "GameIntro carousel — story text about The Shadow of Fear",
+      "assertion": "Hero text and carousel indicators visible"
+    },
+    {
+      "file": "ai-character-name.png",
+      "description": "CharacterCreate name entry — input with auto-generated DARER ID",
+      "assertion": "Centered name input with THAT'S ME button"
+    },
+    {
+      "file": "ai-meet-dara.png",
+      "description": "Meet Dara screen — Soul Companion introduction",
+      "assertion": "Dara character intro with BEGIN JOURNEY button"
+    },
+    {
+      "file": "ai-values-cards.png",
+      "description": "Values card selection grid — WHAT MATTERS MOST header",
+      "assertion": "Grid of tappable value cards with icons"
+    },
+    {
+      "file": "ai-shadow-lore.png",
+      "description": "Shadow Lore F.E.A.R. intro screen",
+      "assertion": "F.E.A.R. acronym explanation with dramatic styling"
+    },
+    {
+      "file": "ai-psychoed.png",
+      "description": "PsychoEd slide — The Shadow's Tricks educational content",
+      "assertion": "Educational slide with readable text and NEXT button"
+    },
+    {
+      "file": "map-final.png",
+      "description": "GameMap — boss list, zone banner, hero status bar",
+      "assertion": "Map screen with bosses, zone info, and bottom nav"
+    },
+    {
+      "file": "resume-state.png",
+      "description": "Resume test — map screen after logout/login",
+      "assertion": "Map screen restores after re-login with same data"
+    }
+  ]
+}

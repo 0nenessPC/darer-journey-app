@@ -749,7 +749,12 @@ export function useCompletionHandlers({
       const bossName = chosenExposure?.text || 'Tutorial Exposure';
 
       return {
-        outcome: engageOutcome === 'full' ? 'victory' : engageOutcome === 'partial' ? 'partial' : 'retreat',
+        outcome:
+          engageOutcome === 'full'
+            ? 'victory'
+            : engageOutcome === 'partial'
+              ? 'partial'
+              : 'retreat',
         bossName,
         xpEarned,
         coinsEarned,

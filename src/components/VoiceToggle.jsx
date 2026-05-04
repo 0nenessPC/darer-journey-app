@@ -183,13 +183,13 @@ export function VoiceInputBar({
       <input
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') onSend(); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { onSend(input.trim()); } }}
         placeholder={isListening ? 'Listening...' : placeholder}
         disabled={typing || disabled || isListening}
         style={{
           flex: 1,
           padding: '10px 12px',
-          background: 'C.inputBg',
+          background: C.inputBg,
           border: `2px solid ${isListening ? C.plum : C.teal + '60'}`,
           borderRadius: 6,
           color: C.cream,
@@ -202,7 +202,7 @@ export function VoiceInputBar({
 
       {/* Send button */}
       <button
-        onClick={onSend}
+        onClick={() => { if (input.trim()) onSend(input.trim()); }}
         disabled={typing || !input.trim() || disabled}
         style={{
           padding: '10px 16px',

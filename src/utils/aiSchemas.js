@@ -33,7 +33,10 @@ export function validateAIResponse(raw, schema) {
   if (!raw || typeof raw !== 'string') return null;
 
   // Strip markdown code fences
-  const stripped = raw.replace(/```(?:json)?\s*/g, '').replace(/```\s*/g, '').trim();
+  const stripped = raw
+    .replace(/```(?:json)?\s*/g, '')
+    .replace(/```\s*/g, '')
+    .trim();
 
   // Try raw parse first
   let parsed = null;

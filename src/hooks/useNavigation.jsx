@@ -5,17 +5,20 @@ export function useNavigation() {
   const [screen, setScreenRaw] = useState('login');
   const [screenHistory, setScreenHistory] = useState([]);
 
-  const setScreen = useCallback((s) => {
-    if (s === screen) return;
-    setScreenHistory((prev) => {
-      const last = prev.length > 0 ? prev[prev.length - 1] : null;
-      if (last === screen && prev.length > 1) {
-        return [...prev.slice(0, -1), screen];
-      }
-      return [...prev, screen];
-    });
-    setScreenRaw(s);
-  }, [screen]);
+  const setScreen = useCallback(
+    (s) => {
+      if (s === screen) return;
+      setScreenHistory((prev) => {
+        const last = prev.length > 0 ? prev[prev.length - 1] : null;
+        if (last === screen && prev.length > 1) {
+          return [...prev.slice(0, -1), screen];
+        }
+        return [...prev, screen];
+      });
+      setScreenRaw(s);
+    },
+    [screen],
+  );
 
   const setOBState = useCallback((screenKey, partial) => {
     // Returns a state updater — the caller wires this into onboardingState

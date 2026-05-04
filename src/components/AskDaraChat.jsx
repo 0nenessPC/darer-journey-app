@@ -23,17 +23,21 @@ function AskDaraTypewriterBubble({ text, muted, voice }) {
   }, [voice?.isSpeaking]);
 
   return (
-    <div style={{
-      maxWidth: "80%", padding: "10px 14px", borderRadius: 8,
-      background: C.grayBg,
-      border: `2px solid ${isSpeaking ? C.teal : C.teal + "40"}`,
-      boxShadow: isSpeaking ? `0 0 8px ${C.teal}40` : "none",
-    }}>
-      <PixelText size={7} color={C.cream} style={{ whiteSpace: "pre-wrap" }}>
+    <div
+      style={{
+        maxWidth: '80%',
+        padding: '10px 14px',
+        borderRadius: 8,
+        background: C.grayBg,
+        border: `2px solid ${isSpeaking ? C.teal : C.teal + '40'}`,
+        boxShadow: isSpeaking ? `0 0 8px ${C.teal}40` : 'none',
+      }}
+    >
+      <PixelText size={7} color={C.cream} style={{ whiteSpace: 'pre-wrap' }}>
         {text}
       </PixelText>
       {isSpeaking && (
-        <PixelText size={6} color={C.teal} style={{ display: "block", marginTop: 4, opacity: 0.8 }}>
+        <PixelText size={6} color={C.teal} style={{ display: 'block', marginTop: 4, opacity: 0.8 }}>
           🔊 speaking
         </PixelText>
       )}
@@ -41,10 +45,10 @@ function AskDaraTypewriterBubble({ text, muted, voice }) {
   );
 }
 
-export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = "" }) {
+export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext = '' }) {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [step, setStep] = useState(0); // 0 = intro, 1-4 = questions, 5 = review
   const [generatedExposure, setGeneratedExposure] = useState(null);
   const [chatError, setChatError] = useState(false);
@@ -55,10 +59,10 @@ export default function AskDaraChat({ onClose, onSubmit, onFallback, heroContext
   // Voice hook
   const voice = useCloudVoice({ useCloud: false });
 
-  const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || "Hero"; // Extract name from hero context
+  const USER_NAME = heroContext?.match(/HERO: (.+)/)?.[1]?.split(',')[0] || 'Hero'; // Extract name from hero context
 
   // Dara's system prompt for exposure design
-  const DARA_SYS = `${heroContext ? heroContext + "\n\n" : ""}You are Dara, a warm clinical psychologist helping someone design a personalized micro-exposure for social anxiety.
+  const DARA_SYS = `${heroContext ? heroContext + '\n\n' : ''}You are Dara, a warm clinical psychologist helping someone design a personalized micro-exposure for social anxiety.
 
 RULES:
 - Ask exactly ONE question per turn, keep responses to 2-3 sentences max.
@@ -76,14 +80,17 @@ CONVERSATION FLOW:
 Always keep the exposure small, actionable, and specific.`;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   // Initialize — Dara's first message
   useEffect(() => {
     if (step === 0 && messages.length === 0) {
       setTyping(true);
-      const initMsg = { role: "assistant", text: `Hey there. I'm Dara — and I'm here to help you design your very own exposure challenge. Think of it as a small, brave step toward ${heroContext ? "your goal" : "the things that feel hard right now"}.\n\nWhat's one social situation that makes you feel the most anxious lately?` };
+      const initMsg = {
+        role: 'assistant',
+        text: `Hey there. I'm Dara — and I'm here to help you design your very own exposure challenge. Think of it as a small, brave step toward ${heroContext ? 'your goal' : 'the things that feel hard right now'}.\n\nWhat's one social situation that makes you feel the most anxious lately?`,
+      };
       chatHistory.current = [initMsg];
       setMessages([initMsg]);
       setTyping(false);
@@ -95,102 +102,127 @@ Always keep the exposure small, actionable, and specific.`;
     }
   }, [step, messages.length, voiceMode, voice.speak, voice.supported]);
 
-  const handleSend = useCallback(async (textOverride) => {
-    const textToSend = textOverride || input;
-    if (!textToSend.trim() || typing) return;
-    const userText = textToSend.trim();
-    setInput("");
+  const handleSend = useCallback(
+    async (textOverride) => {
+      const textToSend = textOverride || input;
+      if (!textToSend.trim() || typing) return;
+      const userText = textToSend.trim();
+      setInput('');
 
-    // Add user message (track if it came from voice)
-    const userMsg = { role: "user", text: userText, fromVoice: !!textOverride };
-    chatHistory.current.push(userMsg);
-    setMessages(prev => [...prev, userMsg]);
+      // Add user message (track if it came from voice)
+      const userMsg = { role: 'user', text: userText, fromVoice: !!textOverride };
+      chatHistory.current.push(userMsg);
+      setMessages((prev) => [...prev, userMsg]);
 
-    // After enough exchanges, generate the exposure card
-    if (step >= 4) {
-      setTyping(true);
-      setStep(5);
-      try {
-        const res = await callAI(
-          DARA_SYS + `\n\nThe user has shared enough. Now generate ONLY a JSON exposure card with: {"name": "...", "desc": "...", "difficulty": 1-10}. Do NOT add any other text.`,
-          chatHistory.current,
-          500,
-          20000
-        );
+      // After enough exchanges, generate the exposure card
+      if (step >= 4) {
+        setTyping(true);
+        setStep(5);
+        try {
+          const res = await callAI(
+            DARA_SYS +
+              `\n\nThe user has shared enough. Now generate ONLY a JSON exposure card with: {"name": "...", "desc": "...", "difficulty": 1-10}. Do NOT add any other text.`,
+            chatHistory.current,
+            500,
+            20000,
+          );
 
-        const exposure = validateAIResponse(res, BossConfigSchema);
-        if (exposure) {
-          const finalMsg = { role: "assistant", text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.` };
-          chatHistory.current.push(finalMsg);
-          setMessages(prev => [...prev, finalMsg]);
-          if (voiceMode) {
-            voice.speak(finalMsg.text, { speed: 0.9 });
+          const exposure = validateAIResponse(res, BossConfigSchema);
+          if (exposure) {
+            const finalMsg = {
+              role: 'assistant',
+              text: `I've designed an exposure challenge for you based on what you shared! Take a look — if it feels right, tap "Add to My Journey." If not, you can tweak it or write your own instead.`,
+            };
+            chatHistory.current.push(finalMsg);
+            setMessages((prev) => [...prev, finalMsg]);
+            if (voiceMode) {
+              voice.speak(finalMsg.text, { speed: 0.9 });
+            }
+            setGeneratedExposure({
+              name: exposure.name,
+              desc: exposure.desc || `Based on your conversation with Dara`,
+              difficulty: Math.min(10, Math.max(1, Number(exposure.difficulty))),
+            });
+            setTyping(false);
+            return;
           }
-          setGeneratedExposure({
-            name: exposure.name,
-            desc: exposure.desc || `Based on your conversation with Dara`,
-            difficulty: Math.min(10, Math.max(1, Number(exposure.difficulty))),
-          });
-          setTyping(false);
-          return;
+
+          // If parsing failed, fall back to manual form
+          setChatError(true);
+          onFallback();
+        } catch (err) {
+          console.error('Dara chat error:', err);
+          setChatError(true);
+          onFallback();
         }
-
-        // If parsing failed, fall back to manual form
-        setChatError(true);
-        onFallback();
-      } catch (err) {
-        console.error("Dara chat error:", err);
-        setChatError(true);
-        onFallback();
+        return;
       }
-      return;
-    }
 
-    // Normal conversation turn
-    setTyping(true);
-    setStep(prev => prev + 1);
-    const res = await callAI(DARA_SYS, chatHistory.current, 300, 15000);
-    if (res) {
-      const aiMsg = { role: "assistant", text: res };
-      chatHistory.current.push(aiMsg);
-      setMessages(prev => [...prev, aiMsg]);
-      // Speak reply if voice mode is on
-      if (voiceMode) {
-        voice.speak(res, { speed: 0.9 });
+      // Normal conversation turn
+      setTyping(true);
+      setStep((prev) => prev + 1);
+      const res = await callAI(DARA_SYS, chatHistory.current, 300, 15000);
+      if (res) {
+        const aiMsg = { role: 'assistant', text: res };
+        chatHistory.current.push(aiMsg);
+        setMessages((prev) => [...prev, aiMsg]);
+        // Speak reply if voice mode is on
+        if (voiceMode) {
+          voice.speak(res, { speed: 0.9 });
+        }
       }
-    }
-    setTyping(false);
-  }, [input, typing, voiceMode, voice.speak, voice.supported]);
+      setTyping(false);
+    },
+    [input, typing, voiceMode, voice.speak, voice.supported],
+  );
 
   // Show review screen if we have a generated exposure
   if (generatedExposure) {
     return (
       <Modal open onClose={onClose} variant="bottom" title="Dara's Suggestion">
         {/* Generated card preview */}
-        <div style={{
-          padding: 14, background: C.teal + "15", border: `2px solid ${C.teal}`,
-          borderRadius: 6, marginBottom: 20,
-        }}>
-          <PixelText size={9} color={C.cream} style={{ display: "block", marginBottom: 6 }}>✏ {generatedExposure.name}</PixelText>
-          <PixelText size={7} color={C.grayLt}>{generatedExposure.desc}</PixelText>
+        <div
+          style={{
+            padding: 14,
+            background: C.teal + '15',
+            border: `2px solid ${C.teal}`,
+            borderRadius: 6,
+            marginBottom: 20,
+          }}
+        >
+          <PixelText size={9} color={C.cream} style={{ display: 'block', marginBottom: 6 }}>
+            ✏ {generatedExposure.name}
+          </PixelText>
+          <PixelText size={7} color={C.grayLt}>
+            {generatedExposure.desc}
+          </PixelText>
           <div style={{ marginTop: 8 }}>
-            <PixelText size={8} color={C.teal}>Anxiety level: LV.{generatedExposure.difficulty}</PixelText>
+            <PixelText size={8} color={C.teal}>
+              Anxiety level: LV.{generatedExposure.difficulty}
+            </PixelText>
           </div>
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
-            onClick={() => onSubmit({
-              name: generatedExposure.name,
-              desc: generatedExposure.desc,
-              difficulty: generatedExposure.difficulty,
-            })}
+            onClick={() =>
+              onSubmit({
+                name: generatedExposure.name,
+                desc: generatedExposure.desc,
+                difficulty: generatedExposure.difficulty,
+              })
+            }
             style={{
-              width: "100%", padding: "14px 20px",
-              background: C.teal, border: `3px solid ${C.teal}`,
-              borderRadius: 6, cursor: "pointer",
-              color: C.cream, fontSize: 10, fontFamily: PIXEL_FONT,
+              width: '100%',
+              padding: '14px 20px',
+              background: C.teal,
+              border: `3px solid ${C.teal}`,
+              borderRadius: 6,
+              cursor: 'pointer',
+              color: C.cream,
+              fontSize: 10,
+              fontFamily: PIXEL_FONT,
               boxShadow: `0 4px 0 ${C.btnShadow}`,
             }}
           >
@@ -199,10 +231,15 @@ Always keep the exposure small, actionable, and specific.`;
           <button
             onClick={onFallback}
             style={{
-              width: "100%", padding: "12px 20px",
-              background: "transparent", border: `2px solid ${C.grayLt}`,
-              borderRadius: 6, cursor: "pointer",
-              color: C.subtleText, fontSize: 9, fontFamily: PIXEL_FONT,
+              width: '100%',
+              padding: '12px 20px',
+              background: 'transparent',
+              border: `2px solid ${C.grayLt}`,
+              borderRadius: 6,
+              cursor: 'pointer',
+              color: C.subtleText,
+              fontSize: 9,
+              fontFamily: PIXEL_FONT,
             }}
           >
             ✏️ Edit or write my own
@@ -216,49 +253,83 @@ Always keep the exposure small, actionable, and specific.`;
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.9)",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100,
+        background: 'rgba(0,0,0,0.9)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 480, height: "80vh",
-          background: C.cardBg, border: `3px solid ${C.teal}`,
-          borderRadius: 12, display: "flex", flexDirection: "column",
-          overflow: "hidden",
+          width: '100%',
+          maxWidth: 480,
+          height: '80vh',
+          background: C.cardBg,
+          border: `3px solid ${C.teal}`,
+          borderRadius: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         {/* Header */}
-        <div style={{
-          padding: "12px 16px", borderBottom: `2px solid ${C.teal}40`,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <PixelText size={9} color={C.teal}>🤖 Ask Dara</PixelText>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.subtleText, fontSize: 16 }}>✕</button>
+        <div
+          style={{
+            padding: '12px 16px',
+            borderBottom: `2px solid ${C.teal}40`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <PixelText size={9} color={C.teal}>
+            🤖 Ask Dara
+          </PixelText>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: C.subtleText,
+              fontSize: 16,
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: "auto", padding: C.padLg }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: C.padLg }}>
           {messages.map((m, i) => (
-            <div key={i} style={{
-              marginBottom: 12,
-              display: "flex",
-              justifyContent: m.role === "user" ? "flex-end" : "flex-start",
-              alignItems: "flex-start",
-              gap: 6,
-            }}>
-              {m.role === "assistant" ? (
+            <div
+              key={i}
+              style={{
+                marginBottom: 12,
+                display: 'flex',
+                justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
+                alignItems: 'flex-start',
+                gap: 6,
+              }}
+            >
+              {m.role === 'assistant' ? (
                 <AskDaraTypewriterBubble text={m.text} muted={!voiceMode} voice={voice} />
               ) : (
-                <VoiceMessageBubble isFromVoice={m.fromVoice} style={{
-                  maxWidth: "85%", padding: "10px 14px",
-                  background: C.plum + "30",
-                  border: `2px solid ${C.plum}60`,
-                  borderRadius: 8,
-                }}>
-                  <PixelText size={7} color={C.plumLt} style={{ whiteSpace: "pre-wrap" }}>
+                <VoiceMessageBubble
+                  isFromVoice={m.fromVoice}
+                  style={{
+                    maxWidth: '85%',
+                    padding: '10px 14px',
+                    background: C.plum + '30',
+                    border: `2px solid ${C.plum}60`,
+                    borderRadius: 8,
+                  }}
+                >
+                  <PixelText size={7} color={C.plumLt} style={{ whiteSpace: 'pre-wrap' }}>
                     {m.text}
                   </PixelText>
                 </VoiceMessageBubble>
@@ -267,11 +338,15 @@ Always keep the exposure small, actionable, and specific.`;
           ))}
           {typing && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{
-                maxWidth: "85%", padding: "10px 14px",
-                background: C.grayBg, border: `2px solid ${C.teal}40`,
-                borderRadius: 8,
-              }}>
+              <div
+                style={{
+                  maxWidth: '85%',
+                  padding: '10px 14px',
+                  background: C.grayBg,
+                  border: `2px solid ${C.teal}40`,
+                  borderRadius: 8,
+                }}
+              >
                 <TypingDots />
               </div>
             </div>
@@ -281,24 +356,32 @@ Always keep the exposure small, actionable, and specific.`;
 
         {/* Voice mode toggle (header row below title) */}
         {voice.supported && (
-          <div style={{
-            padding: "6px 16px", borderBottom: `2px solid ${C.teal}40`,
-            display: "flex", alignItems: "center", justifyContent: "flex-end",
-          }}>
+          <div
+            style={{
+              padding: '6px 16px',
+              borderBottom: `2px solid ${C.teal}40`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+            }}
+          >
             <button
-              onClick={() => { if (voiceMode) voice.cancelSpeech(); setVoiceMode(v => !v); }}
+              onClick={() => {
+                if (voiceMode) voice.cancelSpeech();
+                setVoiceMode((v) => !v);
+              }}
               style={{
-                padding: "4px 10px",
-                background: voiceMode ? C.plum + "40" : "transparent",
-                border: `1px solid ${voiceMode ? C.plumLt : C.gray + "60"}`,
+                padding: '4px 10px',
+                background: voiceMode ? C.plum + '40' : 'transparent',
+                border: `1px solid ${voiceMode ? C.plumLt : C.gray + '60'}`,
                 borderRadius: 4,
-                cursor: "pointer",
+                cursor: 'pointer',
                 color: voiceMode ? C.plumLt : C.grayLt,
                 fontSize: 9,
                 fontFamily: PIXEL_FONT,
               }}
             >
-              {voiceMode ? "🎤 Voice ON" : "🎤 Voice OFF"}
+              {voiceMode ? '🎤 Voice ON' : '🎤 Voice OFF'}
             </button>
           </div>
         )}
@@ -312,24 +395,37 @@ Always keep the exposure small, actionable, and specific.`;
             typing={typing}
             disabled={step >= 5}
             voice={voice}
-            placeholder={step >= 5 ? "Generating your exposure..." : "Type your answer or tap 🎤..."}
+            placeholder={
+              step >= 5 ? 'Generating your exposure...' : 'Type your answer or tap 🎤...'
+            }
           />
         ) : (
-          <div style={{
-            padding: "12px 16px", borderTop: `2px solid ${C.teal}40`,
-            display: "flex", gap: 8,
-          }}>
+          <div
+            style={{
+              padding: '12px 16px',
+              borderTop: `2px solid ${C.teal}40`,
+              display: 'flex',
+              gap: 8,
+            }}
+          >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
-              placeholder={step >= 5 ? "Generating your exposure..." : "Type your answer..."}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSend();
+              }}
+              placeholder={step >= 5 ? 'Generating your exposure...' : 'Type your answer...'}
               disabled={typing || step >= 5}
               style={{
-                flex: 1, padding: "10px 12px",
-                background: C.grayBg, border: `2px solid ${C.teal}60`,
-                borderRadius: 6, color: C.cream, fontSize: 12,
-                fontFamily: "inherit", outline: "none",
+                flex: 1,
+                padding: '10px 12px',
+                background: C.grayBg,
+                border: `2px solid ${C.teal}60`,
+                borderRadius: 6,
+                color: C.cream,
+                fontSize: 12,
+                fontFamily: 'inherit',
+                outline: 'none',
                 opacity: typing || step >= 5 ? 0.5 : 1,
               }}
             />
@@ -337,11 +433,14 @@ Always keep the exposure small, actionable, and specific.`;
               onClick={handleSend}
               disabled={typing || !input.trim() || step >= 5}
               style={{
-                padding: "10px 16px",
+                padding: '10px 16px',
                 background: input.trim() && !typing ? C.teal : C.gray,
                 border: `2px solid ${input.trim() && !typing ? C.teal : C.gray}`,
-                borderRadius: 6, cursor: input.trim() && !typing ? "pointer" : "default",
-                color: C.cream, fontSize: 14, fontFamily: PIXEL_FONT,
+                borderRadius: 6,
+                cursor: input.trim() && !typing ? 'pointer' : 'default',
+                color: C.cream,
+                fontSize: 14,
+                fontFamily: PIXEL_FONT,
               }}
             >
               →
@@ -352,4 +451,3 @@ Always keep the exposure small, actionable, and specific.`;
     </div>
   );
 }
-

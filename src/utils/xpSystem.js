@@ -2,26 +2,26 @@
 
 // XP thresholds per level (cumulative)
 const LEVEL_THRESHOLDS = [
-  0,      // Level 1
-  300,    // Level 2
-  700,    // Level 3
-  1200,   // Level 4
-  1800,   // Level 5
-  2500,   // Level 6
-  3300,   // Level 7
-  4200,   // Level 8
-  5200,   // Level 9
-  6300,   // Level 10
-  7500,   // Level 11
-  8800,   // Level 12
-  10200,  // Level 13
-  11700,  // Level 14
-  13300,  // Level 15
-  15000,  // Level 16
-  16800,  // Level 17
-  18700,  // Level 18
-  20700,  // Level 19
-  22800,  // Level 20
+  0, // Level 1
+  300, // Level 2
+  700, // Level 3
+  1200, // Level 4
+  1800, // Level 5
+  2500, // Level 6
+  3300, // Level 7
+  4200, // Level 8
+  5200, // Level 9
+  6300, // Level 10
+  7500, // Level 11
+  8800, // Level 12
+  10200, // Level 13
+  11700, // Level 14
+  13300, // Level 15
+  15000, // Level 16
+  16800, // Level 17
+  18700, // Level 18
+  20700, // Level 19
+  22800, // Level 20
 ];
 
 const MAX_LEVEL = LEVEL_THRESHOLDS.length;
@@ -32,8 +32,8 @@ export function battleXP(boss, outcome, sudsBefore, sudsAfter) {
   const baseXP = bossLevel * 50;
 
   let multiplier = 1;
-  if (outcome === "victory") multiplier = 1.5;
-  else if (outcome === "partial") multiplier = 1.0;
+  if (outcome === 'victory') multiplier = 1.5;
+  else if (outcome === 'partial') multiplier = 1.0;
   else multiplier = 0.5; // retreat
 
   // SUDS reduction bonus: bigger drops earn more XP
@@ -47,7 +47,7 @@ export function battleXP(boss, outcome, sudsBefore, sudsAfter) {
 export function calcTotalXP(battleHistory = [], questBosses = []) {
   let total = 0;
   for (const b of battleHistory) {
-    const boss = questBosses.find(qb => qb.id === b.bossId);
+    const boss = questBosses.find((qb) => qb.id === b.bossId);
     total += battleXP(boss, b.outcome, b.suds?.before, b.suds?.after);
   }
   return total;

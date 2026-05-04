@@ -185,7 +185,9 @@ export default function RisePhase({
               }}
             >
               <PixelText size={6} color={exposureWhereCoords ? C.teal : C.plumMd}>
-                {exposureWhereCoords ? '✅ Location pinned for diamond verification' : '📍 Pin my current location (earn 💎)'}
+                {exposureWhereCoords
+                  ? '✅ Location pinned for diamond verification'
+                  : '📍 Pin my current location (earn 💎)'}
               </PixelText>
             </button>
           </div>

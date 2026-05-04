@@ -547,5 +547,166 @@ Profile, armory, and ladder screens are accessible via bottom nav from map/battl
 **Phase 5: Bug fixes** — COMPLETE (items 1-3)
 **Phase 6: Tooling** — COMPLETE (items 4-6: ESLint/Prettier, pre-commit hook, CI, production console audit)
 **Phase 7: Architecture** — COMPLETE (items 7-11: useDARERFlow hook, gameData split, ONBOARDING single source, debounce auto-save, voice hooks)
-**Phase 8: Refinement** — 6/11 done (#13 AbortController, #14 useMemo buildHeroContext, #15 deduplicate boss creation, #16 rapid-fire send guard, #17 Vitest, #18 Zod validation, #19 split useAppState, #22 barrel exports)
+**Phase 8: Refinement** — ALL done (#13 AbortController, #14 useMemo buildHeroContext, #15 deduplicate boss creation, #16 rapid-fire send guard, #17 Vitest, #18 Zod validation, #19 split useAppState, #22 barrel exports, #11 Welcome-Back Letters)
 **Phase 8: Skipped** — #12 CSS architecture, #20 TypeScript migration (low ROI for this project)
+
+### Session: 2026-05-08 — Dara's Welcome-Back Letters Complete
+
+- **`src/screens/WelcomeBackLetter.jsx`** (created previously, now fully wired):
+  - Full-screen letter UI with 4 tone variants based on days away (0, 1-2, 3-7, 7+ days)
+  - Letter header with icon, tone stage label, days-away context
+  - Stats recap: bosses defeated, best SUDS drop, streak count
+  - "I'M READY TO CONTINUE" button clears welcomeBackData and navigates to map
+
+- **`src/hooks/useHeroState.jsx`** — `checkWelcomeBack()` function:
+  - Checks if `lastActiveDate` was 2+ days ago
+  - Returns `{ daysSinceLastActive, lastBossName, totalDefeated, bestSudsDrop, streakCount }` or `null`
+  - Exported in hook return object
+
+- **`src/hooks/useAppState.jsx`** — Login flow integration:
+  - `handleLogin`: After `restoreProgress` + streak update, calls `hero.checkWelcomeBack(heroData, hero.battleHistory)`
+  - If welcome-back data returned: sets it on hero and routes to `welcomeBack` screen instead of map
+  - `handleNdaComplete`: Same welcome-back check wired in for post-NDA login
+  - Falls through to normal routing (map, exposureSort, intro) if no welcome-back needed
+
+- **`src/App.jsx`** (updated previously):
+  - Lazy import + screen route for `welcomeBack` screen
+  - Renders WelcomeBackLetter with `letterData` and `onContinue` handler
+
+**Testing impact:**
+- New screen route `welcomeBack` — AI smoke tests may encounter this screen if test accounts have 2+ day gaps
+- E2E tests: welcome-back check fires on login for returning users. Test accounts with fresh NDA agreements should NOT trigger it (same-day login). If tests start seeing the letter unexpectedly, pre-set `lastActiveDate` to today in the test progress data.
+
+**Verification**:
+- `npx vite build` — passes cleanly (1.69s)
+- `npm run test:unit` — 16/16 passing
+
+### Session: 2026-05-08 (continued) — Test/QA Infrastructure
+
+- **`test/ai-smoke.spec.js`** — Values test timing fix + 2 new smoke tests:
+  - Values test: intake auto-transition timeout increased to 45s (was 30s) to account for typewriter/TTS sync delay
+  - **Test 8: BossBattle prep/visual smoke test** — full navigation through onboarding, tutorial, exposure sort, then enters BossBattle prep from map. Screenshots DECIDE and ALLOW phases with AI assertions on D.A.R.E.R. progress bar and layout
+  - **Test 9: TutorialBattle coach chat voice test** — navigates to "TALK TO DARA FIRST" in TutorialBattle engage, verifies VoiceInputBar presence, sends a message, validates AI reply renders, then proceeds
+  - Both tests updated to include new loot upload step between outcome selection and SUDs after
+
+- **`test/darer-full-onboarding.spec.js`** — Loot upload step added:
+  - New A12 step: ENGAGE sub-step 1.5 (loot upload) — fills textarea, clicks CONTINUE
+  - Previous A12/A13 renumbered to A13/A14 to accommodate
+  - Note: E2E targets `https://darer-journey-app.vercel.app` by default; loot feature only on localhost/dev until deployed
+
+- **`test/intake-real-ai.spec.js`** (NEW) — Real AI intake chat test:
+  - Mocks non-intake AI calls (values gen, etc.) for fast navigation
+  - Routes intake calls through to real AI via `/api/qwen-chat` dev proxy
+  - Validates chat UI renders, sends a real message, waits for AI response
+  - Handles retry state ("Dara is still preparing...") with explicit wait
+  - Screenshot captures at `test/screenshots/ai-intake-initial.png` and `ai-intake-response.png`
+  - Gracefully skips if AI returns shadow summary on init (auto-transition)
+
+- **`test/visual-regression.spec.js`** (NEW) — Baseline screenshot comparison:
+  - Reads `test/baselines/manifest.json` for list of baseline screenshots
+  - Compares file sizes between baseline and current screenshots
+  - Flags visual regressions at >15% size change, fails at >30%
+  - Additional test: verifies all baselines have current screenshots
+  - New Playwright project `visual` (no webServer needed — file comparison only)
+  - `test/baselines/manifest.json` — manifest with 9 baseline entries + descriptions
+  - Baseline images copied from existing `test/screenshots/`
+
+- **`playwright.config.js`** — Updated:
+  - Added `visual` project for baseline comparison tests
+  - AI project testMatch extended to include `intake-real-ai.spec.js`
+
+- **`package.json`** — New scripts:
+  - `npm run test:visual` — run visual regression baseline comparison
+  - `npm run test:intake` — run intake real-AI test only
+
+- **`src/screens/TutorialBattle.jsx`** — Added loot upload (engage sub-step 1.5):
+  - `lootImage` + `lootText` state variables
+  - Sub-step 1.5 between outcome (1) and SUDs after (2): DialogBox from Dara, image upload with preview/remove, textarea for meaningful moment
+  - `onComplete` callback now passes `{ lootImage, lootText }`
+  - Outcome CONTINUE button now navigates to sub-step 1.5 (was 2)
+
+- **`src/hooks/useCompletionHandlers.jsx`** — Tutorial complete handler updated:
+  - Now accepts `details` object with `lootImage`/`lootText`
+  - Saves tutorial loot data to Supabase `user_progress`
+
+**Verification**:
+- `npx vite build` — passes cleanly
+- `npm run test:visual` — 10/10 passing (baseline comparison)
+- `npm run test:e2e` — E2E test passing against localhost
+- `npm run test:ai` — 14 tests (12 existing + 2 new smoke tests); intake real-AI test needs verification on stable network
+
+### Session: 2026-05-03 — AI Test Fixes (15/15 passing)
+
+**`test/ai-smoke.spec.js`** — fixed 3 persistent test failures:
+- **BossBattle prep mock ordering** — hierarchy prompt contains "values" keyword, so the values mock intercepted it before hierarchy could match. Root cause: the system prompt includes "Connect higher-level exposures to the user's stated values". Fixed by reordering mock conditions: `hierarchy` check before `values` check.
+- **BossBattle prep exposure count** — test accepted 3 cards but hierarchy mock returns 10. Changed loop from 3→10, reduced per-card timeout from 2s→1s.
+- **TutorialBattle coach chat** — screenshot captured before coach chat UI rendered (waited only 2s). Fixed with `waitForSelector('text=/Whatever.*mind/')`. Also removed broken continuation click at test end (clicked disabled CONTINUE button, caused 300s timeout).
+
+**`test/intake-real-ai.spec.js`** — fixed truncated header screenshot:
+- Added `await page.evaluate(() => document.fonts?.ready)` + `waitForSelector('text="DARA"')` before screenshot.
+- Prevents capturing before font loading completes (showed "IRA" instead of "DARA").
+
+**`test/ai-smoke.spec.js`** (BossBattle mock) — fixed mock response format:
+- Added `await` to `route.fulfill()` calls for proper async handling.
+- Removed debug console logging and browser console capture after debugging.
+
+**`src/screens/ExposureSortScreen.jsx`** — no functional changes (formatting only, removed debug log).
+
+**Result**: 15/15 tests passing (5 content quality + 7 smoke + intake real-AI + 2 new smoke tests).
+Committed as `1871f2a` and pushed to `main`.
+
+### Session: 2026-05-09 — Forgiving Streaks + Post-Battle Celebration Overhaul
+
+**Forgiving Streaks (Phase 1–3 complete)** — `lanterns` system replaces `streakFreezes`:
+- **`src/utils/streak.js`** — Rewritten: `lanterns` param (was `streakFreezes`), award 1 lantern per exposure (+2 for repeats), `bestStreak` tracking, `usedLantern` return flag
+- **`src/hooks/useHeroState.jsx`** — `lanterns: 0` + `bestStreak: 0` defaults, migration from `streakFreezes` in `restoreProgress`
+- **`src/hooks/useCompletionHandlers.jsx`** — `recordActivity()` passes `isRepeat` flag, updates `lanterns`/`bestStreak` on hero, loot type `streak_freeze` → `lantern`
+- **`src/hooks/useAppState.jsx`** — `updateStreakOnOpen` calls use `lanterns`, checks `usedLantern`
+- **`src/utils/lootTable.js`** — `streak_freeze` → `lantern`, icon 🏮
+- **`src/screens/ShopScreen.jsx`** — "Streak Freeze" → "Streak Lantern", effect `lantern`
+- **`src/components/GameMap.jsx`** — ❄️ freeze → 🏮 lantern display
+- **`src/components/CelebrationOverlay.jsx`** — 🔥 → 🏮 icon, forgiving milestone messages
+- **`src/constants/achievements.js`** — "Week Warrior" → "Seven Days", "Iron Will" → "Thirty Days", all 🏮 icon
+- **`src/screens/CouragePath.jsx`** — Shows best streak in stat card
+- Messaging tone: "STREAK MILESTONE" → "{n} DAYS. YOUR PRACTICE IS GROWING", 30-day: "YOUR PRACTICE IS DEEPER THAN YOUR FEAR"
+
+**Post-Battle Celebration — Victory Burst + Dara Cheer:**
+- **`src/components/CelebrationOverlay.jsx`** — Added two new opening phases:
+  - `VictoryBurst`: outcome label flash + screen shake (0.5s) + 30-particle confetti rain for victories (1.5s auto-advance)
+  - `DaraCheer`: personalized spoken TTS via `speechSynthesis` (rate 0.9, pitch 1.1), dismisses on speech end or tap
+  - Sequence now: burst → cheer → XP → coins → diamonds → loot → achievements → level → streak → evidence → letter
+- **`src/screens/BossBattle.jsx`** — Wired `outcome`, `heroName`, `bossName` props to `CelebrationOverlay`
+- **`src/index.css`** — New keyframes: `burstFlash`, `screenShake`, `confettiDrop`, `cheerPopIn`
+- Outcome-specific background tint during burst (green/amber/rose)
+
+**E2E test fixes:**
+- TutorialBattle loot upload: added CONTINUE button click after outcome selection
+- ExposureSortScreen mock: fixed field names to match Zod schema (`text`→`activity`, `difficulty`→`level`)
+
+**Verification**: `npx vite build` passes, `npm run test:e2e` 1/1 passing, `npm run test:unit` 16/16 passing.
+
+### Session: 2026-05-09 (continued) — TutorialBattle Full Celebration Flow
+
+**Gap identified**: TutorialBattle (user's first exposure) had ZERO post-battle celebration — it saved to Supabase and navigated directly to `exposureSort`. BossBattle had the full sequence: Victory Burst → Dara Cheer → XP → Coins → Diamonds → Loot → Achievements → Level → Streak → BattleRewardScreen. This meant the user's very first exposure got no gamified positive reinforcement.
+
+**`src/hooks/useCompletionHandlers.jsx`** — Rewrote `handleTutorialComplete`:
+- Now computes: XP (50 base + SUDS bonus), coins (5), streak update (`recordActivity`), lantern award (+1), achievement check
+- Updates hero state: `totalXP`, `playerLevel`, `courageCoins`, `streakCount`, `lanterns`, `bestStreak`, `lastActiveDate`, achievements
+- Returns celebration payload (same shape as `handleBossVictory`) instead of navigating
+- Caller handles navigation after celebration dismisses
+
+**`src/App.jsx`** — Added tutorial celebration rendering:
+- New state: `tutorialCelebration`, `showTutorialReward`
+- After tutorial complete: shows `BattleRewardScreen` (recap with XP breakdown, coins, SUDS drop) → then `CelebrationOverlay` (VictoryBurst → DaraCheer → XP animation → Coins animation → Lantern loot drop → Level → Streak)
+- On celebration dismiss: navigates to `exposureSort`
+
+**Tutorial now awards**:
+- Victory Burst (screen shake + outcome flash + confetti)
+- Dara's personalized TTS cheer
+- +50 XP animated counter + SUDS bonus
+- +5 Courage Coins animated counter
+- Streak Lantern loot drop (🏮)
+- Streak tracking update (first day)
+- Achievement check (first exposure milestone)
+
+**Verification**: `npx vite build` passes, `npm run test:e2e` 1/1 passing, `npm run test:unit` 16/16 passing.

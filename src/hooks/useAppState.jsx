@@ -124,7 +124,7 @@ export function useAppState() {
         lanterns: heroData.lanterns || 0,
       });
       if (streakResult.wasReset || streakResult.usedLantern) {
-        hero.setHero(h => ({
+        hero.setHero((h) => ({
           ...h,
           streakCount: streakResult.streakCount,
           lanterns: streakResult.lanterns,
@@ -134,10 +134,10 @@ export function useAppState() {
       hero.newUser();
     }
     // Check for welcome-back letter (2+ days away)
-    const heroData = progress ? { ...hero.hero, ...((progress.hero || {})) } : hero.hero;
+    const heroData = progress ? { ...hero.hero, ...(progress.hero || {}) } : hero.hero;
     const welcomeBackData = hero.checkWelcomeBack(heroData, hero.battleHistory);
     if (welcomeBackData) {
-      hero.setHero(h => ({ ...h, welcomeBackData }));
+      hero.setHero((h) => ({ ...h, welcomeBackData }));
       nav.setScreen('welcomeBack');
     } else if (progress?.quest?.bosses?.length > 0) {
       nav.setScreen('map');
@@ -182,7 +182,7 @@ export function useAppState() {
           lanterns: heroData.lanterns || 0,
         });
         if (streakResult.wasReset || streakResult.usedLantern) {
-          hero.setHero(h => ({
+          hero.setHero((h) => ({
             ...h,
             streakCount: streakResult.streakCount,
             lanterns: streakResult.lanterns,
@@ -192,10 +192,10 @@ export function useAppState() {
         hero.newUser();
       }
       // Check for welcome-back letter (2+ days away)
-      const ndaHeroData = progress ? { ...hero.hero, ...((progress.hero || {})) } : hero.hero;
+      const ndaHeroData = progress ? { ...hero.hero, ...(progress.hero || {}) } : hero.hero;
       const ndaWelcomeBackData = hero.checkWelcomeBack(ndaHeroData, hero.battleHistory);
       if (ndaWelcomeBackData) {
-        hero.setHero(h => ({ ...h, welcomeBackData: ndaWelcomeBackData }));
+        hero.setHero((h) => ({ ...h, welcomeBackData: ndaWelcomeBackData }));
         nav.setScreen('welcomeBack');
       } else if (progress?.quest?.bosses?.length > 0) {
         nav.setScreen('map');

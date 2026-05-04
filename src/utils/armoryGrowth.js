@@ -20,12 +20,15 @@ export function getToolLevel(practiceCount = 0) {
 /** Get progress toward next level */
 export function getToolProgress(practiceCount = 0) {
   const current = getToolLevel(practiceCount);
-  const nextIdx = TOOL_LEVELS.findIndex(t => t.level === current.level) + 1;
+  const nextIdx = TOOL_LEVELS.findIndex((t) => t.level === current.level) + 1;
   const next = TOOL_LEVELS[nextIdx];
   if (!next) return { current, next: null, progress: 100 };
   const currentThreshold = current.practiceNeeded;
   const nextThreshold = next.practiceNeeded;
-  const pct = Math.min(100, ((practiceCount - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
+  const pct = Math.min(
+    100,
+    ((practiceCount - currentThreshold) / (nextThreshold - currentThreshold)) * 100,
+  );
   return { current, next, progress: pct };
 }
 
@@ -44,7 +47,7 @@ export function getSignatureTool(armory = []) {
 
 /** Check if any tool reached mastery (level 5) */
 export function getMasteryTools(armory = []) {
-  return armory.filter(t => {
+  return armory.filter((t) => {
     const lvl = getToolLevel(t.practiceCount || 0);
     return lvl.level >= 5;
   });

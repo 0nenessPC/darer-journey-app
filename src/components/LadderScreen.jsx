@@ -56,9 +56,7 @@ export default function WallOfFame({ hero, quest, battleHistory = [], setScreen,
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const filtered =
-    activeFilter === 'all'
-      ? allItems
-      : allItems.filter((item) => item.type === activeFilter);
+    activeFilter === 'all' ? allItems : allItems.filter((item) => item.type === activeFilter);
 
   const lootCount = lootEntries.length;
   const evidenceCount = evidenceEntries.length;
@@ -180,9 +178,7 @@ export default function WallOfFame({ hero, quest, battleHistory = [], setScreen,
                   key={item.id}
                   entry={item}
                   isExpanded={expandedCard === item.id}
-                  onToggle={() =>
-                    setExpandedCard(expandedCard === item.id ? null : item.id)
-                  }
+                  onToggle={() => setExpandedCard(expandedCard === item.id ? null : item.id)}
                 />
               );
             }
@@ -191,9 +187,7 @@ export default function WallOfFame({ hero, quest, battleHistory = [], setScreen,
                 key={item.id}
                 card={item}
                 isExpanded={expandedCard === item.id}
-                onToggle={() =>
-                  setExpandedCard(expandedCard === item.id ? null : item.id)
-                }
+                onToggle={() => setExpandedCard(expandedCard === item.id ? null : item.id)}
               />
             );
           })

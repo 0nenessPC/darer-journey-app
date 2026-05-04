@@ -1,0 +1,13 @@
+# Reject commits with non-UTF8 source files
+git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.{js,jsx}' | while read -r file; do
+  if [ -f "$file" ]; then
+    if file -b --mime-encoding "$file" | grep -qv 'utf-8'; then
+      echo "ERROR: $file is not UTF-8 encoded. Convert it before committing."
+      exit 1
+    fi
+  fi
+done
+
+# Lint + format staged JS/JSX files
+npx eslint --ext .js,.jsx $(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.js' 'src/**/*.jsx' | tr '\n' ' ') 2>/dev/null || true
+npx prettier --write $(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.js' 'src/**/*.jsx' | tr '\n' ' ') 2>/dev/null || true

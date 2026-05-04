@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 // ── Feature Detection ──────────────────────────────────────────────
 const SpeechRecognition =
@@ -72,10 +73,10 @@ export function useTTS() {
     } catch (err) {
       // ── Fallback to browser speechSynthesis ──
       if (err.name === 'AbortError') return; // cancelled, don't fallback
-      console.warn('OpenAI TTS unavailable, falling back to browser TTS:', err.message);
+      logger.warn('OpenAI TTS unavailable, falling back to browser TTS:', err.message);
 
       if (!window.speechSynthesis) {
-        console.warn('No TTS available.');
+        logger.warn('No TTS available.');
         return;
       }
 

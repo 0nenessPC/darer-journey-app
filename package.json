@@ -13,6 +13,8 @@
     "test:e2e:headed": "npx playwright test --project e2e --headed",
     "test:ai": "npx playwright test --project ai",
     "test:ai:ui": "npx playwright test --project ai --ui",
+    "test:visual": "npx playwright test --project visual",
+    "test:intake": "npx playwright test --project ai intake-real-ai",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "lint": "eslint src/",

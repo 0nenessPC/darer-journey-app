@@ -126,16 +126,17 @@ export function getDaraTone(playerLevel = 1) {
     return {
       stage: 'guide',
       label: 'Gentle Guide',
-      style: 'warm, encouraging, slightly tentative — like a friend who believes in you more than you believe in yourself',
+      style:
+        'warm, encouraging, slightly tentative — like a friend who believes in you more than you believe in yourself',
       openings: [
         "I'm here with you.",
         "You don't have to do this perfectly.",
         "Let's take this one step at a time.",
       ],
       victories: [
-        "That was brave. Really brave.",
-        "I know how hard that was. Well done.",
-        "You did it. However it felt — you did it.",
+        'That was brave. Really brave.',
+        'I know how hard that was. Well done.',
+        'You did it. However it felt — you did it.',
       ],
     };
   }
@@ -146,12 +147,12 @@ export function getDaraTone(playerLevel = 1) {
       style: 'confident, warm, more direct — speaks as an equal who has walked alongside the hero',
       openings: [
         "You know what to do. Let's go.",
-        "Ready for this one?",
-        "Same rules as always: stay, breathe, observe.",
+        'Ready for this one?',
+        'Same rules as always: stay, breathe, observe.',
       ],
       victories: [
         "Another one down. You're getting good at this.",
-        "Notice how the Storm feels different now?",
+        'Notice how the Storm feels different now?',
         "That's progress. Real, measurable progress.",
       ],
     };
@@ -167,7 +168,7 @@ export function getDaraTone(playerLevel = 1) {
         "This one might feel different. That's normal.",
       ],
       victories: [
-        "Look at the numbers. The trend is clear.",
+        'Look at the numbers. The trend is clear.',
         "You're not the same person who started this.",
         "The Shadow's playbook is running out of pages.",
       ],
@@ -176,7 +177,8 @@ export function getDaraTone(playerLevel = 1) {
   return {
     stage: 'ally',
     label: 'Kindred Spirit',
-    style: 'humble, honest, peer-level — no longer a guide but a fellow traveler who has seen the depths',
+    style:
+      'humble, honest, peer-level — no longer a guide but a fellow traveler who has seen the depths',
     openings: [
       "We've walked a long way together.",
       "You know the path now. I'm just walking beside you.",
@@ -184,7 +186,7 @@ export function getDaraTone(playerLevel = 1) {
     ],
     victories: [
       "You don't need me to tell you that was good. You felt it.",
-      "Remember your first battle? Look at you now.",
+      'Remember your first battle? Look at you now.',
       "The Shadow's still there. But so are you. Always.",
     ],
   };

@@ -128,7 +128,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
                     border: `${node.isFear ? 3 : 2}px solid ${node.color}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: node.isFear ? 18 : 14,
-                    boxShadow: node.isFear ? "0 0 16px ${C.fearRed}40" : "none",
+                    boxShadow: node.isFear ? `0 0 16px ${C.fearRed}40` : "none",
                     animation: node.isFear ? "fearPulse 2s ease-in-out infinite" : "none",
                   }}>{node.icon}</div>
                   {i < arr.length - 1 && (
@@ -141,7 +141,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
                 <div style={{
                   flex: 1, padding: node.isFear ? "8px 12px 12px 10px" : "4px 0 12px 10px",
                   background: node.isFear ? `${C.fearGlow}10` : "transparent",
-                  border: node.isFear ? "1px solid ${C.fearRed}30" : "none",
+                  border: node.isFear ? `1px solid ${C.fearRed}30` : "none",
                   borderRadius: node.isFear ? 6 : 0,
                   marginLeft: node.isFear ? 4 : 0,
                 }}>

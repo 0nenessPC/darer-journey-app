@@ -2,30 +2,82 @@ import React from 'react';
 import { C, PIXEL_FONT, ONBOARDING } from '../constants/gameData';
 
 export function PixelText({ children, size = 10, color = C.cream, style = {} }) {
-  return <span style={{ fontFamily: PIXEL_FONT, fontSize: size, color, lineHeight: 1.6, ...style }}>{children}</span>;
-}
-
-export function PixelBtn({ children, onClick, color = C.plum, textColor = C.cream, disabled, style = {} }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{
-      fontFamily: PIXEL_FONT, fontSize: 10, padding: "12px 20px",
-      background: disabled ? C.grayLt : color, color: disabled ? C.charcoal : textColor,
-      border: `3px solid ${disabled ? C.gray : (color === C.plum ? C.mutedBorder : C.goldBtnShadow)}`,
-      borderRadius: 4, cursor: disabled ? "default" : "pointer",
-      boxShadow: disabled ? "none" : `0 4px 0 ${color === C.plum ? C.plumBtnShadow : C.goldBtnShadow}`,
-      transition: "transform 0.1s", imageRendering: "pixelated", ...style,
-    }}>{children}</button>
+    <span style={{ fontFamily: PIXEL_FONT, fontSize: size, color, lineHeight: 1.6, ...style }}>
+      {children}
+    </span>
   );
 }
 
-export function HPBar({ current, max, width = "100%", height = 12, label }) {
+export function PixelBtn({
+  children,
+  onClick,
+  color = C.plum,
+  textColor = C.cream,
+  disabled,
+  style = {},
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        fontFamily: PIXEL_FONT,
+        fontSize: 10,
+        padding: '12px 20px',
+        background: disabled ? C.grayLt : color,
+        color: disabled ? C.charcoal : textColor,
+        border: `3px solid ${disabled ? C.gray : color === C.plum ? C.mutedBorder : C.goldBtnShadow}`,
+        borderRadius: 4,
+        cursor: disabled ? 'default' : 'pointer',
+        boxShadow: disabled
+          ? 'none'
+          : `0 4px 0 ${color === C.plum ? C.plumBtnShadow : C.goldBtnShadow}`,
+        transition: 'transform 0.1s',
+        imageRendering: 'pixelated',
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function HPBar({ current, max, width = '100%', height = 12, label }) {
   const pct = Math.max(0, (current / max) * 100);
   const color = pct > 50 ? C.hpGreen : pct > 25 ? C.amber : C.hpRed;
   return (
-    <div style={{ width }} role="progressbar" aria-valuenow={current} aria-valuemin={0} aria-valuemax={max} aria-label={label || "Health"}>
-      {label && <PixelText size={8} color={C.subtleText}>{label}</PixelText>}
-      <div style={{ height, background: C.cardBg, borderRadius: 2, border: `2px solid ${C.mutedBorder}`, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: color, transition: "width 0.6s ease", imageRendering: "pixelated" }} />
+    <div
+      style={{ width }}
+      role="progressbar"
+      aria-valuenow={current}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-label={label || 'Health'}
+    >
+      {label && (
+        <PixelText size={8} color={C.subtleText}>
+          {label}
+        </PixelText>
+      )}
+      <div
+        style={{
+          height,
+          background: C.cardBg,
+          borderRadius: 2,
+          border: `2px solid ${C.mutedBorder}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            background: color,
+            transition: 'width 0.6s ease',
+            imageRendering: 'pixelated',
+          }}
+        />
       </div>
     </div>
   );
@@ -33,11 +85,19 @@ export function HPBar({ current, max, width = "100%", height = 12, label }) {
 
 export function TypingDots() {
   return (
-    <span style={{ display: "inline-flex", gap: 3 }}>
-      {[0,1,2].map(i => <span key={i} style={{
-        width: 6, height: 6, borderRadius: "50%", background: C.plumMd,
-        animation: `bop 1s ease-in-out ${i*0.15}s infinite`,
-      }} />)}
+    <span style={{ display: 'inline-flex', gap: 3 }}>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: C.plumMd,
+            animation: `bop 1s ease-in-out ${i * 0.15}s infinite`,
+          }}
+        />
+      ))}
       <style>{`@keyframes bop { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }`}</style>
     </span>
   );
@@ -45,12 +105,33 @@ export function TypingDots() {
 
 export function DialogBox({ speaker, text, typing, children }) {
   return (
-    <div role="region" aria-label={speaker ? `Message from ${speaker}` : "Message"} style={{
-      background: C.cardBg, border: `3px solid ${C.mutedBorder}`, borderRadius: 6,
-      padding: "12px 14px", marginBottom: 10,
-    }}>
-      {speaker && <div style={{ marginBottom: 4 }}><PixelText size={7} color={C.goldMd}>{speaker}</PixelText></div>}
-      {text && <PixelText size={8} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap", lineHeight: 1.8 }}>{text}</PixelText>}
+    <div
+      role="region"
+      aria-label={speaker ? `Message from ${speaker}` : 'Message'}
+      style={{
+        background: C.cardBg,
+        border: `3px solid ${C.mutedBorder}`,
+        borderRadius: 6,
+        padding: '12px 14px',
+        marginBottom: 10,
+      }}
+    >
+      {speaker && (
+        <div style={{ marginBottom: 4 }}>
+          <PixelText size={7} color={C.goldMd}>
+            {speaker}
+          </PixelText>
+        </div>
+      )}
+      {text && (
+        <PixelText
+          size={8}
+          color={C.cream}
+          style={{ display: 'block', whiteSpace: 'pre-wrap', lineHeight: 1.8 }}
+        >
+          {text}
+        </PixelText>
+      )}
       {typing && <TypingDots />}
       {children}
     </div>
@@ -59,46 +140,95 @@ export function DialogBox({ speaker, text, typing, children }) {
 
 export function OnboardingProgress({ screen }) {
   const CHAPTERS = [
-    { name: "ORIGIN", color: C.plumMd, start: 0, end: 2 },
-    { name: "SHADOW", color: C.bossRed, start: 3, end: 7 },
-    { name: "STRATEGY", color: C.teal, start: 8, end: 9 },
-    { name: "TRAINING", color: C.hpGreen, start: 10, end: 10 },
+    { name: 'ORIGIN', color: C.plumMd, start: 0, end: 2 },
+    { name: 'SHADOW', color: C.bossRed, start: 3, end: 7 },
+    { name: 'STRATEGY', color: C.teal, start: 8, end: 9 },
+    { name: 'TRAINING', color: C.hpGreen, start: 10, end: 10 },
   ];
-  const idx = ONBOARDING.findIndex(s => s.key === screen);
+  const idx = ONBOARDING.findIndex((s) => s.key === screen);
   if (idx === -1) return null;
   const pct = ((idx + 1) / ONBOARDING.length) * 100;
-  const chapter = CHAPTERS.find(c => idx >= c.start && idx <= c.end);
+  const chapter = CHAPTERS.find((c) => idx >= c.start && idx <= c.end);
   return (
-    <div role="navigation" aria-label="DARER phase navigation" style={{
-      position: "absolute", top: 0, left: 0, right: 0, zIndex: 200,
-      background: C.cardBg, borderBottom: `2px solid ${C.mutedBorder}`,
-      padding: "8px 12px 6px",
-      boxSizing: "border-box",
-    }}>
+    <div
+      role="navigation"
+      aria-label="DARER phase navigation"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        background: C.cardBg,
+        borderBottom: `2px solid ${C.mutedBorder}`,
+        padding: '8px 12px 6px',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Chapter progress bar */}
-      <div style={{ display: "flex", gap: 2, marginBottom: 6 }}>
+      <div style={{ display: 'flex', gap: 2, marginBottom: 6 }}>
         {CHAPTERS.map((ch, i) => {
           const totalSteps = ch.end - ch.start + 1;
           const completedSteps = Math.max(0, Math.min(totalSteps, idx - ch.start + 1));
           const chPct = (completedSteps / totalSteps) * 100;
           const isActive = idx >= ch.start && idx <= ch.end;
           return (
-            <div key={ch.name} style={{ flex: 1, height: 3, background: C.mapBg, borderRadius: 1, overflow: "hidden", opacity: isActive ? 1 : 0.4 }}>
-              <div style={{ height: "100%", width: `${chPct}%`, background: ch.color, transition: "width 0.3s ease" }} />
+            <div
+              key={ch.name}
+              style={{
+                flex: 1,
+                height: 3,
+                background: C.mapBg,
+                borderRadius: 1,
+                overflow: 'hidden',
+                opacity: isActive ? 1 : 0.4,
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${chPct}%`,
+                  background: ch.color,
+                  transition: 'width 0.3s ease',
+                }}
+              />
             </div>
           );
         })}
       </div>
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 6,
+        }}
+      >
         <PixelText size={7} color={chapter?.color || C.goldMd} aria-current="step">
-          CHAPTER {CHAPTERS.indexOf(chapter) + 1}: {chapter?.name} — STEP {idx + 1}/{ONBOARDING.length}
+          CHAPTER {CHAPTERS.indexOf(chapter) + 1}: {chapter?.name} — STEP {idx + 1}/
+          {ONBOARDING.length}
         </PixelText>
-        <PixelText size={7} color={C.subtleText}>{ONBOARDING[idx].label.toUpperCase()}</PixelText>
+        <PixelText size={7} color={C.subtleText}>
+          {ONBOARDING[idx].label.toUpperCase()}
+        </PixelText>
       </div>
-      <div style={{ height: 4, background: C.mapBg, borderRadius: 2, border: `1px solid ${C.mutedBorder}`, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: C.plumMd, transition: "width 0.3s ease" }} />
+      <div
+        style={{
+          height: 4,
+          background: C.mapBg,
+          borderRadius: 2,
+          border: `1px solid ${C.mutedBorder}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            background: C.plumMd,
+            transition: 'width 0.3s ease',
+          }}
+        />
       </div>
     </div>
   );

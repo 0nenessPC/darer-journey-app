@@ -165,7 +165,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
       <div style={{
         width: "100%", maxWidth: 400,
         padding: "16px",
-        background: C.cardBg, border: "2px solid ${C.mutedBorder}",
+        background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
         borderRadius: 6,
       }}>
         {/* Checkbox */}
@@ -214,7 +214,7 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             style={{
               flex: 1, padding: "12px",
               background: C.mutedBorder, color: C.subtleText,
-              border: "2px solid ${C.mutedBorder}", borderRadius: 4,
+              border: `2px solid ${C.mutedBorder}`, borderRadius: 4,
               fontFamily: PIXEL_FONT, fontSize: 9, cursor: "pointer",
               opacity: saving ? 0.5 : 1,
             }}

@@ -3,7 +3,7 @@
 export const LORE_CHAPTERS = [
   {
     id: 'lore_1',
-    title: 'The Shadow\'s Origin',
+    title: "The Shadow's Origin",
     subtitle: 'How the Shadow was born',
     unlockBosses: 1,
     icon: '📜',
@@ -31,7 +31,7 @@ You don't need to feel brave. You just need to stay. The Shadow's power comes fr
   },
   {
     id: 'lore_3',
-    title: 'Dara\'s Promise',
+    title: "Dara's Promise",
     subtitle: 'Where Dara comes from',
     unlockBosses: 5,
     icon: '🌟',
@@ -45,7 +45,7 @@ She doesn't promise the Shadow will disappear. She promises something better: th
   },
   {
     id: 'lore_4',
-    title: 'The Storm\'s Secret',
+    title: "The Storm's Secret",
     subtitle: 'What the physical sensations really mean',
     unlockBosses: 7,
     icon: '⛈️',
@@ -59,7 +59,7 @@ The Storm is not your enemy. It is your engine. The Shadow just taught you to in
   },
   {
     id: 'lore_5',
-    title: 'The Shadow\'s Weakness',
+    title: "The Shadow's Weakness",
     subtitle: 'What the Shadow fears most',
     unlockBosses: 10,
     icon: '💀',
@@ -90,9 +90,9 @@ The Order has no ranks, no hierarchy, no leaders. Only people who walked the pat
 ];
 
 export function getUnlockedLore(defeatedCount) {
-  return LORE_CHAPTERS.filter(ch => defeatedCount >= ch.unlockBosses);
+  return LORE_CHAPTERS.filter((ch) => defeatedCount >= ch.unlockBosses);
 }
 
 export function getNextLore(defeatedCount) {
-  return LORE_CHAPTERS.find(ch => defeatedCount < ch.unlockBosses);
+  return LORE_CHAPTERS.find((ch) => defeatedCount < ch.unlockBosses);
 }

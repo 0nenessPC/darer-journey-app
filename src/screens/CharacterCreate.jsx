@@ -358,7 +358,7 @@ export default function CharacterCreate({ onComplete, onFastForward, initialName
             return assigned.map((v, i) => (
               <div key={v.id} style={{
                 padding: "12px 14px", marginBottom: 8, background: "C.cardBg",
-                border: "2px solid ${C.mutedBorder}", borderRadius: 6,
+                border: `2px solid ${C.mutedBorder}`, borderRadius: 6,
                 display: "flex", alignItems: "center", gap: 12,
                 animation: statsRevealed ? `fadeIn 0.4s ease-out ${i * 0.15}s both` : "none",
                 opacity: statsRevealed ? 1 : 0,
