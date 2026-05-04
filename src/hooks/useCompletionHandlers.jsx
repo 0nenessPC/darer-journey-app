@@ -145,7 +145,9 @@ export function useCompletionHandlers({
       const evidenceForBattle = generateEvidenceCards({
         ...battleRecord,
         bossId: activeBoss?.id,
-        masteryLevel: activeBoss?.id?.startsWith('repeat_') ? originalBossForEvidence?.masteryLevel || 'uncharted' : null,
+        masteryLevel: activeBoss?.id?.startsWith('repeat_')
+          ? originalBossForEvidence?.masteryLevel || 'uncharted'
+          : null,
         bossCompletions: bossCompletionsForEvidence,
         battleId: newHistory.length,
       });
@@ -657,7 +659,7 @@ export function useCompletionHandlers({
       const sudsDelta = (sudsBefore || 0) - (sudsAfter || 0);
       const sudsBonus = sudsDelta > 0 ? Math.floor(sudsDelta / 10) * 10 : 0;
       const xpEarned = 50 + sudsBonus;
-      const coinsEarned = 5; // Tutorial always awards 5 coins
+      const coinsEarned = 25; // Tutorial awards 25 coins — enough for first shop purchase
 
       // XP breakdown for BattleRewardScreen
       const xpBreakdown = [
@@ -666,6 +668,23 @@ export function useCompletionHandlers({
         { label: 'Reflection', xp: 25 },
       ];
       if (sudsBonus > 0) xpBreakdown.push({ label: 'SUDS Drop Bonus', xp: sudsBonus });
+
+      // Generate evidence cards for the tutorial battle — first entry on Wall of Fame
+      const bossName = chosenExposure?.text || 'Tutorial Exposure';
+      const tutorialBattle = {
+        bossName,
+        bossDesc: chosenExposure?.where || '',
+        outcome: engageOutcome === 'full' ? 'victory' : engageOutcome === 'partial' ? 'partial' : 'retreat',
+        date: new Date().toISOString(),
+        suds: { before: sudsBefore ?? 0, after: sudsAfter ?? 0 },
+        fearedHappened: decideWhy || '',
+        fearedSeverity: 0,
+        madeItThrough: engageOutcome === 'full' || engageOutcome === 'partial',
+        masteryLevel: null,
+        bossCompletions: [],
+        battleId: 0,
+      };
+      const tutorialEvidence = generateEvidenceCards(tutorialBattle);
 
       // Update hero state
       setHero((h) => {
@@ -709,6 +728,11 @@ export function useCompletionHandlers({
           updates.achievements = [...prevAchievements, ...newAchievements];
         }
 
+        // Persist evidence cards to hero state — first entry on Wall of Fame
+        if (tutorialEvidence.length > 0) {
+          updates.evidenceCards = [...(h.evidenceCards || []), ...tutorialEvidence];
+        }
+
         return { ...h, ...updates };
       });
 
@@ -746,8 +770,6 @@ export function useCompletionHandlers({
       }
 
       // Return celebration payload (caller handles navigation after celebration)
-      const bossName = chosenExposure?.text || 'Tutorial Exposure';
-
       return {
         outcome:
           engageOutcome === 'full'
@@ -776,7 +798,7 @@ export function useCompletionHandlers({
         sudsDrop: sudsDelta,
         xpBreakdown,
         weeklyChallengeRewards: null,
-        evidenceCards: [],
+        evidenceCards: tutorialEvidence,
       };
     },
     [hero, quest, setHero],

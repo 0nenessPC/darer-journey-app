@@ -3,6 +3,7 @@ import { C } from '../constants/gameData';
 import { AVATAR_CATALOG } from '../constants/avatars';
 import { PixelText } from '../components/shared';
 import { DaraAvatar } from '../assets/DaraAvatar';
+import DaraDialog from '../components/DaraDialog';
 import BottomNav from '../components/BottomNav';
 
 /** Build avatar shop items from the catalog. */
@@ -156,8 +157,8 @@ const SHOP_ITEMS = [
   },
 ];
 
-export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
-  const [category, setCategory] = useState('all');
+export default function ShopScreen({ hero, setHero, onBack, setScreen, shopTour = false }) {
+  const [category, setCategory] = useState(shopTour ? 'avatar' : 'all');
   const [purchasing, setPurchasing] = useState(null);
   const [justPurchased, setJustPurchased] = useState(null);
 
@@ -422,6 +423,50 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           Both are earned through real effort{'\n'}in your exposures.
         </PixelText>
       </div>
+
+      {/* Shop tour overlay — guided first visit after tutorial */}
+      {shopTour && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            maxWidth: 480,
+            padding: '12px 16px 24px',
+            background: 'rgba(0,0,0,0.85)',
+            borderTop: `2px solid ${C.goldMd}`,
+            zIndex: 100,
+          }}
+        >
+          <DaraDialog
+            speaker="DARA"
+            text={`Welcome to my shop, ${hero.name}. You earned 25 courage coins from your first exposure — enough to buy me a new look. Browse the avatars below, or explore when you're ready.`}
+            hero={hero}
+            interactionKey="shopTour"
+          >
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={onBack}
+                style={{
+                  width: '100%',
+                  padding: '10px 0',
+                  borderRadius: 4,
+                  background: C.goldMd,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <PixelText size={8} color={C.charcoal}>
+                  CONTINUE TO THE PATH →
+                </PixelText>
+              </button>
+            </div>
+          </DaraDialog>
+        </div>
+      )}
 
       <BottomNav active="hero" onNav={setScreen} />
     </div>

@@ -65,11 +65,13 @@ export default function DARERQuest() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [tutorialCelebration, setTutorialCelebration] = useState(null);
   const [showTutorialReward, setShowTutorialReward] = useState(false);
+  const [showShopTour, setShowShopTour] = useState(false);
 
   // Stable onDismiss for CelebrationOverlay — prevents timer reset loop
   const handleTutorialCelebrationDismiss = useCallback(() => {
     setTutorialCelebration(null);
-    setScreen("exposureSort");
+    setShowShopTour(true);
+    setScreen("shop");
   }, [setScreen]);
 
   // Memoized hero context for AI — avoids recomputing on every render
@@ -282,7 +284,14 @@ export default function DARERQuest() {
       {screen === "bank" && <ExposureBankScreen quest={quest} hero={hero} focusedBoss={focusedBoss} setFocusedBoss={setFocusedBoss} onBack={() => setScreen("map")} onAchieveBoss={handleAchieveBoss} onDeleteBoss={handleDeleteBoss} onNav={(s) => setScreen(s)} battleHistory={battleHistory} />}
       {screen === "profile" && <HeroProfile hero={hero} setHero={setHero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("map")} setScreen={setScreen} />}
       {screen === "couragePath" && <CouragePath hero={hero} quest={quest} battleHistory={battleHistory} onBack={() => setScreen("profile")} setScreen={setScreen} />}
-      {screen === "shop" && <ShopScreen hero={hero} setHero={setHero} onBack={() => setScreen("profile")} setScreen={setScreen} />}
+      {screen === "shop" && <ShopScreen hero={hero} setHero={setHero} onBack={() => {
+        if (showShopTour) {
+          setShowShopTour(false);
+          setScreen("exposureSort");
+        } else {
+          setScreen("profile");
+        }
+      }} setScreen={setScreen} shopTour={showShopTour} />}
       {screen === "lorePath" && <LoreScreen quest={quest} onBack={() => setScreen("profile")} setScreen={setScreen} />}
       {screen === "daraLetter" && <DaraLetterScreen letter={hero.pendingLetter || ""} date={hero.pendingLetterDate} onBack={() => setScreen("map")} hero={hero} />}
       {screen === "welcomeBack" && <WelcomeBackLetter letterData={hero.welcomeBackData || {}} onContinue={() => { setHero(h => ({ ...h, welcomeBackData: null })); setScreen("map"); }} hero={hero} />}
