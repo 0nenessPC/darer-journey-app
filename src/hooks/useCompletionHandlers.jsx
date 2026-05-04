@@ -133,6 +133,23 @@ export function useCompletionHandlers({
       const newHistory = [...prevHistory, battleRecord];
       setBattleHistory(newHistory);
 
+      // Generate evidence cards from this battle (needed by setHero callbacks below)
+      const originalBossForEvidence = quest.bosses.find(
+        (b) => b.name === activeBoss?.name && b.id !== activeBoss?.id,
+      );
+      const bossCompletionsForEvidence = activeBoss?.id?.startsWith('repeat_')
+        ? (originalBossForEvidence?.completions || 0) + 1
+        : outcome === 'victory'
+          ? 1
+          : 0;
+      const evidenceForBattle = generateEvidenceCards({
+        ...battleRecord,
+        bossId: activeBoss?.id,
+        masteryLevel: activeBoss?.id?.startsWith('repeat_') ? originalBossForEvidence?.masteryLevel || 'uncharted' : null,
+        bossCompletions: bossCompletionsForEvidence,
+        battleId: newHistory.length,
+      });
+
       // Earn Courage Coins: 5-15 based on boss level
       const bossLevel = activeBoss?.level || activeBoss?.difficulty || 1;
       let coinsEarned = 0;
@@ -488,23 +505,6 @@ export function useCompletionHandlers({
       }
       setActiveBoss(null);
       setScreen('map');
-
-      // Generate evidence cards from this battle
-      const originalBoss = quest.bosses.find(
-        (b) => b.name === activeBoss?.name && b.id !== activeBoss?.id,
-      );
-      const bossCompletions = isRepeat
-        ? (originalBoss?.completions || 0) + 1
-        : outcome === 'victory'
-          ? 1
-          : 0;
-      const evidenceForBattle = generateEvidenceCards({
-        ...battleRecord,
-        bossId: activeBoss?.id,
-        masteryLevel: isRepeat ? originalBoss?.masteryLevel || 'uncharted' : null,
-        bossCompletions,
-        battleId: newHistory.length,
-      });
 
       // Return celebration data for the caller to display
       const { unlocked: newAchObjects } =
