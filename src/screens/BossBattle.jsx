@@ -22,16 +22,10 @@ import { VoiceInputBar, VoiceMessageBubble } from '../components/VoiceToggle';
 function BattleTypewriterBubble({ text, muted, voice }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Start speech simultaneously with text render
+  // Track speaking state from the parent's auto-speak effect
   useEffect(() => {
-    if (muted || !text || !voice?.speak) return;
-    voice.speak(text, { speed: 0.9 });
-  }, [text, muted, voice]);
-
-  // Track speaking state from hook
-  useEffect(() => {
-    setIsSpeaking(!!voice?.isSpeaking);
-  }, [voice?.isSpeaking]);
+    setIsSpeaking(!muted && !!voice?.isSpeaking);
+  }, [muted, voice?.isSpeaking]);
 
   return (
     <div
