@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { C } from '../constants/gameData';
-import { PixelText, PixelBtn } from './shared';
+import { PixelText } from './shared';
 import BottomNav from './BottomNav';
 
 const OUTCOME_COLORS = {
@@ -162,7 +162,7 @@ export default function WallOfFame({ hero, quest, battleHistory = [], setScreen,
           <div style={{ textAlign: 'center', padding: '40px 16px' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
             <PixelText size={8} color={C.grayLt} style={{ display: 'block', lineHeight: 1.8 }}>
-              Your Wall of Fame is empty —{'\n'}but it won't stay that way.{'\n'}
+              Your Wall of Fame is empty —{'\n'}but it won&apos;t stay that way.{'\n'}
               {'\n'}
               Every exposure you complete adds{'\n'}a new piece of proof that{'\n'}
               courage is a practice, not a trait.{'\n'}
@@ -270,6 +270,9 @@ function LootCard({ entry, isExpanded, onToggle }) {
       {/* Loot text */}
       {entry.lootText && (
         <div
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggle()}
           style={{
             padding: '12px',
             cursor: 'pointer',
@@ -321,6 +324,9 @@ function EvidenceCard({ card, isExpanded, onToggle }) {
       }}
     >
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggle()}
         style={{
           padding: '10px 12px',
           borderBottom: `1px solid ${tc.border}`,
