@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCloudVoice } from './useCloudVoice';
 
 /**
@@ -74,59 +74,71 @@ export function useDARERFlow({ obState = {} } = {}) {
     setRepeatOptions([]);
   };
 
-  return {
-    // Decide
-    decideCustom,
-    setDecideCustom,
-    decideSelectedVals,
-    setDecideSelectedVals,
-    // Allow
-    allowFearful,
-    setAllowFearful,
-    allowLikelihood,
-    setAllowLikelihood,
-    allowSeverity,
-    setAllowSeverity,
-    allowCanHandle,
-    setAllowCanHandle,
-    allowFearShowing,
-    setAllowFearShowing,
-    allowPhysicalSensations,
-    setAllowPhysicalSensations,
-    allowCustomSensation,
-    setAllowCustomSensation,
-    // Rise
-    riseSubStep,
-    setRiseSubStep,
-    exposureWhen,
-    setExposureWhen,
-    exposureWhere,
-    setExposureWhere,
-    exposureWhereCoords,
-    setExposureWhereCoords,
-    exposureArmory,
-    setExposureArmory,
-    exposureScheduledTime,
-    setExposureScheduledTime,
-    selectedArmoryTool,
-    setSelectedArmoryTool,
-    // Engage
-    engageSubStep,
-    setEngageSubStep,
-    engageFreeText,
-    setEngageFreeText,
-    fearedHappened,
-    setFearedHappened,
-    fearedSeverity,
-    setFearedSeverity,
-    madeItThrough,
-    setMadeItThrough,
-    // Repeat
-    repeatOptions,
-    setRepeatOptions,
-    // Voice
-    voice,
-    // Helpers
-    resetFlow,
-  };
+  return useMemo(
+    () => ({
+      // Decide
+      decideCustom,
+      setDecideCustom,
+      decideSelectedVals,
+      setDecideSelectedVals,
+      // Allow
+      allowFearful,
+      setAllowFearful,
+      allowLikelihood,
+      setAllowLikelihood,
+      allowSeverity,
+      setAllowSeverity,
+      allowCanHandle,
+      setAllowCanHandle,
+      allowFearShowing,
+      setAllowFearShowing,
+      allowPhysicalSensations,
+      setAllowPhysicalSensations,
+      allowCustomSensation,
+      setAllowCustomSensation,
+      // Rise
+      riseSubStep,
+      setRiseSubStep,
+      exposureWhen,
+      setExposureWhen,
+      exposureWhere,
+      setExposureWhere,
+      exposureWhereCoords,
+      setExposureWhereCoords,
+      exposureArmory,
+      setExposureArmory,
+      exposureScheduledTime,
+      setExposureScheduledTime,
+      selectedArmoryTool,
+      setSelectedArmoryTool,
+      // Engage
+      engageSubStep,
+      setEngageSubStep,
+      engageFreeText,
+      setEngageFreeText,
+      fearedHappened,
+      setFearedHappened,
+      fearedSeverity,
+      setFearedSeverity,
+      madeItThrough,
+      setMadeItThrough,
+      // Repeat
+      repeatOptions,
+      setRepeatOptions,
+      // Voice
+      voice,
+      // Helpers
+      resetFlow,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      decideCustom, decideSelectedVals,
+      allowFearful, allowLikelihood, allowSeverity, allowCanHandle,
+      allowFearShowing, allowPhysicalSensations, allowCustomSensation,
+      riseSubStep, exposureWhen, exposureWhere, exposureWhereCoords,
+      exposureArmory, exposureScheduledTime, selectedArmoryTool,
+      engageSubStep, engageFreeText, fearedHappened, fearedSeverity,
+      madeItThrough, repeatOptions, voice, resetFlow,
+    ],
+  );
 }

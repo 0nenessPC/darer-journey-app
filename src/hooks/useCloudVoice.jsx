@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 // Browser SpeechRecognition (webkit prefix for Chrome/Safari)
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -296,17 +296,21 @@ export function useCloudVoice({ useCloud = true, language = 'en-US' } = {}) {
     };
   }, [cancelSpeech]);
 
-  return {
-    isListening,
-    isSpeaking,
-    transcript,
-    interimTranscript,
-    error,
-    supported,
-    startListening,
-    stopListening,
-    resetTranscript,
-    speak,
-    cancelSpeech,
-  };
+  // Stabilise the return object so callers don't re-render on every tick
+  return useMemo(
+    () => ({
+      isListening,
+      isSpeaking,
+      transcript,
+      interimTranscript,
+      error,
+      supported,
+      startListening,
+      stopListening,
+      resetTranscript,
+      speak,
+      cancelSpeech,
+    }),
+    [isListening, isSpeaking, transcript, interimTranscript, error, supported, startListening, stopListening, resetTranscript, speak, cancelSpeech],
+  );
 }
