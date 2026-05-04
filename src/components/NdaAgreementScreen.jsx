@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { C, PIXEL_FONT } from "../constants/gameData";
+import { useState, useEffect, useRef } from 'react';
+import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText } from '../components/shared.jsx';
 
 const NDA_TEXT = `DARER ORDER — CONFIDENTIALITY AGREEMENT
@@ -62,7 +62,7 @@ For questions about this Agreement, contact us through the App or at the email a
 
 export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecline, onSigned }) {
   const [checked, setChecked] = useState(false);
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [scrolling, setScrolling] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -99,19 +99,38 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
   // === AGREED SCREEN ===
   if (agreed) {
     return (
-      <div style={{
-        minHeight: "100vh", background: C.mapBg,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        padding: "32px 24px",
-      }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
-        <PixelText size={14} color={C.hpGreen} style={{ display: "block", marginBottom: 8, textAlign: "center" }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: C.mapBg,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '32px 24px',
+        }}
+      >
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📜</div>
+        <PixelText
+          size={14}
+          color={C.hpGreen}
+          style={{ display: 'block', marginBottom: 8, textAlign: 'center' }}
+        >
           AGREEMENT SIGNED
         </PixelText>
-        <PixelText size={8} color={C.subtleText} style={{ display: "block", marginBottom: 24, textAlign: "center", lineHeight: 1.8 }}>
-          Welcome to the DARER Order, {heroName}.<br />Your journey begins now.
+        <PixelText
+          size={8}
+          color={C.subtleText}
+          style={{ display: 'block', marginBottom: 24, textAlign: 'center', lineHeight: 1.8 }}
+        >
+          Welcome to the DARER Order, {heroName}.<br />
+          Your journey begins now.
         </PixelText>
-        <PixelText size={7} color={C.amber} style={{ marginTop: 16, animation: "fadeIn 1s ease-in-out" }}>
+        <PixelText
+          size={7}
+          color={C.amber}
+          style={{ marginTop: 16, animation: 'fadeIn 1s ease-in-out' }}
+        >
           Loading your journey...
         </PixelText>
       </div>
@@ -120,19 +139,23 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
 
   // === MAIN NDA SCREEN ===
   return (
-    <div style={{
-      minHeight: "100vh", background: C.mapBg,
-      display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "24px 20px",
-    }}>
-      
+    <div
+      style={{
+        minHeight: '100vh',
+        background: C.mapBg,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px 20px',
+      }}
+    >
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 36, marginBottom: 8 }}>📜</div>
-        <PixelText size={12} color={C.goldMd} style={{ display: "block", marginBottom: 4 }}>
+        <PixelText size={12} color={C.goldMd} style={{ display: 'block', marginBottom: 4 }}>
           CONFIDENTIALITY AGREEMENT
         </PixelText>
-        <PixelText size={7} color={C.subtleText} style={{ display: "block" }}>
+        <PixelText size={7} color={C.subtleText} style={{ display: 'block' }}>
           Please read and sign before entering the DARER Order
         </PixelText>
       </div>
@@ -142,43 +165,71 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
         ref={scrollRef}
         onScroll={handleScroll}
         style={{
-          width: "100%", maxWidth: 400,
-          maxHeight: "45vh", overflowY: "auto",
-          padding: "16px", marginBottom: 16,
-          background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
+          width: '100%',
+          maxWidth: 400,
+          maxHeight: '45vh',
+          overflowY: 'auto',
+          padding: '16px',
+          marginBottom: 16,
+          background: C.cardBg,
+          border: `2px solid ${C.mutedBorder}`,
           borderRadius: 6,
         }}
       >
-        <PixelText size={7} color={C.cream} style={{ display: "block", whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
+        <PixelText
+          size={7}
+          color={C.cream}
+          style={{ display: 'block', whiteSpace: 'pre-wrap', lineHeight: 1.8 }}
+        >
           {NDA_TEXT}
         </PixelText>
       </div>
 
       {/* Scroll indicator */}
       {!scrolling && (
-        <div style={{ textAlign: "center", marginBottom: 12, animation: "fadeIn 1s ease-in-out infinite" }}>
-          <PixelText size={6} color={C.amber}>↓ Scroll to read the full agreement ↓</PixelText>
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: 12,
+            animation: 'fadeIn 1s ease-in-out infinite',
+          }}
+        >
+          <PixelText size={6} color={C.amber}>
+            ↓ Scroll to read the full agreement ↓
+          </PixelText>
         </div>
       )}
 
       {/* Agreement form */}
-      <div style={{
-        width: "100%", maxWidth: 400,
-        padding: "16px",
-        background: C.cardBg, border: `2px solid ${C.mutedBorder}`,
-        borderRadius: 6,
-      }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 400,
+          padding: '16px',
+          background: C.cardBg,
+          border: `2px solid ${C.mutedBorder}`,
+          borderRadius: 6,
+        }}
+      >
         {/* Checkbox */}
-        <label style={{
-          display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 14,
-          cursor: "pointer",
-        }}>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            marginBottom: 14,
+            cursor: 'pointer',
+          }}
+        >
           <input
             type="checkbox"
             checked={checked}
             onChange={() => setChecked(!checked)}
             style={{
-              marginTop: 4, width: 16, height: 16, cursor: "pointer",
+              marginTop: 4,
+              width: 16,
+              height: 16,
+              cursor: 'pointer',
               accentColor: C.gold,
             }}
           />
@@ -189,33 +240,43 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
 
         {/* Signature field */}
         <div style={{ marginBottom: 16 }}>
-          <PixelText size={7} color={C.goldMd} style={{ display: "block", marginBottom: 6 }}>
+          <PixelText size={7} color={C.goldMd} style={{ display: 'block', marginBottom: 6 }}>
             Type your full name as your digital signature:
           </PixelText>
           <input
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Your full name..."
             style={{
-              width: "100%", padding: "10px 12px",
-              background: C.mapBg, border: `2px solid ${checked ? C.goldMd : C.mutedBorder}`,
-              borderRadius: 3, color: C.cream, fontSize: 13,
-              fontFamily: PIXEL_FONT, outline: "none",
-              transition: "border-color 0.3s",
+              width: '100%',
+              padding: '10px 12px',
+              background: C.mapBg,
+              border: `2px solid ${checked ? C.goldMd : C.mutedBorder}`,
+              borderRadius: 3,
+              color: C.cream,
+              fontSize: 13,
+              fontFamily: PIXEL_FONT,
+              outline: 'none',
+              transition: 'border-color 0.3s',
             }}
           />
         </div>
 
         {/* Buttons */}
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={handleDecline}
             disabled={saving}
             style={{
-              flex: 1, padding: "12px",
-              background: C.mutedBorder, color: C.subtleText,
-              border: `2px solid ${C.mutedBorder}`, borderRadius: 4,
-              fontFamily: PIXEL_FONT, fontSize: 9, cursor: "pointer",
+              flex: 1,
+              padding: '12px',
+              background: C.mutedBorder,
+              color: C.subtleText,
+              border: `2px solid ${C.mutedBorder}`,
+              borderRadius: 4,
+              fontFamily: PIXEL_FONT,
+              fontSize: 9,
+              cursor: 'pointer',
               opacity: saving ? 0.5 : 1,
             }}
           >
@@ -225,22 +286,22 @@ export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecli
             onClick={handleAgree}
             disabled={!canAgree || saving}
             style={{
-              flex: 1, padding: "12px",
+              flex: 1,
+              padding: '12px',
               background: canAgree && !saving ? C.gold : C.disabledBg,
               color: canAgree && !saving ? C.charcoal : C.grayLt,
               border: `2px solid ${canAgree && !saving ? C.goldMd : C.mutedBorder}`,
               borderRadius: 4,
-              fontFamily: PIXEL_FONT, fontSize: 9,
-              cursor: canAgree && !saving ? "pointer" : "not-allowed",
-              boxShadow: canAgree && !saving ? `0 0 12px ${C.goldMd}30` : "none",
+              fontFamily: PIXEL_FONT,
+              fontSize: 9,
+              cursor: canAgree && !saving ? 'pointer' : 'not-allowed',
+              boxShadow: canAgree && !saving ? `0 0 12px ${C.goldMd}30` : 'none',
             }}
           >
-            {saving ? "SAVING..." : "I AGREE →"}
+            {saving ? 'SAVING...' : 'I AGREE →'}
           </button>
         </div>
       </div>
-
-
     </div>
   );
 }

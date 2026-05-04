@@ -140,13 +140,15 @@ export function VoiceInputBar({
   };
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      borderTop: `2px solid ${C.teal}40`,
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center',
-    }}>
+    <div
+      style={{
+        padding: '12px 16px',
+        borderTop: `2px solid ${C.teal}40`,
+        display: 'flex',
+        gap: 8,
+        alignItems: 'center',
+      }}
+    >
       {/* Voice toggle */}
       {supported && (
         <button
@@ -183,7 +185,11 @@ export function VoiceInputBar({
       <input
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { onSend(input.trim()); } }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && input.trim()) {
+            onSend(input.trim());
+          }
+        }}
         placeholder={isListening ? 'Listening...' : placeholder}
         disabled={typing || disabled || isListening}
         style={{
@@ -202,7 +208,9 @@ export function VoiceInputBar({
 
       {/* Send button */}
       <button
-        onClick={() => { if (input.trim()) onSend(input.trim()); }}
+        onClick={() => {
+          if (input.trim()) onSend(input.trim());
+        }}
         disabled={typing || !input.trim() || disabled}
         style={{
           padding: '10px 16px',

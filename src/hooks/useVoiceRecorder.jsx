@@ -2,8 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { logger } from '../utils/logger';
 
 // ── Feature Detection ──────────────────────────────────────────────
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // ── useTTS — OpenAI TTS with browser fallback ──────────────────────
 /**
@@ -34,72 +33,82 @@ export function useTTS() {
     setIsSpeaking(false);
   }, []);
 
-  const speak = useCallback(async (text) => {
-    if (!text || !text.trim()) return;
+  const speak = useCallback(
+    async (text) => {
+      if (!text || !text.trim()) return;
 
-    // Cancel whatever is playing before starting fresh
-    cancel();
+      // Cancel whatever is playing before starting fresh
+      cancel();
 
-    try {
-      // ── Try OpenAI TTS first ──
-      const controller = new AbortController();
-      abortRef.current = controller;
+      try {
+        // ── Try OpenAI TTS first ──
+        const controller = new AbortController();
+        abortRef.current = controller;
 
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-        signal: controller.signal,
-      });
+        const res = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+          signal: controller.signal,
+        });
 
-      if (!res.ok) throw new Error(`TTS API returned ${res.status}`);
+        if (!res.ok) throw new Error(`TTS API returned ${res.status}`);
 
-      // API returns raw MP3 binary → blob URL
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
+        // API returns raw MP3 binary → blob URL
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
 
-      audio.onplay = () => setIsSpeaking(true);
-      audio.onended = () => { audioRef.current = null; URL.revokeObjectURL(url); setIsSpeaking(false); };
-      audio.onerror = () => {
-        audioRef.current = null;
-        URL.revokeObjectURL(url);
-        setIsSpeaking(false);
-        throw new Error('Audio playback failed');
-      };
+        audio.onplay = () => setIsSpeaking(true);
+        audio.onended = () => {
+          audioRef.current = null;
+          URL.revokeObjectURL(url);
+          setIsSpeaking(false);
+        };
+        audio.onerror = () => {
+          audioRef.current = null;
+          URL.revokeObjectURL(url);
+          setIsSpeaking(false);
+          throw new Error('Audio playback failed');
+        };
 
-      await audio.play();
-    } catch (err) {
-      // ── Fallback to browser speechSynthesis ──
-      if (err.name === 'AbortError') return; // cancelled, don't fallback
-      logger.warn('OpenAI TTS unavailable, falling back to browser TTS:', err.message);
+        await audio.play();
+      } catch (err) {
+        // ── Fallback to browser speechSynthesis ──
+        if (err.name === 'AbortError') return; // cancelled, don't fallback
+        logger.warn('OpenAI TTS unavailable, falling back to browser TTS:', err.message);
 
-      if (!window.speechSynthesis) {
-        logger.warn('No TTS available.');
-        return;
+        if (!window.speechSynthesis) {
+          logger.warn('No TTS available.');
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.lang = 'en-US';
+
+        // Prefer a warm-sounding voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Female') ||
+              v.name.includes('Google') ||
+              v.name.includes('Samantha') ||
+              v.name.includes('Daniel')),
+        );
+        if (preferred) utterance.voice = preferred;
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
       }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.lang = 'en-US';
-
-      // Prefer a warm-sounding voice
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(
-        v => v.lang.startsWith('en') &&
-          (v.name.includes('Female') || v.name.includes('Google') ||
-           v.name.includes('Samantha') || v.name.includes('Daniel'))
-      );
-      if (preferred) utterance.voice = preferred;
-
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [cancel]);
+    },
+    [cancel],
+  );
 
   // Cleanup on unmount
   useEffect(() => {
@@ -166,7 +175,7 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
           interim += t;
         }
       }
-      if (final) setTranscript(prev => prev + final);
+      if (final) setTranscript((prev) => prev + final);
       setInterimTranscript(interim);
       onResultRef.current?.({ final, interim });
     };
@@ -214,34 +223,46 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
   }, []);
 
   // ── Text → Speech ────────────────────────────────────────────────
-  const speak = useCallback((text, options = {}) => {
-    if (!window.speechSynthesis) return;
+  const speak = useCallback(
+    (text, options = {}) => {
+      if (!window.speechSynthesis) return;
 
-    // Cancel any current speech
-    window.speechSynthesis.cancel();
+      // Cancel any current speech
+      window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language;
-    utterance.rate = options.rate ?? 0.9; // slightly slower, calming
-    utterance.pitch = options.pitch ?? 1;
-    utterance.volume = options.volume ?? 1;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language;
+      utterance.rate = options.rate ?? 0.9; // slightly slower, calming
+      utterance.pitch = options.pitch ?? 1;
+      utterance.volume = options.volume ?? 1;
 
-    // Try to pick a warm-sounding voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = options.voice || voices.find(
-      v => v.lang.startsWith(language.split('-')[0]) && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Moira') || v.name.includes('Tessa'))
-    );
-    if (preferred) utterance.voice = preferred;
+      // Try to pick a warm-sounding voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferred =
+        options.voice ||
+        voices.find(
+          (v) =>
+            v.lang.startsWith(language.split('-')[0]) &&
+            (v.name.includes('Female') ||
+              v.name.includes('Google') ||
+              v.name.includes('Samantha') ||
+              v.name.includes('Karen') ||
+              v.name.includes('Moira') ||
+              v.name.includes('Tessa')),
+        );
+      if (preferred) utterance.voice = preferred;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setError('Could not play audio.');
-    };
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        setError('Could not play audio.');
+      };
 
-    window.speechSynthesis.speak(utterance);
-  }, [language]);
+      window.speechSynthesis.speak(utterance);
+    },
+    [language],
+  );
 
   const cancelSpeech = useCallback(() => {
     if (window.speechSynthesis) {
@@ -259,8 +280,12 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
   }, []);
 
   // ── Expose callbacks for external hook users ─────────────────────
-  const setOnResult = useCallback((fn) => { onResultRef.current = fn; }, []);
-  const setOnError = useCallback((fn) => { onErrorRef.current = fn; }, []);
+  const setOnResult = useCallback((fn) => {
+    onResultRef.current = fn;
+  }, []);
+  const setOnError = useCallback((fn) => {
+    onErrorRef.current = fn;
+  }, []);
 
   return {
     isListening,
