@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
 import { PixelText } from '../components/shared.jsx';
 
@@ -60,7 +60,7 @@ This Agreement shall be governed by and construed in accordance with the laws of
 
 For questions about this Agreement, contact us through the App or at the email address provided in the App's settings.`;
 
-export default function NdaAgreementScreen({ heroName, darerId, onAgree, onDecline, onSigned }) {
+export default function NdaAgreementScreen({ heroName, darerId: _darerId, onAgree, onDecline, onSigned }) {
   const [checked, setChecked] = useState(false);
   const [name, setName] = useState('');
   const [scrolling, setScrolling] = useState(false);

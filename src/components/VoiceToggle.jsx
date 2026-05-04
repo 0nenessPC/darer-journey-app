@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
-import { PixelText } from './shared';
 
 /**
  * VoiceToggle — a pixel-styled 🎤 mic button + 🔊 speaker button for Dara voice chat.
@@ -17,7 +16,7 @@ import { PixelText } from './shared';
  *   size        — 'sm' (32px) or 'md' (40px, default)
  */
 export default function VoiceToggle({
-  onSend,
+  onSend: _onSend,
   onSpeak,
   isActive = false,
   onToggleMic,
@@ -26,9 +25,9 @@ export default function VoiceToggle({
   supported = true,
   style = {},
   size = 'md',
-  transcript = '',
+  transcript: _transcript = '',
 }) {
-  const [showInterim, setShowInterim] = useState(false);
+  const [_showInterim, _setShowInterim] = useState(false);
 
   if (!supported) return null;
 
@@ -123,7 +122,7 @@ export function VoiceInputBar({
   const { isListening, startListening, stopListening, transcript, supported } = voice || {};
 
   // When transcript becomes non-empty, auto-send it
-  React.useEffect(() => {
+  useEffect(() => {
     if (transcript && !isListening) {
       onSend(transcript);
       // Reset transcript after sending

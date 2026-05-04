@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { C, PIXEL_FONT } from '../constants/gameData';
-import { PixelText, PixelBtn, HPBar, DialogBox, TypingDots } from '../components/shared';
+import { PixelText, PixelBtn, DialogBox } from '../components/shared';
 
 export default function CharacterCreate({
   onComplete,
@@ -331,7 +331,6 @@ export default function CharacterCreate({
               if (e.key === 'Enter' && name.trim()) setNameConfirmed(true);
             }}
             placeholder={darerId || 'Enter your name...'}
-            autoFocus
             style={{
               width: '100%',
               padding: 14,
@@ -371,7 +370,7 @@ export default function CharacterCreate({
                   {name.trim() || darerId}. A name the Shadow{'\n'}will learn to fear.{'\n'}
                   {'\n'}
                   Welcome to the DARER family.{'\n'}
-                  {'\n'}A name alone doesn't make a{'\n'}hero. Your story does. Your{'\n'}actions
+                  {'\n'}A name alone doesn&apos;t make a{'\n'}hero. Your story does. Your{'\n'}actions
                   do. Your strengths matter.{'\n'}
                   {'\n'}
                   Let me introduce someone who{'\n'}will walk beside you from here.
@@ -441,7 +440,7 @@ export default function CharacterCreate({
             }}
           >
             <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
-              Every DARER is assigned a Soul{'\n'}Companion — someone who knows the{'\n'}Shadow's
+              Every DARER is assigned a Soul{'\n'}Companion — someone who knows the{'\n'}Shadow&apos;s
               tricks and how to{'\n'}unravel them.{'\n'}
               {'\n'}
               Dara has walked beside hundreds{'\n'}of DARERs before you. She knows{'\n'}the path.
@@ -454,9 +453,9 @@ export default function CharacterCreate({
 
           <DialogBox speaker="DARA">
             <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
-              {name.trim() || darerId}. I've been waiting for you.{'\n'}
+              {name.trim() || darerId}. I&apos;ve been waiting for you.{'\n'}
               {'\n'}
-              My name means courage — and{'\n'}that's exactly what we'll build{'\n'}together. Let's
+              My name means courage — and{'\n'}that&apos;s exactly what we&apos;ll build{'\n'}together. Let&apos;s
               begin the journey.
             </PixelText>
           </DialogBox>
@@ -519,6 +518,13 @@ export default function CharacterCreate({
                     return (
                       <div
                         key={i}
+                        role={picked ? 'button' : undefined}
+                        tabIndex={picked ? 0 : undefined}
+                        onKeyDown={(e) => {
+                          if (picked && (e.key === 'Enter' || e.key === ' ')) {
+                            setCoreValues((prev) => prev.filter((x) => x !== picked.id));
+                          }
+                        }}
                         style={{
                           flex: 1,
                           padding: '12px 8px',
@@ -678,7 +684,7 @@ export default function CharacterCreate({
               These are the strengths the{'\n'}Shadow cannot take from you.{'\n'}They are yours —
               and they will{'\n'}grow stronger with every battle.{'\n'}
               {'\n'}
-              I'll call on these strengths{'\n'}when we plan your battles and{'\n'}face the Shadow
+              I&apos;ll call on these strengths{'\n'}when we plan your battles and{'\n'}face the Shadow
               together. They{'\n'}are your strategies.
             </PixelText>
           </DialogBox>

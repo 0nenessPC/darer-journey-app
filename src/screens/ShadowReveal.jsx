@@ -103,7 +103,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
       <div style={{ textAlign: 'center', marginBottom: 24, animation: 'fadeIn 0.6s ease-out' }}>
         <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.8 }}>👁</div>
         <PixelText size={12} color={C.bossRed} style={{ display: 'block', marginBottom: 6 }}>
-          THE SHADOW'S TRUE NATURE
+          THE SHADOW&apos;S TRUE NATURE
         </PixelText>
         <PixelText size={7} color={C.subtleText} style={{ display: 'block' }}>
           {heroName}, for the first time, you see your enemy clearly.
@@ -145,7 +145,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
             color={C.goldMd}
             style={{ display: 'block', textAlign: 'center', marginBottom: 12 }}
           >
-            YOUR SHADOW'S INFINITE TRAP
+            YOUR SHADOW&apos;S INFINITE TRAP
           </PixelText>
 
           {/* Vertical cycle with user's own data */}
@@ -308,7 +308,7 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
           <div style={{ marginTop: 12 }}>
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
-                This is YOUR Shadow's trap —{'\n'}built from your specific fears,{'\n'}your specific
+                This is YOUR Shadow&apos;s trap —{'\n'}built from your specific fears,{'\n'}your specific
                 thoughts, and{'\n'}your specific escapes.{'\n'}
                 {'\n'}
                 But now you can see it. And{'\n'}a trap you can see is a trap{'\n'}you can break.

@@ -138,7 +138,7 @@ export function useVoiceRecorder({ language = 'en-US' } = {}) {
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState(null);
-  const [supported, setSupported] = useState(hasSTT && hasTTS);
+  const [supported] = useState(hasSTT && hasTTS);
 
   const recognitionRef = useRef(null);
   const onResultRef = useRef(null);
