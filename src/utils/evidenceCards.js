@@ -42,7 +42,7 @@ const CARD_TYPES = {
     color: C.plumMd,
     bg: C.plumMd + '15',
     border: C.plumMd + '40',
-    template: (d) =>
+    template: (_) =>
       `I started even though it was hard.\n\nEvidence: "Partial action is still action. I showed up."`,
   },
   RETURNED: {
@@ -70,9 +70,9 @@ export function generateEvidenceCards(battle) {
     date,
     suds,
     fearedHappened,
-    fearedSeverity,
+    fearedSeverity: _,
     madeItThrough,
-    repeatChoice,
+    repeatChoice: __,
     masteryLevel,
     battleId,
   } = battle;

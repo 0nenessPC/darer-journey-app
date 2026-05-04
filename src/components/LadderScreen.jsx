@@ -280,10 +280,9 @@ function LootCard({ entry, isExpanded, onToggle }) {
             size={7}
             color={C.grayLt}
             style={{
-              display: 'block',
+              display: '-webkit-box',
               lineHeight: 1.7,
               overflow: 'hidden',
-              display: '-webkit-box',
               WebkitLineClamp: isExpanded ? 'unset' : 3,
               WebkitBoxOrient: 'vertical',
             }}

@@ -20,7 +20,7 @@ module.exports = {
   rules: {
     "react/prop-types": "off",
     "react/no-unknown-property": ["error", { ignore: ["css"] }],
-    "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     "react-hooks/exhaustive-deps": "warn",
     "jsx-a11y/click-events-have-key-events": "off",
     "jsx-a11y/no-noninteractive-element-interactions": "off",

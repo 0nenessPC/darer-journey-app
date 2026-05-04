@@ -27,7 +27,7 @@ const FORECAST_MESSAGES = {
       `I know coming back is the hardest part. It's been ${ctx.daysSinceLastBattle} days, and the Shadow probably told you it's too late to restart. It's wrong. Every path starts with one step — even this one.`,
     (ctx) =>
       `${ctx.heroName}, I remember when you defeated ${ctx.lastBossName}. That took real courage. Whatever made you step away doesn't matter now. What matters is that the path is still here. I'm still here.`,
-    (ctx) =>
+    (_ctx) =>
       `The Shadow thinks you've given up. Want to prove it wrong? Just one exposure. That's all I'm asking.`,
   ],
 };

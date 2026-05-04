@@ -22,7 +22,6 @@ export function getMasteryLevel(completions) {
 }
 
 export function getMasteryLabel(completions) {
-  const m = getMasteryLevel(completions);
   if (completions >= 10) return 'MASTERED';
   if (completions >= 5) return `SHADOW WEAKENED (${completions}x)`;
   if (completions >= 3) return `REPEATED ${completions}x`;
