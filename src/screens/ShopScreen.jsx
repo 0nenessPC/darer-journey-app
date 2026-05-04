@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { C } from '../constants/gameData';
 import { AVATAR_CATALOG } from '../constants/avatars';
-import { PixelText, PixelBtn } from '../components/shared';
+import { PixelText } from '../components/shared';
 import { DaraAvatar } from '../assets/DaraAvatar';
 import BottomNav from '../components/BottomNav';
 
@@ -164,7 +164,6 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
   const coins = hero.courageCoins || 0;
   const diamonds = hero.diamonds || 0;
   const purchased = hero.purchasedItems || [];
-  const functionalItems = purchased.filter((p) => p.repeatable && p.id !== undefined);
 
   const categories = [
     { key: 'all', label: 'ALL' },
@@ -252,7 +251,7 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           </PixelText>
         </button>
         <PixelText size={10} color={C.goalGold}>
-          🛒 DARA'S SHOP
+          🛒 DARA&apos;S SHOP
         </PixelText>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 14 }}>🪙</span>
@@ -323,7 +322,6 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           const canAfford = balance >= item.price;
           const buying = purchasing === item.id;
           const currencyIcon = item.currencyType === 'diamond' ? '💎' : '🪙';
-          const priceColor = item.currencyType === 'diamond' ? '#60A5FA' : C.goldMd;
 
           return (
             <div

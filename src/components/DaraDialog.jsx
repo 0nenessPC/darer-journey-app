@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C } from '../constants/gameData';
 import { PixelText, DialogBox } from './shared';
 import { DaraAvatar } from '../assets/DaraAvatar';
@@ -12,14 +12,7 @@ import { DaraAvatar } from '../assets/DaraAvatar';
  *     (e.g. screen name + phase). When it changes, the hide-toggle resets.
  *   hero             — hero state object (reads activeAvatar, hideDaraAvatar)
  */
-export default function DaraDialog({
-  speaker,
-  text,
-  typing,
-  children,
-  hero,
-  interactionKey,
-}) {
+export default function DaraDialog({ speaker, text, typing, children, hero, interactionKey }) {
   const isDara = speaker === 'DARA';
   const [hidden, setHidden] = useState(hero?.hideDaraAvatar || false);
   const prevKey = useRef(interactionKey);
@@ -103,7 +96,14 @@ export default function DaraDialog({
       )}
 
       {/* Content area — left padding for avatar */}
-      <div style={{ paddingLeft: hidden ? 14 : 76, paddingRight: 14, paddingTop: 12, paddingBottom: 12 }}>
+      <div
+        style={{
+          paddingLeft: hidden ? 14 : 76,
+          paddingRight: 14,
+          paddingTop: 12,
+          paddingBottom: 12,
+        }}
+      >
         {speaker && (
           <div style={{ marginBottom: 4 }}>
             <PixelText size={7} color={C.goldMd}>

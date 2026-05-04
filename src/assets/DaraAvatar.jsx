@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Pixel-art Dara avatar rendered as inline SVG.
@@ -78,25 +77,35 @@ function PixelDara({ colors, size = 80, glow = false }) {
   // . = transparent, c = cloak, C = cloakLight, h = hood, s = skin,
   // S = staff, t = staffTip, e = eyes, r = robe
   const grid = [
-    '................',  // 0: top of hood
-    '................',  // 1
-    '......hhhh......',  // 2: hood top
-    '.....hCCCCh.....',  // 3: hood with cloak trim
-    '....hCcCCcCh....',  // 4
-    '....hsCCcCsh....',  // 5: eyes level (s = skin gap around eyes)
-    '...hCseCCesCh...',  // 6: eyes (e) glowing
-    '...hCssCCssCh...',  // 7: mouth area (covered by hood shadow)
-    '....hCccCCCh....',  // 8: hood bottom
-    '.....hCCCh......',  // 9: neck
-    '....cCrrCcc.....',  // 10: robe top
-    '...ccCrrrCcc....',  // 11
-    '..ccCrrrrrCcc...',  // 12: robe mid, staff on right
-    '.ccCrrrrrrrCccS.',  // 13: staff (S) appears
-    '.ccrrrrrrrrrCSS.',  // 14: staff extends down with tip
-    '................',  // 15
+    '................', // 0: top of hood
+    '................', // 1
+    '......hhhh......', // 2: hood top
+    '.....hCCCCh.....', // 3: hood with cloak trim
+    '....hCcCCcCh....', // 4
+    '....hsCCcCsh....', // 5: eyes level (s = skin gap around eyes)
+    '...hCseCCesCh...', // 6: eyes (e) glowing
+    '...hCssCCssCh...', // 7: mouth area (covered by hood shadow)
+    '....hCccCCCh....', // 8: hood bottom
+    '.....hCCCh......', // 9: neck
+    '....cCrrCcc.....', // 10: robe top
+    '...ccCrrrCcc....', // 11
+    '..ccCrrrrrCcc...', // 12: robe mid, staff on right
+    '.ccCrrrrrrrCccS.', // 13: staff (S) appears
+    '.ccrrrrrrrrrCSS.', // 14: staff extends down with tip
+    '................', // 15
   ];
 
-  const colorMap = { '.': null, c: cloak, C: cloakLight, h: hood, s: skin, S: staff, t: staffTip, e: eyes, r: robe };
+  const colorMap = {
+    '.': null,
+    c: cloak,
+    C: cloakLight,
+    h: hood,
+    s: skin,
+    S: staff,
+    t: staffTip,
+    e: eyes,
+    r: robe,
+  };
 
   const pixels = [];
   for (let row = 0; row < grid.length; row++) {
@@ -128,8 +137,19 @@ function PixelDara({ colors, size = 80, glow = false }) {
       {pixels}
       {/* Staff tip glow */}
       {glow && (
-        <circle cx={14 * px + px / 2} cy={14 * px + px / 2} r={px * 1.5} fill={staffTip} opacity={0.3}>
-          <animate attributeName="opacity" values="0.15;0.35;0.15" dur="2s" repeatCount="indefinite" />
+        <circle
+          cx={14 * px + px / 2}
+          cy={14 * px + px / 2}
+          r={px * 1.5}
+          fill={staffTip}
+          opacity={0.3}
+        >
+          <animate
+            attributeName="opacity"
+            values="0.15;0.35;0.15"
+            dur="2s"
+            repeatCount="indefinite"
+          />
         </circle>
       )}
     </svg>
