@@ -710,3 +710,33 @@ Committed as `1871f2a` and pushed to `main`.
 - Achievement check (first exposure milestone)
 
 **Verification**: `npx vite build` passes, `npm run test:e2e` 1/1 passing, `npm run test:unit` 16/16 passing.
+
+### Session: 2026-05-09 (night) — CelebrationOverlay Auto-Advance Fix + ESLint Compliance
+
+**Bug fixed**: CelebrationOverlay VictoryBurst phase never auto-advanced past 1.5s — the `⚔️ BOSS DEFEATED!` banner remained on screen indefinitely (observed after 1.9 minutes in test screenshot).
+
+**Root cause**: App.jsx passed an inline arrow function as `onDismiss` to CelebrationOverlay → new reference on every render → VictoryBurst's `useEffect` (which depends on `onDismiss`) cleaned up and restarted its 1.5s timer on each re-render → infinite reset loop.
+
+**`src/App.jsx`**:
+- Added memoized `handleTutorialCelebrationDismiss` callback with `useCallback` to prevent the same timer-reset pattern for tutorial celebrations:
+  ```js
+  const handleTutorialCelebrationDismiss = useCallback(() => {
+    setTutorialCelebration(null);
+    setScreen("exposureSort");
+  }, [setScreen]);
+  ```
+- Changed CelebrationOverlay `onDismiss` from inline `() => { ... }` to stable reference
+
+**`src/components/CelebrationOverlay.jsx`**:
+- Removed unused `PIXEL_FONT` import (ESLint: no-unused-vars)
+- Refactored phase management to eliminate dependency on unstable props:
+  - `sequence` built inside `React.useMemo` with `eslint-disable-next-line react-hooks/exhaustive-deps` (build once, never rebuild)
+  - `advance` wrapped in `React.useCallback` depending only on `sequence.length` and `safeDismiss`
+  - `safeDismiss` uses `dismissedRef` to prevent double-dismiss from React Strict Mode
+  - Tap-to-dismiss on overlay background with `eslint-disable` for `jsx-a11y/no-static-element-interactions`
+- Fixed conditional `useEffect` calls in `LootAnimation`, `AchievementPopup`, `StreakNotification` — moved `useEffect` before early returns so hooks are always called unconditionally
+- Fixed unescaped apostrophes in LetterNotification (`you're` → `you&apos;re`, `I'LL` → `I&apos;LL`)
+
+**`test/ai-smoke.spec.js`** — Removed debug screenshot line from BossBattle prep test.
+
+**Verification**: `npx vite build` passes, `npm run test:ai` BossBattle prep test passes (13/15 in full suite). Remaining 2 failures are pre-existing: intake-real-ai font truncation ("IRA" vs "DARA") and one other unrelated issue.

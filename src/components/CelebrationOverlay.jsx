@@ -340,7 +340,10 @@ function LevelUpAnimation({ level, prevLevel, onDone }) {
 function LootAnimation({ loot, onDone }) {
   // Auto-dismiss after 3s so the celebration doesn't hang if user is inactive
   useEffect(() => {
-    if (!loot) { onDone(); return; }
+    if (!loot) {
+      onDone();
+      return;
+    }
     const timer = setTimeout(onDone, 3000);
     return () => clearTimeout(timer);
   }, [loot, onDone]);
@@ -399,7 +402,10 @@ function LootAnimation({ loot, onDone }) {
 function AchievementPopup({ achievements, onDone }) {
   // Auto-dismiss after 4s so celebration doesn't hang
   useEffect(() => {
-    if (!achievements || achievements.length === 0) { onDone(); return; }
+    if (!achievements || achievements.length === 0) {
+      onDone();
+      return;
+    }
     const timer = setTimeout(onDone, 4000);
     return () => clearTimeout(timer);
   }, [achievements, onDone]);
@@ -464,7 +470,8 @@ function LetterNotification({ onDone }) {
         NEW LETTER FROM DARA
       </PixelText>
       <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginBottom: 16 }}>
-        Dara has written a letter about your battle. Find it in your Courage tab when you&apos;re ready.
+        Dara has written a letter about your battle. Find it in your Courage tab when you&apos;re
+        ready.
       </PixelText>
       <PixelBtn onClick={onDone} color={C.plumMd} textColor={C.cream} style={{ width: '100%' }}>
         I&apos;LL READ IT LATER →
@@ -479,7 +486,10 @@ function StreakNotification({ streakCount, onDone }) {
 
   // Auto-dismiss after display time so celebration doesn't hang
   useEffect(() => {
-    if (!streakCount || streakCount < 1) { onDone(); return; }
+    if (!streakCount || streakCount < 1) {
+      onDone();
+      return;
+    }
     const delay = isMilestone ? 3500 : 2000;
     const timer = setTimeout(onDone, delay);
     return () => clearTimeout(timer);
@@ -687,7 +697,7 @@ export default function CelebrationOverlay({
     }
     if (hasLetter) s.push({ type: 'letter' });
     return s;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeDismiss = React.useCallback(() => {

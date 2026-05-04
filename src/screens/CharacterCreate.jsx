@@ -370,8 +370,8 @@ export default function CharacterCreate({
                   {name.trim() || darerId}. A name the Shadow{'\n'}will learn to fear.{'\n'}
                   {'\n'}
                   Welcome to the DARER family.{'\n'}
-                  {'\n'}A name alone doesn&apos;t make a{'\n'}hero. Your story does. Your{'\n'}actions
-                  do. Your strengths matter.{'\n'}
+                  {'\n'}A name alone doesn&apos;t make a{'\n'}hero. Your story does. Your{'\n'}
+                  actions do. Your strengths matter.{'\n'}
                   {'\n'}
                   Let me introduce someone who{'\n'}will walk beside you from here.
                 </PixelText>
@@ -440,8 +440,8 @@ export default function CharacterCreate({
             }}
           >
             <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
-              Every DARER is assigned a Soul{'\n'}Companion — someone who knows the{'\n'}Shadow&apos;s
-              tricks and how to{'\n'}unravel them.{'\n'}
+              Every DARER is assigned a Soul{'\n'}Companion — someone who knows the{'\n'}
+              Shadow&apos;s tricks and how to{'\n'}unravel them.{'\n'}
               {'\n'}
               Dara has walked beside hundreds{'\n'}of DARERs before you. She knows{'\n'}the path.
               She knows the fear.{'\n'}And she knows it can be beaten.{'\n'}
@@ -455,8 +455,8 @@ export default function CharacterCreate({
             <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
               {name.trim() || darerId}. I&apos;ve been waiting for you.{'\n'}
               {'\n'}
-              My name means courage — and{'\n'}that&apos;s exactly what we&apos;ll build{'\n'}together. Let&apos;s
-              begin the journey.
+              My name means courage — and{'\n'}that&apos;s exactly what we&apos;ll build{'\n'}
+              together. Let&apos;s begin the journey.
             </PixelText>
           </DialogBox>
 
@@ -684,8 +684,8 @@ export default function CharacterCreate({
               These are the strengths the{'\n'}Shadow cannot take from you.{'\n'}They are yours —
               and they will{'\n'}grow stronger with every battle.{'\n'}
               {'\n'}
-              I&apos;ll call on these strengths{'\n'}when we plan your battles and{'\n'}face the Shadow
-              together. They{'\n'}are your strategies.
+              I&apos;ll call on these strengths{'\n'}when we plan your battles and{'\n'}face the
+              Shadow together. They{'\n'}are your strategies.
             </PixelText>
           </DialogBox>
 

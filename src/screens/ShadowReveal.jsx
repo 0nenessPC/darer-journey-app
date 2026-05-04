@@ -308,8 +308,8 @@ function ShadowReveal({ heroName, shadowText, onContinue }) {
           <div style={{ marginTop: 12 }}>
             <DialogBox speaker="DARA">
               <PixelText size={8} color={C.cream} style={{ display: 'block', lineHeight: 1.8 }}>
-                This is YOUR Shadow&apos;s trap —{'\n'}built from your specific fears,{'\n'}your specific
-                thoughts, and{'\n'}your specific escapes.{'\n'}
+                This is YOUR Shadow&apos;s trap —{'\n'}built from your specific fears,{'\n'}your
+                specific thoughts, and{'\n'}your specific escapes.{'\n'}
                 {'\n'}
                 But now you can see it. And{'\n'}a trap you can see is a trap{'\n'}you can break.
                 {'\n'}
