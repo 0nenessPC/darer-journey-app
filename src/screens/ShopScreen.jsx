@@ -1,7 +1,22 @@
 import React, { useState } from 'react';
 import { C } from '../constants/gameData';
+import { AVATAR_CATALOG } from '../constants/avatars';
 import { PixelText, PixelBtn } from '../components/shared';
+import { DaraAvatar } from '../assets/DaraAvatar';
 import BottomNav from '../components/BottomNav';
+
+/** Build avatar shop items from the catalog. */
+const AVATAR_ITEMS = AVATAR_CATALOG.filter((a) => a.id !== 'dara_default').map((a) => ({
+  id: a.id,
+  name: `Dara Avatar: ${a.name}`,
+  icon: 'avatar',
+  description: a.description,
+  price: a.price,
+  currencyType: 'platinum',
+  category: 'avatar',
+  repeatable: false,
+  avatarId: a.id,
+}));
 
 const SHOP_ITEMS = [
   // Platinum items (cosmetics + functional)
@@ -155,12 +170,17 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
     { key: 'all', label: 'ALL' },
     { key: 'functional', label: '⚡ ITEMS' },
     { key: 'cosmetic', label: '🏷️ COSMETICS' },
+    { key: 'avatar', label: '🎭 AVATARS' },
     { key: 'theme', label: '🗺 THEMES' },
     { key: 'premium', label: '💎 PREMIUM' },
   ];
 
   const filtered =
-    category === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter((i) => i.category === category);
+    category === 'all'
+      ? [...SHOP_ITEMS, ...AVATAR_ITEMS]
+      : category === 'avatar'
+        ? AVATAR_ITEMS
+        : SHOP_ITEMS.filter((i) => i.category === category);
 
   const handlePurchase = (item) => {
     const balance = item.currencyType === 'diamond' ? diamonds : coins;
@@ -192,6 +212,10 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
           updates.doubleXP = (h.doubleXP || 0) + 1;
         } else if (item.effect === 'lantern') {
           updates.lanterns = (h.lanterns || 0) + 1;
+        }
+        // Activate avatar immediately when purchased
+        if (item.avatarId) {
+          updates.activeAvatar = item.avatarId;
         }
         return { ...h, ...updates };
       });
@@ -326,10 +350,15 @@ export default function ShopScreen({ hero, setHero, onBack, setScreen }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  overflow: 'hidden',
                   fontSize: 24,
                 }}
               >
-                {item.icon}
+                {item.icon === 'avatar' ? (
+                  <DaraAvatar size={40} variant={item.avatarId} />
+                ) : (
+                  item.icon
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <PixelText size={8} color={owned ? C.hpGreen : C.cream}>
