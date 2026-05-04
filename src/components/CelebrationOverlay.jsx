@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { C, PIXEL_FONT } from '../constants/gameData';
+import { C } from '../constants/gameData';
 import { PixelText, PixelBtn } from './shared';
 
 /**
@@ -338,18 +338,17 @@ function LevelUpAnimation({ level, prevLevel, onDone }) {
 }
 
 function LootAnimation({ loot, onDone }) {
-  if (!loot) {
-    onDone();
-    return null;
-  }
-  const rarity = loot.rarity || 'common';
-  const rarityColor = RARITY_COLORS[rarity] || C.grayLt;
-
   // Auto-dismiss after 3s so the celebration doesn't hang if user is inactive
   useEffect(() => {
+    if (!loot) { onDone(); return; }
     const timer = setTimeout(onDone, 3000);
     return () => clearTimeout(timer);
-  }, [onDone]);
+  }, [loot, onDone]);
+
+  if (!loot) return null;
+
+  const rarity = loot.rarity || 'common';
+  const rarityColor = RARITY_COLORS[rarity] || C.grayLt;
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
@@ -398,16 +397,14 @@ function LootAnimation({ loot, onDone }) {
 }
 
 function AchievementPopup({ achievements, onDone }) {
-  if (!achievements || achievements.length === 0) {
-    onDone();
-    return null;
-  }
-
   // Auto-dismiss after 4s so celebration doesn't hang
   useEffect(() => {
+    if (!achievements || achievements.length === 0) { onDone(); return; }
     const timer = setTimeout(onDone, 4000);
     return () => clearTimeout(timer);
-  }, [onDone]);
+  }, [achievements, onDone]);
+
+  if (!achievements || achievements.length === 0) return null;
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
@@ -467,29 +464,28 @@ function LetterNotification({ onDone }) {
         NEW LETTER FROM DARA
       </PixelText>
       <PixelText size={7} color={C.subtleText} style={{ display: 'block', marginBottom: 16 }}>
-        Dara has written a letter about your battle. Find it in your Courage tab when you're ready.
+        Dara has written a letter about your battle. Find it in your Courage tab when you&apos;re ready.
       </PixelText>
       <PixelBtn onClick={onDone} color={C.plumMd} textColor={C.cream} style={{ width: '100%' }}>
-        I'LL READ IT LATER →
+        I&apos;LL READ IT LATER →
       </PixelBtn>
     </div>
   );
 }
 
 function StreakNotification({ streakCount, onDone }) {
-  if (!streakCount || streakCount < 1) {
-    onDone();
-    return null;
-  }
   const milestones = [3, 7, 14, 30];
-  const isMilestone = milestones.includes(streakCount);
+  const isMilestone = milestones.includes(streakCount || 0);
 
   // Auto-dismiss after display time so celebration doesn't hang
   useEffect(() => {
+    if (!streakCount || streakCount < 1) { onDone(); return; }
     const delay = isMilestone ? 3500 : 2000;
     const timer = setTimeout(onDone, delay);
     return () => clearTimeout(timer);
-  }, [onDone, isMilestone]);
+  }, [streakCount, isMilestone, onDone]);
+
+  if (!streakCount || streakCount < 1) return null;
 
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
@@ -680,7 +676,10 @@ export default function CelebrationOverlay({
     if (achievements.length > 0) s.push({ type: 'achievements', value: achievements });
     s.push({ type: 'level', value: { level: playerLevel, prevLevel } });
     if (streakCount > 0) s.push({ type: 'streak', value: streakCount });
-    if (weeklyChallengeRewards && (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)) {
+    if (
+      weeklyChallengeRewards &&
+      (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)
+    ) {
       s.push({ type: 'weeklyRewards', value: weeklyChallengeRewards });
     }
     if (evidenceCards.length > 0) {
@@ -688,7 +687,8 @@ export default function CelebrationOverlay({
     }
     if (hasLetter) s.push({ type: 'letter' });
     return s;
-  }, []); // empty deps — build once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const safeDismiss = React.useCallback(() => {
     if (dismissedRef.current) return;
@@ -719,6 +719,7 @@ export default function CelebrationOverlay({
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
     <div
       style={{
         position: 'fixed',
@@ -738,6 +739,7 @@ export default function CelebrationOverlay({
       }}
       onClick={onDismiss}
     >
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
       <div
         style={{
           background: C.charcoal,
