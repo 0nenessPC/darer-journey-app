@@ -584,6 +584,15 @@ test.describe('@ai Smoke Tests', () => {
     await btn(page, 'THE POWER OF REPEAT', 15000);
     await btn(page, 'GOT IT — ON TO THE PATH', 15000);
 
+    // Dismiss post-battle celebration overlay (BattleRewardScreen + CelebrationOverlay)
+    const seeRewardsBtn = page.locator('button').filter({ hasText: /SEE MY REWARDS/i }).first();
+    await expect(seeRewardsBtn).toBeVisible({ timeout: 15000 });
+    await seeRewardsBtn.click();
+    // Celebration overlay auto-advances through XP/coins/lantern/level/streak — tap to dismiss
+    await page.waitForTimeout(5000);
+    await page.click('body');
+    await page.waitForTimeout(1000);
+
     // ═══ EXPOSURE SORT ═══
     await screen(page, 'FORGE YOUR PATH', 20000);
     await page.waitForTimeout(3000);
