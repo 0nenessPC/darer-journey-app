@@ -66,6 +66,12 @@ export default function DARERQuest() {
   const [tutorialCelebration, setTutorialCelebration] = useState(null);
   const [showTutorialReward, setShowTutorialReward] = useState(false);
 
+  // Stable onDismiss for CelebrationOverlay — prevents timer reset loop
+  const handleTutorialCelebrationDismiss = useCallback(() => {
+    setTutorialCelebration(null);
+    setScreen("exposureSort");
+  }, [setScreen]);
+
   // Memoized hero context for AI — avoids recomputing on every render
   const heroContext = useMemo(
     () => buildHeroContext(hero, quest, shadowText, battleHistory),
@@ -315,10 +321,7 @@ export default function DARERQuest() {
           hasLetter={tutorialCelebration.hasLetter || false}
           weeklyChallengeRewards={tutorialCelebration.weeklyChallengeRewards || null}
           evidenceCards={tutorialCelebration.evidenceCards || []}
-          onDismiss={() => {
-            setTutorialCelebration(null);
-            setScreen("exposureSort");
-          }}
+          onDismiss={handleTutorialCelebrationDismiss}
         />
       )}
 

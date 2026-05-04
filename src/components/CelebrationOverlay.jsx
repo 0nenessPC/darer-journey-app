@@ -345,6 +345,12 @@ function LootAnimation({ loot, onDone }) {
   const rarity = loot.rarity || 'common';
   const rarityColor = RARITY_COLORS[rarity] || C.grayLt;
 
+  // Auto-dismiss after 3s so the celebration doesn't hang if user is inactive
+  useEffect(() => {
+    const timer = setTimeout(onDone, 3000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div
@@ -396,6 +402,13 @@ function AchievementPopup({ achievements, onDone }) {
     onDone();
     return null;
   }
+
+  // Auto-dismiss after 4s so celebration doesn't hang
+  useEffect(() => {
+    const timer = setTimeout(onDone, 4000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div style={{ fontSize: 36, marginBottom: 8 }}>🏆</div>
@@ -441,6 +454,12 @@ function AchievementPopup({ achievements, onDone }) {
 }
 
 function LetterNotification({ onDone }) {
+  // Auto-dismiss after 3s
+  useEffect(() => {
+    const timer = setTimeout(onDone, 3000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>💌</div>
@@ -464,6 +483,14 @@ function StreakNotification({ streakCount, onDone }) {
   }
   const milestones = [3, 7, 14, 30];
   const isMilestone = milestones.includes(streakCount);
+
+  // Auto-dismiss after display time so celebration doesn't hang
+  useEffect(() => {
+    const delay = isMilestone ? 3500 : 2000;
+    const timer = setTimeout(onDone, delay);
+    return () => clearTimeout(timer);
+  }, [onDone, isMilestone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div
@@ -518,6 +545,13 @@ function StreakNotification({ streakCount, onDone }) {
 
 function EvidenceCardView({ card, onDone }) {
   const lines = card.text.split('\n');
+
+  // Auto-dismiss after 3.5s
+  useEffect(() => {
+    const timer = setTimeout(onDone, 3500);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div style={{ fontSize: 36, marginBottom: 8 }}>{card.icon}</div>
@@ -573,6 +607,13 @@ function WeeklyRewardsAnimation({ rewards, onDone }) {
   const parts = [];
   if (rewards.coins > 0) parts.push(`+${rewards.coins} 🪙`);
   if (rewards.xp > 0) parts.push(`+${rewards.xp} XP`);
+
+  // Auto-dismiss after 3s
+  useEffect(() => {
+    const timer = setTimeout(onDone, 3000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <div style={{ textAlign: 'center', animation: 'screenFadeIn 0.4s ease-out' }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>⚡</div>
@@ -625,56 +666,55 @@ export default function CelebrationOverlay({
   onDismiss,
 }) {
   const [phase, setPhase] = useState(0);
-  const phaseRef = useRef(0);
+  const dismissedRef = useRef(false);
 
-  // Build the sequence of celebration phases
-  const sequence = [];
-  // Phase 1: Victory burst (opening flash + confetti)
-  sequence.push({ type: 'victoryBurst', value: outcome });
-  // Phase 2: Dara's spoken cheer
-  sequence.push({ type: 'daraCheer', value: { outcome, heroName, bossName } });
-  // Then the reward sequence
-  if (xpEarned > 0) sequence.push({ type: 'xp', value: xpEarned });
-  if (coinsEarned > 0) sequence.push({ type: 'coins', value: coinsEarned });
-  if (diamondsEarned > 0) sequence.push({ type: 'diamonds', value: diamondsEarned });
-  if (lootDrop) sequence.push({ type: 'loot', value: lootDrop });
-  if (achievements.length > 0) sequence.push({ type: 'achievements', value: achievements });
-  sequence.push({ type: 'level', value: { level: playerLevel, prevLevel } });
-  if (streakCount > 0) sequence.push({ type: 'streak', value: streakCount });
-  if (
-    weeklyChallengeRewards &&
-    (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)
-  ) {
-    sequence.push({ type: 'weeklyRewards', value: weeklyChallengeRewards });
-  }
-  if (evidenceCards.length > 0) {
-    evidenceCards.forEach((card) => sequence.push({ type: 'evidence', value: card }));
-  }
-  if (hasLetter) sequence.push({ type: 'letter' });
-
-  const advance = () => {
-    phaseRef.current++;
-    if (phaseRef.current >= sequence.length) {
-      onDismiss();
-    } else {
-      setPhase(phaseRef.current);
+  // Build sequence once — stable reference
+  const sequence = React.useMemo(() => {
+    const s = [];
+    s.push({ type: 'victoryBurst', value: outcome });
+    s.push({ type: 'daraCheer', value: { outcome, heroName, bossName } });
+    if (xpEarned > 0) s.push({ type: 'xp', value: xpEarned });
+    if (coinsEarned > 0) s.push({ type: 'coins', value: coinsEarned });
+    if (diamondsEarned > 0) s.push({ type: 'diamonds', value: diamondsEarned });
+    if (lootDrop) s.push({ type: 'loot', value: lootDrop });
+    if (achievements.length > 0) s.push({ type: 'achievements', value: achievements });
+    s.push({ type: 'level', value: { level: playerLevel, prevLevel } });
+    if (streakCount > 0) s.push({ type: 'streak', value: streakCount });
+    if (weeklyChallengeRewards && (weeklyChallengeRewards.coins > 0 || weeklyChallengeRewards.xp > 0)) {
+      s.push({ type: 'weeklyRewards', value: weeklyChallengeRewards });
     }
-  };
+    if (evidenceCards.length > 0) {
+      evidenceCards.forEach((card) => s.push({ type: 'evidence', value: card }));
+    }
+    if (hasLetter) s.push({ type: 'letter' });
+    return s;
+  }, []); // empty deps — build once on mount
 
-  // Auto-advance for simple animations (XP counter, coin counter)
-  useEffect(() => {
-    phaseRef.current = 0;
-    setPhase(0);
-  }, [xpEarned, coinsEarned, diamondsEarned, lootDrop, achievements, evidenceCards]);
+  const safeDismiss = React.useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    onDismiss();
+  }, [onDismiss]);
+
+  const advance = React.useCallback(() => {
+    setPhase((p) => {
+      const next = p + 1;
+      if (next >= sequence.length) {
+        setTimeout(safeDismiss, 0);
+        return p; // stay on last phase visually until dismissed
+      }
+      return next;
+    });
+  }, [sequence.length, safeDismiss]);
 
   if (sequence.length === 0) {
-    onDismiss();
+    safeDismiss();
     return null;
   }
 
   const current = sequence[phase];
   if (!current) {
-    onDismiss();
+    safeDismiss();
     return null;
   }
 
@@ -696,6 +736,7 @@ export default function CelebrationOverlay({
         zIndex: 9999,
         padding: 20,
       }}
+      onClick={onDismiss}
     >
       <div
         style={{
@@ -709,6 +750,7 @@ export default function CelebrationOverlay({
           overflowY: 'auto',
           boxShadow: `0 0 40px ${OUTCOME_CONFIG[outcome]?.color || C.goldMd}30`,
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {current.type === 'victoryBurst' && (
           <VictoryBurst outcome={current.value} onDone={advance} />
