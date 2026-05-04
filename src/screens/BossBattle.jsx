@@ -1225,6 +1225,21 @@ export default function BossBattle({
               </PixelBtn>
             </div>
           )}
+          {battleChat.error && battleChat.errorType === 'send' && (
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <PixelText size={7} color={C.bossRed}>
+                {battleChat.error}
+              </PixelText>
+              <PixelBtn
+                onClick={() => battleChat.reset()}
+                color={C.teal}
+                textColor={C.cream}
+                style={{ width: '100%', marginTop: 8 }}
+              >
+                TRY AGAIN →
+              </PixelBtn>
+            </div>
+          )}
           <PixelBtn
             onClick={() => {
               setPhase('result');

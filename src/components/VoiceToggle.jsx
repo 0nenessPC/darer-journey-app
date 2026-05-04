@@ -123,12 +123,12 @@ export function VoiceInputBar({
 
   // When transcript becomes non-empty, auto-send it
   useEffect(() => {
-    if (transcript && !isListening) {
-      onSend(transcript);
+    if (transcript?.trim() && !isListening) {
+      onSend(transcript.trim());
       // Reset transcript after sending
       voice?.resetTranscript?.();
     }
-  }, [transcript, isListening]);
+  }, [transcript, isListening]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMicToggle = () => {
     if (isListening) {

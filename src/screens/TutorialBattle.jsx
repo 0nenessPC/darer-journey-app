@@ -821,23 +821,40 @@ No other text.`,
                 </DialogBox>
 
                 {voice.supported ? (
-                  <VoiceInputBar
-                    input={coachInput}
-                    onInputChange={setCoachInput}
-                    onSend={async (text) => {
-                      const msg = text || coachInput;
-                      if (!msg?.trim() || coachChat.typing) return;
-                      setCoachInput('');
-                      const ok = await coachChat.sendMessage(msg);
-                      if (ok && voice.supported) {
-                        voice.speak(ok, { speed: 0.9 });
-                      }
-                    }}
-                    typing={coachChat.typing}
-                    disabled={false}
-                    voice={voice}
-                    placeholder="Speak or type — ask Dara anything..."
-                  />
+                  <>
+                    <VoiceInputBar
+                      input={coachInput}
+                      onInputChange={setCoachInput}
+                      onSend={async (text) => {
+                        const msg = text || coachInput;
+                        if (!msg?.trim() || coachChat.typing) return;
+                        setCoachInput('');
+                        const ok = await coachChat.sendMessage(msg);
+                        if (ok && voice.supported) {
+                          voice.speak(ok, { speed: 0.9 });
+                        }
+                      }}
+                      typing={coachChat.typing}
+                      disabled={false}
+                      voice={voice}
+                      placeholder="Speak or type — ask Dara anything..."
+                    />
+                    {coachChat.error && coachChat.errorType === 'send' && (
+                      <div style={{ textAlign: 'center', marginTop: 8 }}>
+                        <PixelText size={7} color={C.bossRed}>
+                          {coachChat.error}
+                        </PixelText>
+                        <PixelBtn
+                          onClick={() => coachChat.reset()}
+                          color={C.teal}
+                          textColor={C.cream}
+                          style={{ width: '100%', marginTop: 8 }}
+                        >
+                          TRY AGAIN →
+                        </PixelBtn>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <textarea
                     value={coachInput}
