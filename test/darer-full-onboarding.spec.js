@@ -94,6 +94,19 @@ test.describe('DARER Journey', () => {
           { name: "The Greeter", text: "Say hello to someone you don't know", icon: "👋", where: "Walking past", time: "10 seconds", suds: 1 },
           { name: "The Nod", text: "Give a small nod to someone nearby", icon: "🙂", where: "Elevator", time: "5 seconds", suds: 2 },
         ]);
+      } else if (sys.includes('hierarchy')) {
+        reply = JSON.stringify([
+          { name: "The Cashier", activity: "Ask a store clerk a question", level: 1 },
+          { name: "The Greeter", activity: "Say hello to a stranger", level: 2 },
+          { name: "The Nodder", activity: "Give a small nod to someone nearby", level: 3 },
+          { name: "The Asker", activity: "Ask a store clerk a question", level: 4 },
+          { name: "The Joiner", activity: "Join a group conversation", level: 5 },
+          { name: "The Sharer", activity: "Share an opinion in a small group", level: 6 },
+          { name: "The Speaker", activity: "Give a short toast at a gathering", level: 7 },
+          { name: "The Challenger", activity: "Disagree respectfully in a meeting", level: 8 },
+          { name: "The Debater", activity: "Lead a discussion with 5+ people", level: 9 },
+          { name: "The Performer", activity: "Do a 1-minute impromptu speech", level: 10 },
+        ]);
       } else if (sys.includes('exposure') && sys.includes('boss') && sys.includes('generate')) {
         reply = JSON.stringify([
           { name: "The Cashier", activity: "Ask a store clerk a question", level: 2 },
@@ -566,12 +579,30 @@ test.describe('DARER Journey', () => {
     await btn(page, 'GOT IT — ON TO THE PATH', 15000);
     console.log('✅ Tutorial complete');
 
+    // ═══ 11b. Battle Reward + Celebration Overlay ═══
+    console.log('  → Battle reward screen...');
+    await screen(page, 'BOSS DEFEATED', 15000);
+    await btn(page, 'SEE MY REWARDS', 15000);
+    // Celebration overlay auto-advances through phases — tap to dismiss
+    await page.waitForTimeout(5000);
+    await page.click('body');
+    await page.waitForTimeout(1000);
+
+    // Dismiss shop tour overlay
+    await page.waitForSelector('text=CONTINUE TO THE PATH', { timeout: 15000 }).catch(() => {});
+    const shopTourBtn = page.locator('button').filter({ hasText: /CONTINUE TO THE PATH/ }).first();
+    await expect(shopTourBtn).toBeVisible({ timeout: 10000 });
+    await shopTourBtn.click({ force: true });
+    await page.waitForTimeout(3000);
+
     // ═══ 12. EXPOSURE SORT ═══
     console.log('📋 12. Exposure Sort...');
-    await screen(page, 'FORGE YOUR PATH', 20000);
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(5000);
+    await screen(page, 'FORGE YOUR PATH', 30000);
     await page.waitForTimeout(3000);
-    // Accept all 3 exposure cards by clicking the checkmark (✓) button
-    for (let i = 0; i < 3; i++) {
+    // Accept all 10 exposure cards by clicking the checkmark (✓) button
+    for (let i = 0; i < 10; i++) {
       const acceptBtn = page.locator('button').filter({ hasText: /^✓$/ }).first();
       await expect(acceptBtn).toBeVisible({ timeout: 10000 });
       await acceptBtn.click();

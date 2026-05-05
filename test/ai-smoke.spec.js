@@ -593,8 +593,20 @@ test.describe('@ai Smoke Tests', () => {
     await page.click('body');
     await page.waitForTimeout(1000);
 
-    // ═══ EXPOSURE SORT ═══
-    await screen(page, 'FORGE YOUR PATH', 20000);
+    // Dismiss shop tour overlay — wait for it explicitly, then dismiss
+    await page.waitForSelector('text=CONTINUE TO THE PATH', { timeout: 15000 }).catch(() => {});
+    const shopTourBtn = page.locator('button').filter({ hasText: /CONTINUE TO THE PATH/ }).first();
+    await expect(shopTourBtn).toBeVisible({ timeout: 10000 });
+    await shopTourBtn.click({ force: true });
+    // Wait for shop screen to unmount and exposureSort to render
+    await page.waitForTimeout(3000);
+
+    // Wait for lazy-loaded component and AI response
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(5000);
+
+    // ═══ EXPOSURE SORT ══
+    await screen(page, 'FORGE YOUR PATH', 30000);
     await page.waitForTimeout(3000);
     // Accept all 10 exposures
     for (let i = 0; i < 10; i++) {

@@ -198,7 +198,21 @@ export async function setupMockAI(page, targetScreen) {
     const sys = (req.systemPrompt || '').toLowerCase();
     let reply;
 
-    if (targetScreen === 'values' && (sys.includes('values') && sys.includes('generate'))) {
+    // Hierarchy check first — exposure sort prompt contains "values" too
+    if (sys.includes('hierarchy')) {
+      reply = JSON.stringify([
+        { name: 'The Smiler', activity: 'Make eye contact and smile at a stranger', level: 1 },
+        { name: 'The Greeter', activity: 'Say hello to someone you don\'t know', level: 2 },
+        { name: 'The Nodder', activity: 'Give a small nod to someone nearby', level: 3 },
+        { name: 'The Asker', activity: 'Ask a store clerk a question', level: 4 },
+        { name: 'The Joiner', activity: 'Join a group conversation', level: 5 },
+        { name: 'The Sharer', activity: 'Share an opinion in a small group', level: 6 },
+        { name: 'The Speaker', activity: 'Give a short toast at a gathering', level: 7 },
+        { name: 'The Challenger', activity: 'Disagree respectfully in a meeting', level: 8 },
+        { name: 'The Debater', activity: 'Lead a discussion with 5+ people', level: 9 },
+        { name: 'The Performer', activity: 'Do a 1-minute impromptu speech', level: 10 },
+      ]);
+    } else if (targetScreen === 'values' && (sys.includes('values') && sys.includes('generate'))) {
       reply = JSON.stringify([
         { id: 'v1', text: 'Build meaningful friendships', icon: '🤝', domain: 'friendships' },
         { id: 'v2', text: 'Feel a sense of belonging', icon: '💜', domain: 'friendships' },
